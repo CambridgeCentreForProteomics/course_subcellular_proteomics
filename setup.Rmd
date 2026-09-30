@@ -82,28 +82,22 @@ if (!require("BiocManager", quietly = TRUE)) {
 }
 
 BiocManager::install(c(
-  "QFeatures",
-  "NormalyzerDE",
-  "limma",
-  "factoextra",
-  "org.Hs.eg.db",
-  "clusterProfiler",
-  "enrichplot",
-  "patchwork",
-  "tidyverse",
-  "pheatmap",
-  "ggupset",
-  "arrow",
-  "readxl",
-  "naniar",
-  "ggbeeswarm",
-  "ggrepel",
-  "matrixStats",
-  "GOSemSim",
-  "MsCoreUtils",
-  "RColorBrewer",
-  "AnnotationDbi"
-))
+  library("tidyverse"),
+  library("QFeatures"),
+  library("MSnbase"),
+  library("pRoloc"),
+  library("pRolocdata"),
+  library("pRolocGUI"),
+  library("ggplot2"),
+  library("Biostrings"),
+  library("gridExtra"),
+  library("dbscan"),
+  library("clusterProfiler"),
+  library("org.Hs.eg.db"),
+  library("ggpubr"),
+  library("pheatmap"),
+  library("arrow")))
+
 ```
 
 After installation, each package must be loaded before it can be used in the R session.
@@ -116,26 +110,25 @@ Here we load all packages included in this course.
 #| results: "hide"
 #| warning: false
 
-library("QFeatures")
-library("NormalyzerDE")
-library("limma")
-library("factoextra")
-library("org.Hs.eg.db")
-library("clusterProfiler")
-library("enrichplot")
-library("patchwork")
-library("tidyverse")
-library("pheatmap")
-library("ggupset")
-library("arrow")
-library("readxl")
-library("naniar")
-library("ggbeeswarm")
-library("ggrepel")
-library("matrixStats")
-library("GOSemSim")
-library("MsCoreUtils")
-library("RColorBrewer")
-library("AnnotationDbi")
+  library("tidyverse")
+  library("QFeatures")
+  library("MSnbase")
+  library("pRoloc")
+  library("pRolocdata")
+  library("pRolocGUI")
+  library("ggplot2")
+  library("Biostrings")
+  library("gridExtra")
+  library("dbscan")
+  library("clusterProfiler")
+  library("org.Hs.eg.db")
+  library("ggpubr")
+  library("pheatmap")
+  library("arrow")
 ```
+
+If you have questions about this workflow, or about other Bioconductor packages 
+in general, they are best asked on the [Bioconductor support site](https://support.bioconductor.org) 
+following the [posting guidelines](http://www.bioconductor.org/help/support/posting-guide/). 
+Questions can be tagged with specific package names or keywords. 
 

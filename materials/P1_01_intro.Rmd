@@ -56,7 +56,7 @@ package](https://www.bioconductor.org/packages/release/bioc/html/pRoloc.html).
 
 In this workflow we use R packages from Bioconductor, namely, the
 [`QFeatures` package](https://bioconductor.org/packages/release/bioc/html/QFeatures.html)
-for upstream data processing and the `pRoloc` for downstream 
+for upstream data processing and the [`pRoloc`](https://bioconductor.org/packages/release/bioc/html/pRoloc.html) for downstream 
 machine learning. 
 
 :::{.callout-note}
@@ -91,7 +91,7 @@ or data-independent acquisition, DIA).
 
 Our use-case data was generated using the DIA-LOP method from the Lilley lab at
 the Universisty of Cambridge. DIA-LOP (Data-Independent Acquisition
-Localization of Organelle Proteins), it is a next-generation subcellular
+Localization of Organelle Proteins), it is a high throughput subcellular
 proteomics method that offers a faster, label-free, and cost-effective
 alternative to classic multiplexed LOPIT methods. The pipeline works by gently
 lysing cells and using differential ultracentrifugation to separate intact
@@ -206,13 +206,14 @@ to Proteome Discoverer as the database for searching. We also provided a
 database of common contaminants that could be present in our sample due to (i)
 human contamination (e.g., keratin from nails, hair or skin), or (ii) sample
 preparation (e.g., enzymes used for protein digestion). These two databases are
-can be found in the course materials and also at
-[](https://github.com/CambridgeCentreForProteomics/f1000_subcellular_dia_extension). The
-result of such a database search is a list of **peptide spectrum matches (PSMs), or precursors**,  
-that is a list of matches between observed and expected spectra. Most
-software will also aggregate the PSM or precursor level data upward and provide output files
-at all data levels (PSM, peptide and protein). It is up to the user which output
-file to use for further analysis.
+can be found in the course materials and also
+[here](https://github.com/CambridgeCentreForProteomics/f1000_subcellular_dia_extension). 
+
+The result of such a database search is a list of 
+**peptide spectrum matches (PSMs), or precursors**, that is a list of matches between observed and expected
+spectra. Most software will also aggregate the PSM or precursor level data
+upward and provide output files at all data levels (PSM, peptide and protein).
+It is up to the user which output file to use for further analysis.
 
 The starting point for this workshop and data processing workflow in R is an 
 output file from the identification search. Different softwares output different
@@ -249,80 +250,5 @@ The use-case data that we will process and analyse in this workshop is a **DIA**
 to determine **where proteins reside in the cell** (their subcellular
 localisation).
 
-## Glossary
-
-Key terms that you should understand for this workshop.
-
-### Mass spectrometry basics
-
-- **Precursor ion** = the intact, charged peptide ion that is selected for fragmentation. In analysis, a precursor is a unique combination of peptide sequence, modifications and charge state.
-
-- **Fragment ion** = an ion produced by fragmentation of the precursor ion, thus only representing a fraction of the original peptide sequence (e.g. b and y ions).
-
-- **MS1 spectrum** = a survey scan of all intact ions eluting at a given time, separated by mass-to-charge ratio (m/z). Each peptide typically appears as an isotopic envelope of peaks, with intensities that can be used for quantification.
-
-- **MS2 (MS/MS) spectrum** = a mass spectrum of fragment ions produced by fragmenting selected precursor ions, separated by m/z. In DDA, a spectrum usually comes from a single precursor; in DIA, it contains fragments from all precursors in an isolation window (a chimeric spectrum).
-
-- **Isolation window** = the m/z range of precursor ions that is passed to the collision cell and fragmented together. In DIA, windows are typically several to tens of m/z wide and step across the full m/z range.
-
-- **Chimeric spectrum** = an MS2 spectrum containing fragment ions from more than one precursor. DIA spectra are chimeric by design, which is why identification relies on specialised software rather than PSMs.
-
-### Acquisition methods
-
-- **Data-dependent acquisition (DDA)** = an acquisition mode in which the instrument selects the most abundant precursor ions from each MS1 scan and isolates and fragments them individually. Each MS2 spectrum therefore usually originates from a single precursor.
-
-- **Data-independent acquisition (DIA)** = an acquisition mode in which all precursor ions within predefined m/z windows are fragmented together, without selecting individual precursors. This gives more complete and reproducible coverage across samples than DDA.
-
-### Chromatography
-
-- **Liquid chromatography (LC)** = the separation of peptides over time before they enter the mass spectrometer, which reduces the number of peptides being analysed at once.
-
-- **Retention time** = the time at which a peptide elutes from the LC column. Peptides with the same sequence elute at reproducible times, which helps to identify them.
-
-- **Extracted ion chromatogram (XIC)** = a plot of the intensity of a specific ion (precursor or fragment) against retention time. In DIA, precursors are identified partly because their fragment ion XICs peak together (co-elute).
-
-### Identification and data levels
-
-- **Peptide spectrum match (PSM)** = an assignment of an observed MS2 spectrum to a peptide sequence, based on how well it matches the theoretical spectrum of that sequence. PSMs arise from DDA data; DIA has no PSMs.
-
-- **Spectral library** = a collection of reference spectra and retention times for peptides, used to search DIA data. Libraries can be built from DDA experiments or predicted in silico from sequence.
-
-- **Peptide-centric search** = an identification strategy that asks whether the expected fragments of a given peptide are present in the data, as used in DIA. It contrasts with the spectrum-centric approach of DDA, where each spectrum is matched to a peptide.
-
-- **Modified peptide** = a peptide sequence together with its post-translational or chemical modifications (e.g. oxidised methionine), regardless of charge state. One modified peptide can give rise to several precursors.
-
-- **Protein group** = a set of proteins that cannot be distinguished from one another based on the identified peptides, which are reported together as a single entry.
-
-- **False discovery rate (FDR)** = the expected proportion of incorrect identifications among those accepted. It is usually estimated with decoy sequences and controlled at a threshold such as 1%.
-
-### Quantification and data processing
-
-- **Label-free quantification (LFQ)** = quantification based on the measured signal of each peptide in each sample, without chemical labels. Each sample is acquired in a separate MS run.
-
-- **Tandem mass tag (TMT)** = an isobaric peptide label used for relative quantification of peptides across samples. Labelled peptides from different samples have the same mass at MS1, and quantification is based on reporter ions released on fragmentation at the MS2 or MS3 level.
-
-- **Isobaric labels** = tags with the same total mass that are indistinguishable at MS1 but release different reporter ions on fragmentation, which allows quantification across samples in the same run.
-
-- **Reporter ion** = a low-mass fragment released from an isobaric tag whose intensity reports the relative abundance of a peptide in a given sample.
-
-- **Missing value** = a peptide or protein that is not quantified in a sample. Missing values are common in proteomics, especially for low-abundance peptides, and are less frequent in DIA than in DDA.
-
-- **Normalisation** = adjusting intensities to remove technical differences between samples or runs (e.g. loading amount), so that samples can be compared.
-
-- **Aggregation (summarisation)** = combining lower-level measurements (e.g. precursors) into a higher level (e.g. proteins) using a method such as the median or a model-based approach.
-
-### Spatial proteomics
-
-- **Subcellular fractionation** = the partial separation of a lysate into fractions enriched in different organelles, usually by centrifugation.
-
-- **Localisation of organelle proteins by isotope tagging (LOPIT)** = a spatial proteomics method that measures protein abundance across subcellular fractions, traditionally using TMT labels and DDA.
-
-- **DIA-LOP** = the label-free DIA version of the same approach, in which fractions are acquired by DIA rather than labelled with TMT.
-
-- **Abundance profile** = the pattern of a protein's abundance across fractions. Proteins in the same compartment tend to have similar profiles.
-
-- **Marker protein** = a protein with a well-established subcellular location, used to define the expected profile of each compartment for classification.
-
-- **Relocalisation** = a change in a protein's subcellular location between conditions (e.g. treated vs untreated), detected as a change in its abundance profile.
 
 ## References {-}

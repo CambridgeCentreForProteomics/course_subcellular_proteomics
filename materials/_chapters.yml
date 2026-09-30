@@ -16,3 +16,7 @@ book:
     - part: "Differential localisation"
       chapters: 
         - materials/P3_01_sandle.Rmd
+    - part: "Glossary"
+      chapters: 
+        - materials/P4_01_glossary.Rmd
+        

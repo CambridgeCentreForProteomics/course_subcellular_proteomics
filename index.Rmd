@@ -75,7 +75,7 @@ Please cite these materials if:
 - You adapted or used any of them in your own teaching.
 - These materials were useful for your research work.
 
-For example, you can cite us in the methods section of your paper: "We carried out our analyses based on the recommendations in Hutchings and Breckels (2025)".
+For example, you can cite us in the methods section of your paper: "We carried out our analyses based on the recommendations in Hutchings and Breckels (2026)".
 
 You can cite these materials as:
 
@@ -104,10 +104,16 @@ Data analysis workflow
 The `QFeatures` R/Bioconductor package.
 
 > Gatto L, Vanderaa C: QFeatures: Quantitative features for mass spectrometry data.
-> R package version 1.12.0.
+> R package version 1.23.1.
 > 2023.
 > Reference Source
 
+The `pRoloc` R/Bioconductor package.
+
+> Gatto L, Breckels LM, Wieczorek S, Burger T, Lilley KS. Mass-spectrometry-based spatial
+>  proteomics data analysis using pRoloc and pRolocdata. Bioinformatics. 2014 May 1;30(9):1322-4.
+>  doi:10.1093/bioinformatics/btu013. Epub 2014 Jan 11. PubMed PMID: 24413670; PubMed Central
+>  PMCID: PMC3998135.
 
 Case-study data
 
