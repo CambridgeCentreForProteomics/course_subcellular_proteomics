@@ -1,0 +1,141 @@
+---
+bibliography: setup_refs.bib
+number-sections: false
+---
+
+# Data & Setup {.unnumbered}
+
+<!-- 
+Note for Training Developers:
+We provide instructions for commonly-used software as commented sections below.
+Uncomment the sections relevant for your materials, and add additional instructions where needed (e.g. specific packages used).
+Note that we use tabsets to provide instructions for all three major operating systems.
+-->
+
+::: {.callout-tip level=2}
+## Workshop Attendees
+
+If you are attending one of our workshops please follow the instructions below to get your computer setup and ready for the course.
+:::
+
+## Data
+
+The data used in these materials is provided as a zip file. 
+Download and unzip the folder to your Desktop to follow along with the materials.
+
+<!-- Note for Training Developers: add the link to 'href' -->
+<a href="https://github.com/CambridgeCentreForProteomics/f1000_subcellular_dia_extension/releases/tag/v1.0.0">
+  <button class="btn"><i class="fa fa-download"></i> Download</button>
+</a>
+
+## Software
+
+### R and RStudio
+
+::: {.tabset group="os"}
+
+#### Windows
+
+Download and install all these using default options:
+
+- [R](https://cran.r-project.org/bin/windows/base/release.html)
+- [RTools](https://cran.r-project.org/bin/windows/Rtools/)
+- [RStudio](https://www.rstudio.com/products/rstudio/download/#download)
+
+#### Mac OS
+
+Download and install all these using default options:
+
+- [R](https://cran.r-project.org/bin/macosx/)
+- [RStudio](https://www.rstudio.com/products/rstudio/download/#download)
+
+#### Linux
+
+- Go to the [R installation](https://cran.r-project.org/bin/linux/) folder and look at the instructions for your distribution.
+- Download the [RStudio](https://www.rstudio.com/products/rstudio/download/#download) installer for your distribution and install it using your package manager.
+
+:::
+
+
+### R package installation
+
+In this workshop we make use of open-source software from the
+[R](https://www.r-project.org) [Bioconductor](https://bioconductor.org)
+[@Huber2015] project. The [Bioconductor initiative](https://bioconductor.org)
+provides [R](https://www.r-project.org) software packages dedicated to the
+processing of high-throughput complex biological data. Packages are open-source,
+well-documented and benefit from an active community of developers.
+
+Detailed instructions for the installation of Bioconductor packages are
+documented on the [Bioconductor Installation page](http://bioconductor.org/install/). 
+The main packages required for this workshop are installed using the code below.
+Additional packages required for downstream statistics and interpretation are
+installed as required.
+
+```{r}
+#| label: install-packages
+#| eval: false
+#| message: false
+
+if (!require("BiocManager", quietly = TRUE)) {
+  install.packages("BiocManager")
+}
+
+BiocManager::install(c(
+  "QFeatures",
+  "NormalyzerDE",
+  "limma",
+  "factoextra",
+  "org.Hs.eg.db",
+  "clusterProfiler",
+  "enrichplot",
+  "patchwork",
+  "tidyverse",
+  "pheatmap",
+  "ggupset",
+  "arrow",
+  "readxl",
+  "naniar",
+  "ggbeeswarm",
+  "ggrepel",
+  "matrixStats",
+  "GOSemSim",
+  "MsCoreUtils",
+  "RColorBrewer",
+  "AnnotationDbi"
+))
+```
+
+After installation, each package must be loaded before it can be used in the R session.
+This is achieved via the `library` function.
+Here we load all packages included in this course.
+
+```{r}
+#| label: load-packages
+#| message: false
+#| results: "hide"
+#| warning: false
+
+library("QFeatures")
+library("NormalyzerDE")
+library("limma")
+library("factoextra")
+library("org.Hs.eg.db")
+library("clusterProfiler")
+library("enrichplot")
+library("patchwork")
+library("tidyverse")
+library("pheatmap")
+library("ggupset")
+library("arrow")
+library("readxl")
+library("naniar")
+library("ggbeeswarm")
+library("ggrepel")
+library("matrixStats")
+library("GOSemSim")
+library("MsCoreUtils")
+library("RColorBrewer")
+library("AnnotationDbi")
+```
+

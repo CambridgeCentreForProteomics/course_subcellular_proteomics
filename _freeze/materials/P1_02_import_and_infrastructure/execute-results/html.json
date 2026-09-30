@@ -1,0 +1,15 @@
+{
+  "hash": "9e559692d7e1c89ed584cb0a42ca26e5",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: Import and infrastructure\nbibliography: ../course_refs.bib\neditor_options:\n  chunk_output_type: console\n---",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

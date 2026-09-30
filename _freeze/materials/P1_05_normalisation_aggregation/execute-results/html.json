@@ -1,0 +1,15 @@
+{
+  "hash": "70a3616322d62290e735205364c81ba3",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: Data normalisation and data aggregation\nbibliography: ../course_refs.bib\neditor_options:\n  chunk_output_type: console\n---",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

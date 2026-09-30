@@ -1,0 +1,15 @@
+{
+  "hash": "c690c6980ce230a71a76e7aa359a84c8",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: Static localisation\nbibliography: course_refs.bib\n---\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

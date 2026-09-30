@@ -1,0 +1,15 @@
+{
+  "hash": "79f17b1b8a2c02515d08c11404b9e3fc",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: Visualisation and exploration\nbibliography: ../course_refs.bib\neditor_options:\n  chunk_output_type: console\n---",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

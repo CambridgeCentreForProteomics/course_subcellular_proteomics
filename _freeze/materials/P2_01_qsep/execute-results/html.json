@@ -1,0 +1,15 @@
+{
+  "hash": "18be0722f852398d7ef265c33d36b583",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: Assessment of resolution\nbibliography: ../course_refs.bib\neditor_options:\n  chunk_output_type: console\n---",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

@@ -7,9 +7,9 @@ project:
   type: book
   output-dir: _site
   render:
-    - index.md
-    - setup.md
-    - materials.md
+    - index.Rmd
+    - setup.Rmd
+    - materials.Rmd
     - materials/*
     - "!materials/*/no_render"
 
@@ -59,6 +59,6 @@ book:
     - part: "Welcome"
       chapters: 
         - text: "Overview"
-          href: index.md
+          href: index.Rmd
         - text: "Data & Setup"
-          href: setup.md
+          href: setup.Rmd

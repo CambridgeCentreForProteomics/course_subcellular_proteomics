@@ -1,0 +1,15 @@
+{
+  "hash": "deb3d4826a1a017333eaeab0e9fd462f",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: Differential localisation analyses\nbibliography: ../course_refs.bib\neditor_options:\n  chunk_output_type: console\n---",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

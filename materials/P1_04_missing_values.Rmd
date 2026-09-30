@@ -1,0 +1,6 @@
+---
+title: Missing data
+bibliography: ../course_refs.bib
+editor_options:
+  chunk_output_type: console
+---

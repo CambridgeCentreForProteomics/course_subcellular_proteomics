@@ -1,0 +1,15 @@
+{
+  "hash": "96366c395fb0c664e8d4df6765b70208",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: Data annotation\nbibliography: ../course_refs.bib\neditor_options:\n  chunk_output_type: console\n---",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

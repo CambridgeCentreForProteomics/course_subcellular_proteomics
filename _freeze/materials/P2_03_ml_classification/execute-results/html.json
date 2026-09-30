@@ -1,0 +1,15 @@
+{
+  "hash": "ed466f181ee483e58cb43cc9ac9d9e7c",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: Protein localisation prediction\nbibliography: ../course_refs.bib\neditor_options:\n  chunk_output_type: console\n---",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

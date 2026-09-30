@@ -1,0 +1,15 @@
+{
+  "hash": "8120bb6ec2dbcdb116c0e51eadb5fa49",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: Data processing\nbibliography: ../course_refs.bib\neditor_options:\n  chunk_output_type: console\n---",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

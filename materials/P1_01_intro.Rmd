@@ -1,0 +1,328 @@
+---
+title: The use-case data
+bibliography: course_refs.bib
+---
+
+::: {.callout-tip}
+#### Learning Objectives
+
+* Understand the aim and design of a typical subcellular proteomics experiment
+* Understand De Duve's principle
+* Understand the aim and design of the use-case DIA subcellular proteomics experiment
+* Understand what DIA-NN does and what data it outputs for downstream analysis
+
+:::
+
+## Introduction to subcellular proteomics
+
+The field of subcellular spatial proteomics is centered on the determination of
+protein localisation within the cell. Importantly, protein localisation is
+intimately linked to protein function and is vital for research into basic
+biological mechanisms impacting the health and disease of all organisms.
+Quantitative mass spectrometry (MS)-based proteomics methods have been developed
+to study protein localisation at the proteome-wide level and generate
+subcellular "maps". Several high throughput MS-based correlation profiling
+methods have been established and include the Localisation of Organelle Proteins
+(LOP) family of methods [@Sadowski2006; @Geladaki2019; @Christoforou2016;
+@Kieran2025], dynamic organellar maps (DOMs) [@Itzhak2016], protein correlation
+profiling (PCP) [@Foster2006], sequential detergent-based solubilisation
+[@MartinezVal2021], COLA [@Mardakheh2017], Prolocate [@Jadot2017] and
+SubcellBarCode [@Orre2019]. 
+
+Generation of protein correlation profiling data requires considerable effort,
+expense and well thought-out experimental designs for successful implementation.
+Equally, data analysis involves considerable time and investment to produce high
+quality, robust datasets which enables meaningful biological interpretation and
+utility to the research community.
+
+
+```{r pcp-picture, out.width = '90%', echo = FALSE, fig.cap = 'Modular experimental design of a mass spectrometry-based correlation profiling experiment. Experiments will differ with respect to: 1) the number of samples (replicates and conditions), 2) the method for gentle cell lysis, 3) the biochemical fractionation approach selected to generate crude separation of organelles, 4) the peptide quantitation method (label-based vs. label-free) and mass spectrometry acquisition method (data-dependent vs. data-independent), and 5) the processing software used to produce a quantitative matrix of PSM, peptides or proteins across biochemical fractions. Despite these differences, all types of correlation profiling-based subcellular proteomics experiments can be analysed using the presented workflow.'}
+knitr::include_graphics("figs/pcp_steps.png", error = FALSE)
+```
+
+In this course material, we provide an updated workflow for the processing and
+analysis of correlation profiling-based spatial proteomics data, based on our
+f1000 workflow [@Hutchings2025]. We cover the key steps required to extract
+spatial information from quantitative correlation profiling MS data. The first
+step requires data importation, processing, and quality control followed by the
+definition of subcellular markers. We discuss how to curate such markers using
+approaches including unsupervised clustering and dimensionality reduction. Next,
+we show how to use subcellular markers to generate spatial proteome maps. This
+involves the classification of protein localisation through classical or
+Bayesian semi-supervised machine learning algorithms using the [`pRoloc`
+package](https://www.bioconductor.org/packages/release/bioc/html/pRoloc.html).
+
+## Software
+
+In this workflow we use R packages from Bioconductor, namely, the
+[`QFeatures` package](https://bioconductor.org/packages/release/bioc/html/QFeatures.html)
+for upstream data processing and the `pRoloc` for downstream 
+machine learning. 
+
+:::{.callout-note}
+## MSnSets versus QFeatures data structures
+In our first [F1000 workflow for spatial proteomics](https://f1000research.com/articles/5-2926) 
+[@Breckels2018] we used the [`MSnbase` package](https://bioconductor.org/packages/release/bioc/html/MSnbase.html) 
+and the `MSnSet` infrastructure for storing and manipulating our spatial
+proteomics data. In this workflow, we have transitioned to working with the 
+`QFeatures` package for data processing. Whilst `MSnbase` provides functionality 
+for manipulating and storing quantitative proteomics data, the `QFeatures` 
+infrastructure makes it possible to store all levels of the data together in one 
+object with explicit links maintained between hierarchical levels. For example,
+it is possible to store the peptide spectrum matches (PSMs), peptides and proteins
+(among other types of data) derived from all replicates of an experiment together,
+in one single data container. 
+:::
+
+## The use-case: Subcellular mapping of U-2 OS cells using DIA-LOP
+
+As a use-case, we will analyse a label-free DIA subcellular proteomics dataset
+from a partially differentiated human osteosarcoma (OS) cell line (U-2 OS cells)
+[@Kieran2025]. U-2 OS cells are one of the earliest described cancer derived cell lines and 
+widely used across many areas of research. For subcellular proteomics they have
+been widely used in benchmarking as they provide a robust, flat, epithelial-like
+morphology and a deeply profiled human proteomic reference map.
+
+Mass spectrometry (MS)-based protein correlation profiling data can be generated
+using a number of methodologies. These methods can differ with respect to (1)
+biochemical fractionation, (2) peptide quantitation (label-based or label-free),
+and (3) mass spectrometry acquisition method (data-dependent acquisition, DDA,
+or data-independent acquisition, DIA).
+
+Our use-case data was generated using the DIA-LOP method from the Lilley lab at
+the Universisty of Cambridge. DIA-LOP (Data-Independent Acquisition
+Localization of Organelle Proteins), it is a next-generation subcellular
+proteomics method that offers a faster, label-free, and cost-effective
+alternative to classic multiplexed LOPIT methods. The pipeline works by gently
+lysing cells and using differential ultracentrifugation to separate intact
+organelles into 10 distinct fractions based on density. Instead of using
+expensive chemical tags e.g. tandem mass tags (TMT), these fractions undergo
+label-free peptide digestion and are analyzed via advanced DIA mass
+spectrometry, which systematically fragments all ions to capture low-abundance
+proteins from very low sample inputs. For each sample, a total of 750 ng of peptide
+was analysed using using a timsTOF HT mass spectrometer (Bruker Daltonics, Bremen, 
+Germany) coupled with a nanoElute 2 UHPLC system (Bruker Daltonics). 
+
+The data was processed using the freely available
+[DIA-NN](https://github.com/vdemichev/DiaNN) software [@Demichev2019] for
+peptide and protein identification and quantification, followed by the
+Bioconductor
+[QFeatures](https://www.bioconductor.org/packages/release/bioc/html/QFeatures.html)
+package to aggregate and process precursor-level data into robust protein
+abundance profiles. Subsequently, the
+[pRoloc](https://www.bioconductor.org/packages/release/bioc/html/pRoloc.html)
+package was used for protein subcellular localisation and the generation of
+organelle maps, matching the abundance profiles of unknown proteins against
+known organelle markers to map over 8,000 protein groups across subcellular
+compartments. The raw MS data is available online through ProteomeXchange via
+the PRIDE repository under the identifier [PXD063082](https://www.ebi.ac.uk/pride/archive/projects/PXD063082).
+
+
+<!-- ## Isobaric peptide labelling using Tandem Mass Tags (TMT) -->
+
+<!-- As outlined above, the use-case experiment made use of tandem mass tag (TMT) -->
+<!-- labelling. TMT reagents are **isobaric** chemical labels that can be covalently -->
+<!-- linked to peptide amine groups, either at the peptide N-terminus or at lysine -->
+<!-- (K) residues. These reagents are currently available in kits (referred to as -->
+<!-- TMTplexes) containing 6 (TMT6plex^TM^), 10 (TMT10plex^TM^), 16 (TMTpro -->
+<!-- 16plex^TM^), 18 (TMTpro 18plex^TM^) or 32 (TMTpro 32plex^TM^) TMT labels. -->
+<!-- Further, kits can be combined to multiplex up to 35 samples. The isobaric nature -->
+<!-- of TMT reagents means that all of the labels within a TMTplex have the same -->
+<!-- overall mass. However, they differ in how this mass is distributed between their -->
+<!-- two variable regions - the **reporter** and **mass normaliser**. The structure -->
+<!-- of a TMT label is shown below in @fig-tmt-structure. -->
+
+
+<!-- ```{r, fig-tmt-structure, echo = FALSE, fig.cap = "The chemical structure of a TMT label.", fig.align = "center", out.width = "50%"} -->
+<!-- knitr::include_graphics("figs/tmt_structure.jpg") -->
+<!-- ``` -->
+
+
+<!-- After labelling each sample with a different TMT reagent, the same peptide will -->
+<!-- have an identical mass but be differentially labelled across samples. The -->
+<!-- samples are then pooled together and run on the MS as a single **multiplexed** -->
+<!-- sample. In the MS1 spectra it is not possible to distinguish how much of each -->
+<!-- peptide (peak) was derived from each sample because all of the labelled peptides -->
+<!-- still have the same overall mass. During fragmentation, however, a cleavable -->
+<!-- linker within the TMT label is broken, thereby releasing a section of the label -->
+<!-- called the **reporter ion**. The mass of this reporter ion is different between -->
+<!-- TMT labels due to differences in the distribution of isotopes (C^13^ and N^15^) -->
+<!-- between the **mass reporter** and **mass normalizer** regions. As a result, the -->
+<!-- spectra of fragment ions will contain one peak per reporter ion and the relative -->
+<!-- intensity of these ions can be used to calculate the relative abundance of the -->
+<!-- identified peptide across the labelled samples. This is summarised below in -->
+<!-- @fig-tmt-quant. -->
+
+
+<!-- ```{r, fig-tmt-quant, echo = FALSE, fig.cap = "Relative peptide quantitation using TMT labels. Image modified from Thermo Fisher Scientific.", fig.align = "center", out.width = "50%"} -->
+<!-- knitr::include_graphics("figs/tmt_quant.png") -->
+<!-- ``` -->
+
+<!-- This means that TMT labelling can be used for the **relative quantification** of  -->
+<!-- peptides (and in turn proteins) across samples. Here we will use the relative -->
+<!-- reporter ion intensity of our TMT labels to compare abundance between samples -->
+<!-- taken throughout the cell cycle. If we wanted to carry out absolute quantification  -->
+<!-- of proteins, TMT labelling would not be an appropriate method. -->
+
+<!-- :::{.callout-note} -->
+<!-- ## MS2- vs. MS3-based TMT quantitaion -->
+
+<!-- Originally the reporter ion of a TMT reagent was released by fragmentation of  -->
+<!-- the precursor peptide. This meant that the reporter ion signals could be  -->
+<!-- calculated based on MS2 spectra, and hence TMT quantitation was done at the MS2 -->
+<!-- level. However, different precursor peptides can have very similar m/z values, -->
+<!-- resulting in their MS1 peaks being very close together. When one of these -->
+<!-- precursors is selected for fragmentation it is possible for other precursors to -->
+<!-- be unintentionally co-isolated within the same fragmentation window. This  -->
+<!-- results in **co-isolation interference** since the reporter ions present at MS2 -->
+<!-- are not only from the identified peptide but also any other co-isolated peptides. -->
+
+<!-- More recently, MS3-based quantitation has been applied to reduce the problem of -->
+<!-- co-isolation interference and increase quantitation accuracy when using TMT labels -->
+<!-- @Ting2011. In this approach the initial round of precursor fragmentation only uses  -->
+<!-- a weak fragmentation method (e.g., collision induced dissociation, CID) to ensure -->
+<!-- that TMT reporter ions are not broken off at MS2. The most abundance fragment ions -->
+<!-- from MS2 are then selected for a second round of fragmentation, this time using -->
+<!-- a stronger force (e.g., high-energy collision dissociation) so that the TMT -->
+<!-- reporter ions are released. Since the MS2 fragment ions derived from the intended -->
+<!-- precursor peptide are more abundant than the unwanted MS2 fragments from  -->
+<!-- co-isolated peptides, the MS3 fragments and reporter ions provide a much cleaner -->
+<!-- quantitation of the identified precursor peptide. The MS3 reporter ion  -->
+<!-- quantitation is almost purely from the peptide that we want, not from a mixture -->
+<!-- of all co-isolated peptides. -->
+
+<!-- The specific MS3 data acquisition approach used to generate our data was  -->
+<!-- synchronous precursor selection (SPS)-MS3. In simple terms, the SPS method  -->
+<!-- allows us to select multiple MS2 fragments for additional fragmentation to the -->
+<!-- MS3 level, rather than just one @McAlister2014. -->
+<!-- ::: -->
+
+:::{.callout-note}
+## Identification search of the raw MS data
+Database searching of MS data involves comparing the observed MS spectra
+to expected MS spectra generated via in silico digestion of a selected protein 
+database. Since the use-case data used human cells, we provided the human proteome
+to Proteome Discoverer as the database for searching. We also provided a 
+database of common contaminants that could be present in our sample due to (i)
+human contamination (e.g., keratin from nails, hair or skin), or (ii) sample
+preparation (e.g., enzymes used for protein digestion). These two databases are
+can be found in the course materials and also at
+[](https://github.com/CambridgeCentreForProteomics/f1000_subcellular_dia_extension). The
+result of such a database search is a list of **peptide spectrum matches (PSMs), or precursors**,  
+that is a list of matches between observed and expected spectra. Most
+software will also aggregate the PSM or precursor level data upward and provide output files
+at all data levels (PSM, peptide and protein). It is up to the user which output
+file to use for further analysis.
+
+The starting point for this workshop and data processing workflow in R is an 
+output file from the identification search. Different softwares output different
+file formats, for example the Proteome Discoverer v3.0 (Thermo Fisher Scientific)
+outputs a `.txt` file format, as does [MaxQuant](https://www.maxquant.org), 
+[FragPipe](https://fragpipe.nesvilab.org), other such as [DIA-NN](https://github.com/vdemichev/DiaNN) output
+parquet formats, will will show in the subsequent section how to import such
+data.
+:::
+
+## Which data level should you start from?
+
+Proteomics search and quantification software can report results at several
+levels: PSMs, precursors (a peptide sequence with its modifications and charge
+state), modified peptides, peptide sequences, and protein groups. In general, we
+recommend starting from the lowest level available. This gives you maximum
+control over data quality filtering, normalisation and aggregation, and makes
+each step of the analysis easier to understand and report transparently.
+
+What "lowest level" means depends on the acquisition method. For TMT data
+acquired by DDA, each MS2 spectrum is matched to a peptide, so analysis can
+start from the PSM level. In DIA, MS2 spectra are chimeric and identification is
+peptide-centric, so there are no PSMs and the lowest level is the precursor.
+Some tools for label-free data also only accept peptide-level input, so starting
+at the lowest level is not always possible.
+
+The data we will use in this workshop is label-free DIA-LOP, so we will start
+from the precursor level (rather than the PSM-level TMT data typical of DDA
+LOPIT).
+
+## Summary
+The use-case data that we will process and analyse in this workshop is a **DIA**
+**label-free** **LOP** subcellular proteomics dataset on human U-2 OS cells. The aim of the experiment is
+to determine **where proteins reside in the cell** (their subcellular
+localisation).
+
+## Glossary
+
+Key terms that you should understand for this workshop.
+
+### Mass spectrometry basics
+
+- **Precursor ion** = the intact, charged peptide ion that is selected for fragmentation. In analysis, a precursor is a unique combination of peptide sequence, modifications and charge state.
+
+- **Fragment ion** = an ion produced by fragmentation of the precursor ion, thus only representing a fraction of the original peptide sequence (e.g. b and y ions).
+
+- **MS1 spectrum** = a survey scan of all intact ions eluting at a given time, separated by mass-to-charge ratio (m/z). Each peptide typically appears as an isotopic envelope of peaks, with intensities that can be used for quantification.
+
+- **MS2 (MS/MS) spectrum** = a mass spectrum of fragment ions produced by fragmenting selected precursor ions, separated by m/z. In DDA, a spectrum usually comes from a single precursor; in DIA, it contains fragments from all precursors in an isolation window (a chimeric spectrum).
+
+- **Isolation window** = the m/z range of precursor ions that is passed to the collision cell and fragmented together. In DIA, windows are typically several to tens of m/z wide and step across the full m/z range.
+
+- **Chimeric spectrum** = an MS2 spectrum containing fragment ions from more than one precursor. DIA spectra are chimeric by design, which is why identification relies on specialised software rather than PSMs.
+
+### Acquisition methods
+
+- **Data-dependent acquisition (DDA)** = an acquisition mode in which the instrument selects the most abundant precursor ions from each MS1 scan and isolates and fragments them individually. Each MS2 spectrum therefore usually originates from a single precursor.
+
+- **Data-independent acquisition (DIA)** = an acquisition mode in which all precursor ions within predefined m/z windows are fragmented together, without selecting individual precursors. This gives more complete and reproducible coverage across samples than DDA.
+
+### Chromatography
+
+- **Liquid chromatography (LC)** = the separation of peptides over time before they enter the mass spectrometer, which reduces the number of peptides being analysed at once.
+
+- **Retention time** = the time at which a peptide elutes from the LC column. Peptides with the same sequence elute at reproducible times, which helps to identify them.
+
+- **Extracted ion chromatogram (XIC)** = a plot of the intensity of a specific ion (precursor or fragment) against retention time. In DIA, precursors are identified partly because their fragment ion XICs peak together (co-elute).
+
+### Identification and data levels
+
+- **Peptide spectrum match (PSM)** = an assignment of an observed MS2 spectrum to a peptide sequence, based on how well it matches the theoretical spectrum of that sequence. PSMs arise from DDA data; DIA has no PSMs.
+
+- **Spectral library** = a collection of reference spectra and retention times for peptides, used to search DIA data. Libraries can be built from DDA experiments or predicted in silico from sequence.
+
+- **Peptide-centric search** = an identification strategy that asks whether the expected fragments of a given peptide are present in the data, as used in DIA. It contrasts with the spectrum-centric approach of DDA, where each spectrum is matched to a peptide.
+
+- **Modified peptide** = a peptide sequence together with its post-translational or chemical modifications (e.g. oxidised methionine), regardless of charge state. One modified peptide can give rise to several precursors.
+
+- **Protein group** = a set of proteins that cannot be distinguished from one another based on the identified peptides, which are reported together as a single entry.
+
+- **False discovery rate (FDR)** = the expected proportion of incorrect identifications among those accepted. It is usually estimated with decoy sequences and controlled at a threshold such as 1%.
+
+### Quantification and data processing
+
+- **Label-free quantification (LFQ)** = quantification based on the measured signal of each peptide in each sample, without chemical labels. Each sample is acquired in a separate MS run.
+
+- **Tandem mass tag (TMT)** = an isobaric peptide label used for relative quantification of peptides across samples. Labelled peptides from different samples have the same mass at MS1, and quantification is based on reporter ions released on fragmentation at the MS2 or MS3 level.
+
+- **Isobaric labels** = tags with the same total mass that are indistinguishable at MS1 but release different reporter ions on fragmentation, which allows quantification across samples in the same run.
+
+- **Reporter ion** = a low-mass fragment released from an isobaric tag whose intensity reports the relative abundance of a peptide in a given sample.
+
+- **Missing value** = a peptide or protein that is not quantified in a sample. Missing values are common in proteomics, especially for low-abundance peptides, and are less frequent in DIA than in DDA.
+
+- **Normalisation** = adjusting intensities to remove technical differences between samples or runs (e.g. loading amount), so that samples can be compared.
+
+- **Aggregation (summarisation)** = combining lower-level measurements (e.g. precursors) into a higher level (e.g. proteins) using a method such as the median or a model-based approach.
+
+### Spatial proteomics
+
+- **Subcellular fractionation** = the partial separation of a lysate into fractions enriched in different organelles, usually by centrifugation.
+
+- **Localisation of organelle proteins by isotope tagging (LOPIT)** = a spatial proteomics method that measures protein abundance across subcellular fractions, traditionally using TMT labels and DDA.
+
+- **DIA-LOP** = the label-free DIA version of the same approach, in which fractions are acquired by DIA rather than labelled with TMT.
+
+- **Abundance profile** = the pattern of a protein's abundance across fractions. Proteins in the same compartment tend to have similar profiles.
+
+- **Marker protein** = a protein with a well-established subcellular location, used to define the expected profile of each compartment for classification.
+
+- **Relocalisation** = a change in a protein's subcellular location between conditions (e.g. treated vs untreated), detected as a change in its abundance profile.
+
+## References {-}

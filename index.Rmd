@@ -1,0 +1,121 @@
+---
+author: "Lisa Breckels"
+date: today
+number-sections: false
+---
+
+# Analysis of subcellular spatial proteomics data in R {.unnumbered}
+
+## Overview
+
+These materials focus on subcellular spatial proteomics, 
+
+::: {.callout-tip}
+### Learning Objectives
+
+You will learn about:
+
+- How mass spectrometry can be used to ...
+- The bioinformatics steps involved in processing and analysing subcellular proteomics data.
+- How to assess the quality of your data, deal with missing values, and summarise feature-level data to protein-level.
+- How to perform ...
+:::
+
+### Target Audience
+
+Proteomics practitioners or data analysts/bioinformaticians that would like to learn how to use R to analyse proteomics data.
+
+### Prerequisites
+
+- Basic understanding of mass spectometry.
+  - Watch [this video](https://www.youtube.com/watch?v=wx4F6kGy1Fs) for an excellent overview.
+- A working knowledge of R and the tidyverse.
+- Familiarity with other Bioconductor data classes, such as those used for RNA-seq analysis, is useful but not required.
+
+<!-- Training Developer note: comment the following section out if you did not assign levels to your exercises -->
+### Exercises
+
+Exercises in these materials are labelled according to their level of difficulty:
+
+  | Level                                                                 | Description                                                                                                           |
+  | --------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------- |
+  | {{< fa solid star >}} {{< fa regular star >}} {{< fa regular star >}} | Exercises in level 1 are simpler and designed to get you familiar with the concepts and syntax covered in the course. |
+  |   {{< fa solid star >}} {{< fa solid star >}} {{< fa regular star >}} | Exercises in level 2 combine different concepts together and apply it to a given task.                                |
+  |     {{< fa solid star >}} {{< fa solid star >}} {{< fa solid star >}} | Exercises in level 3 require going beyond the concepts and syntax introduced to solve new problems.                   |
+
+## Instructors
+
+Current workshops are run by:
+
+- **Lisa Breckels** - Cambridge Centre for Proteomics, University of Cambridge, UK
+- **Charlotte Hutchings** - BioHub, Chicago, USA
+
+
+## Authors
+<!-- 
+The listing below shows an example of how you can give more details about yourself.
+These examples include icons with links to GitHub and Orcid. 
+-->
+
+About the authors:
+
+- **Lisa Breckels** <a href="https://orcid.org/0000-0001-8918-7171" target="_blank"><i class="fa-brands fa-orcid" style="color:#a6ce39"></i></a> <a href="https://github.com/lmsimp" target="_blank"><i class="fa-brands fa-github" style="color:#4078c0"></i></a>\
+  *Affiliation*: Cambridge Centre for Proteomics, Department of Biochemistry, University of Cambridge\
+  *Roles*: writing - original draft; conceptualisation; coding
+- **Charlotte Hutchings** <a href="https://orcid.org/0000-0002-2727-7806" target="_blank"><i class="fa-brands fa-orcid" style="color:#a6ce39"></i></a> <a href="https://github.com/Charl-Hutchings" target="_blank"><i class="fa-brands fa-github" style="color:#4078c0"></i></a>\
+  *Affiliation*: Cambridge Centre for Proteomics, Department of Biochemistry, University of Cambridge\
+  *Roles*: writing - original draft; conceptualisation; coding
+
+## Citation
+
+<!-- We can do this at the end -->
+
+Please cite these materials if:
+
+- You adapted or used any of them in your own teaching.
+- These materials were useful for your research work.
+
+For example, you can cite us in the methods section of your paper: "We carried out our analyses based on the recommendations in Hutchings and Breckels (2025)".
+
+You can cite these materials as:
+
+> Breckels LM, Hutchings C, (2026) "CambridgeCentreForProteomics/course_subcellular_proteomics: Analysis of subcellular spatial proteomics data in R", https://cambridgecentreforproteomics.github.io/course_subcellular_proteomics
+
+Or in BibTeX format:
+
+```
+@Misc{,
+  author = {Lisa M Breckels and Charlotte Hutchings},
+  title = {CambridgeCentreForProteomics/course_subcellular_proteomics: Analysis of subcellular spatial proteomics data in R},
+  month = {November},
+  year = {2026},
+  url = {https://cambridgecentreforproteomics.github.io/course_subcellular_proteomics}
+}
+```
+
+### Other key references
+
+Data analysis workflow
+
+> Hutchings C, Krueger T, Crook OM, Gatto L, Lilley KS, and Breckels LM
+> An updated Bioconductor workflow for correlation profiling subcellular proteomics [version 2; peer review: 3 approved].
+> F1000Research 2025, 14, 714 [http://dx.doi.org/10.12688/f1000research.165543.1](http://dx.doi.org/10.12688/f1000research.165543.1)
+
+The `QFeatures` R/Bioconductor package.
+
+> Gatto L, Vanderaa C: QFeatures: Quantitative features for mass spectrometry data.
+> R package version 1.12.0.
+> 2023.
+> Reference Source
+
+
+Case-study data
+
+> McCaskie K, Hutchings C, Feret R, et al. Localization of Organelle Proteins Using Data-Independent Acquisition (DIA-LOP). Mol Cell Proteomics. 2025;24(9):101047. [doi:10.1016/j.mcpro.2025.101047](https://pubmed.ncbi.nlm.nih.gov/40783120/)
+
+## Acknowledgements
+
+<!-- if there are no acknowledgements we can delete this section -->
+
+- Prof. Kathryn Lilley, group head and director of [Cambridge Centre for Proteomics](https://proteomics.bio.cam.ac.uk) at the Department of Biochemistry, University of Cambridge.
+- The [`QFeatures`](https://bioconductor.org/packages/release/bioc/html/QFeatures.html) and [`pRoloc`](https://bioconductor.org/packages/release/bioc/html/pRoloc.html) R/Bioconductor packages are fundamental to this workflow, please cite them alongside the course if you use this material. Thank you to Laurent Gatto for providing exemplary software for proteomics.
