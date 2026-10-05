@@ -175,7 +175,7 @@ diann_df <- read_parquet("data/report.parquet")
 
 We will be using the Quantitative features for mass spectrometry, or
 `QFeatures`, Bioconductor package to import, store, and manipulate our data.
-Before we import the data into R using `QFeatures` it is first necessary to
+Before we convert the data into a `QFeatures` object it is first necessary to
 understand the structure of a `QFeatures` object and `SummarizedExperiment`
 object.
 
@@ -360,13 +360,11 @@ it into a multi-set `QFeatures` object. We pass the `runCol` as file names from
 the experiment, for our use case this is the new column called `Fraction` that
 we created in the `data.frame`.
 
-We also need to tell `QFeatures` where the quantitation data is located. You
-will notice with DIA-NN output there are multiple qunatitative columns
-(`PG.Quantity`, `PG.Normalised`, `PG.MaxLFQ`, `Genes.Quantity`,
-`Genes.Normalised`, `Genes.MaxLFQ`, `Genes.MaxLFQ.Unique`, `Precursor.Quantity`,
-`Precursor.Normalised`, `Precursor.Translated`, `Fragment.Quant.Raw`,
-`Fragment.Quant.Corrected`, and these will vary between DIA-NN versions), but
-these represent different types of quantitation rather than quantitation across
+We also need to tell `QFeatures` where the quantitation data is located. As
+previously mentioned you will notice with DIA-NN output there are multiple
+qunatitative columns e.g. `PG.Quantity`, `PG.Normalised`,
+`Precursor.Quantity`,etc, and these will vary between DIA-NN versions, but these
+represent different types of quantitation rather than quantitation across
 different samples, as discussed below.
 
 **Using `Precursor.Quantity` for quantitation**
@@ -378,7 +376,7 @@ majority of the proteome does not change between any two samples [@Cox2014].
 Since biochemical fractions derived from a protein correlation profiling
 experiment are expected to be relatively different from each other in terms of
 their composition, our data does not meet the assumptions required. Hence, we
-use the `Precursor.Quantity` column which contains pre-normalised quantitation
+use the `Precursor.Quantity` column which contains the raw quantitation
 data.
 
 #### Adding sample metadata
@@ -389,7 +387,7 @@ sample_metadata <- read.csv("data/sample_info_dia.csv", row.names = 1)
 
 #### Creating the data object
 
-```{r}
+```{r, message=FALSE}
 qf_raw <- readQFeaturesFromDIANN(assayData = df, 
                                  quantCols = "Precursor.Quantity", 
                                  runCol = "runCol", 
