@@ -4,3 +4,13 @@ bibliography: ../course_refs.bib
 editor_options:
   chunk_output_type: console
 ---
+
+::: {.callout-tip}
+#### Learning Objectives
+
+- Know how to use `filterFeatures` to filter DIA-NN precursor data by Q-value thresholds
+- Know how to use `joinAssays` to combine per-sample `SummarizedExperiment` objects into a single combined set
+- Know how to identify and remove contaminant proteins
+- Be able to explore and visualise missing values in DIA proteomics data
+- Understand how to filter sparse precursors based on a missing value threshold
+:::

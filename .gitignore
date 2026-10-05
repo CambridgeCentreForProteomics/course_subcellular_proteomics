@@ -23,3 +23,7 @@ _site
 /.luarc.json
 
 **/*.quarto_ipynb
+
+# Data
+materials/data/report.parquet
+course_files/preprocessed/lesson02.rda

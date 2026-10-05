@@ -615,6 +615,13 @@ rdata %>%
 ```
 
 ::: {.callout-tip}
+
+
+
+```{r, include= FALSE}
+save(qf_raw, file = here("course_files/preprocessed/lesson02.rda"))
+```
+
 #### Key Points
 
 - DIA-NN outputs a `.parquet` format report file containing precursor- and 
