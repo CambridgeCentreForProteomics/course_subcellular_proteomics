@@ -165,13 +165,6 @@ rather than quantitation across different samples, as discussed below. Before
 we proceed to importing our data into `QFeatures` we do some initial data
 wrangling for ease of plotting and interpretation downstream.
 
-We read this file into R using the `read_parquet` function from the `arrow` package.
-
-
-```{r}
-#| label: read-diann-data
-diann_df <- read_parquet("data/report.parquet")
-```
 
 We will be using the Quantitative features for mass spectrometry, or
 `QFeatures`, Bioconductor package to import, store, and manipulate our data.
@@ -286,12 +279,20 @@ section to use in our analysis. It is important that this column is named
 name when importing the DIA-NN results.
 
 ::: {.callout-note}
-#### The pipe operator
-In this course we will frequently use the pipe operator (`%>%`) from the
-`dplyr` package and `tidyverse`. The pipe passes the output of one function
-directly as the input to the next, allowing you to chain together multiple
-operations in a linear, readable way — rather than nesting function calls
-or creating many intermediate variables. For more information see Hadley
+#### The pipe operator 
+In this course we will frequently use the pipe operator (`|>`). The pipe passes
+the output of one function directly as the input to the next, allowing you to
+chain together multiple operations in a linear, readable way — rather than
+nesting function calls or creating many intermediate variables.
+
+##### Why we use R pipe (`|>`) rather than the `magrittr` pipe (`%>%`)?
+Since version 4.1, R has had its own built-in pipe, `|>`, so we don't need to
+load an extra package to chain steps together. Because it's part of the
+language, it runs slightly faster and gives clearer error messages when
+something goes wrong. It's also what the tidyverse style guide and R for Data
+Science now recommend. You'll still see the older magrittr pipe, `%>%`, in
+plenty of existing code and online examples. In everyday use the two behave
+almost identically, so you can read either one. For more information see Hadley
 Wickham's Tidyverse at [https://www.tidyverse.org](https://www.tidyverse.org).
 :::
 
@@ -379,22 +380,17 @@ their composition, our data does not meet the assumptions required. Hence, we
 use the `Precursor.Quantity` column which contains the raw quantitation
 data.
 
-#### Adding sample metadata
-
-```{r}
-sample_metadata <- read.csv("data/sample_info_dia.csv", row.names = 1)
-```
 
 #### Creating the data object
 
 ```{r, message=FALSE}
-qf_raw <- readQFeaturesFromDIANN(assayData = df, 
-                                 quantCols = "Precursor.Quantity", 
-                                 runCol = "runCol", 
-                                 fnames = "Precursor.Id",
-                                 colData = sample_metadata)
+qf <- readQFeaturesFromDIANN(assayData = df, 
+                             quantCols = "Precursor.Quantity", 
+                             runCol = "runCol", 
+                             fnames = "Precursor.Id",
+                             colData = sample_metadata)
 # check
-qf_raw
+qf
 ```
 
 You will notice that each fraction appears as a separate dataset within the
@@ -406,13 +402,13 @@ fractions together and as such the upstream processing is slightly different.
 ## Exploring the data
 
 When we inspect our `QFeatures` object, we see that it contains 
-`r length(qf_raw)` sets, each corresponding to a different sample run. Each set
+`r length(qf)` sets, each corresponding to a different sample run. Each set
 contains the precursor-level quantification data for that fraction, with feature
 names given by the `Precursor.Id` column from the original DIA-NN output.
 
 ```{r}
 #| label: extract-protein-names
-qf_raw
+qf
 ```
 
 By default if a `QFeatures` object has more than 6 samples, only the first three
@@ -421,13 +417,13 @@ and their respective data summary, we can use the `experiments` function.
 
 ```{r}
 #| label: count-unique-proteins
-experiments(qf_raw)
+experiments(qf)
 ```
 
 
 We can quickly see how many precursors were measured per sample for example, we
-see for the first sample called `r names(qf_raw)[1]` there are 
-`r nrow(qf_raw[[1]])` precursors.
+see for the first sample called `r names(qf)[1]` there are 
+`r nrow(qf[[1]])` precursors.
 
 We can access individual samples (sets, or `SummarizedExperiment`s) using
 standard double bracket nomenclature (this is how you would normally access
@@ -436,14 +432,14 @@ dataset name.
 
 ```{r}
 #| label: examine-peptide-counts
-qf_raw[[1]]
+qf[[1]]
 ```
 
 Is the same as,
 
 ```{r}
 #| label: create-class-summary
-qf_raw[["R1F01"]]
+qf[["R1F01"]]
 ```
 
 The quantitation data for each sample is store in the `assay` container and can
@@ -451,7 +447,7 @@ be extracted using the `assay` function.
 
 ```{r}
 #| label: show-dimensions
-assay(qf_raw[[1]]) %>%
+assay(qf[[1]]) %>%
   head()
 ```
 
@@ -511,7 +507,7 @@ counts.</details>
 #| fig-height: 4
 #| fig-width: 4
 
-n <- nrows(qf_raw)
+n <- nrows(qf)
 hist(n, xlab = "Precursors", main = "Precursor counts per sample")
 ```
 
@@ -520,10 +516,10 @@ hist(n, xlab = "Precursors", main = "Precursor counts per sample")
 ```{r}
 #| label: create-subset
 data.frame(
-  n_precursors = nrows(qf_raw),
-  sample = names(nrows(qf_raw))
+  n_precursors = nrows(qf),
+  sample = names(nrows(qf))
 ) %>%
-  merge(data.frame(colData(qf_raw)), by.x = "sample", by.y = "runCol") %>%
+  merge(data.frame(colData(qf)), by.x = "sample", by.y = "runCol") %>%
   ggplot(aes(x = sample, y = n_precursors, fill = Replicate)) +
   geom_bar(stat = "identity") +
   labs(x = "Sample", y = "Number of precursors") +
@@ -540,7 +536,7 @@ using the `rowData` function.
 
 ```{r}
 #| label: compare-sample-counts
-rowData(qf_raw[[1]]) %>%
+rowData(qf[[1]]) %>%
   head(2)
 ```
 
@@ -549,7 +545,7 @@ To do this we can use the `rbindRowData` function.
 
 ```{r}
 #| label: subset-multiple-features
-rdata <- rbindRowData(qf_raw, i = names(qf_raw))
+rdata <- rbindRowData(qf, i = names(qf))
 ```
 
 The `rbindRowData` functions returns a `DFrame` table that contains the row
@@ -562,7 +558,7 @@ on the samples. This is the `colData` slot.
 
 ```{r}
 #| label: compare-subset-counts
-colData(qf_raw)
+colData(qf)
 ```
 
 In the below code chunk we create a `data.frame` called `cdata` containing the
@@ -577,7 +573,7 @@ for each sample. This will help with our data exploration.
 
 # 1. Create a data.frame of the sample information
 
-cdata <- data.frame(colData(qf_raw))
+cdata <- data.frame(colData(qf))
 
 # 2. Merge this with the row data
 # Note: Our data is in separate sets, so the sample names are in the 'assay'
@@ -619,7 +615,7 @@ rdata %>%
 
 
 ```{r, include= FALSE}
-save(qf_raw, file = here("course_files/preprocessed/lesson02.rda"))
+save(qf, file = here("course_files/preprocessed/lesson02.rda"))
 ```
 
 #### Key Points

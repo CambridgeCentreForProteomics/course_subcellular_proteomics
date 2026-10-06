@@ -14,3 +14,400 @@ editor_options:
 - Be able to explore and visualise missing values in DIA proteomics data
 - Understand how to filter sparse precursors based on a missing value threshold
 :::
+
+```{r}
+#| label: load-dia-data
+#| include: false
+
+library("here")
+library("QFeatures")
+library("tidyr")
+library("dplyr")
+library("ggplot2")
+library("patchwork")
+library("Biostrings")
+library("stringr")
+
+load(here("course_files/preprocessed/lesson02.rda"))
+```
+
+## Filtering (Part I): Sample specific quality control (FDR control)
+
+Now that we have our precursor-level data stored in a `QFeatures` object, the
+next step is to carry out data cleaning --- filtering to retain only
+high-confidence identifications and removing precursors with excessive missing
+values across samples.
+
+DIA-NN assigns a Q-value to each precursor and protein group identification,
+representing the local false discovery rate (FDR) at that score threshold ---
+i.e., the expected proportion of identifications at that level that are
+incorrect. Filtering by Q-value ensures we retain only high-confidence
+identifications before proceeding to downstream analysis.
+
+DIA-NN outputs several Q-value columns:
+
+- **Q.Value** --- run-level precursor Q-value (FDR within a single run)
+- **PG.Q.Value** --- run-level protein group Q-value
+- **Lib.Q.Value** --- library-level precursor Q-value (based on the spectral library used in matching)
+- **Lib.PG.Q.Value** --- library-level protein group Q-value
+
+The output from DIA-NN contains information about q-values at different data
+levels. As discussed in the main workflow, FDR should be controlled at the
+highest data level to minimise the impact of FDR inflation during data
+aggregation. Here, the highest data level corresponds to protein groups.
+Therefore, we set a 1% FDR on `Lib.PG.Q.Value` and `PG.Q.Value`, as well as the
+global experiment-wide `Q.Value`.
+
+Since our data was processed with match-between-runs (MBR) enabled, we
+additionally filter on the library-level Q-values (`Lib.Q.Value` and
+`Lib.PG.Q.Value`). When MBR is used, DIA-NN rescores identifications across runs
+using an empirical library built in a first pass; the library-level Q-values
+reflect the confidence of those cross-run matches and are therefore the most
+stringent and appropriate filter for MBR data. We apply a standard 1% FDR
+threshold (Q-value ≤ 0.01) to all four columns.
+
+To remove features based on variables within our `rowData` we make use of the
+**`filterFeatures`** function. This function takes a `QFeatures` object as its
+input and filters it against a condition based on the `rowData` (indicated by
+the `~` operator). If the condition evaluates to `TRUE` for a feature, that
+feature will be kept; features returning `FALSE` are removed.
+
+The `filterFeatures` function provides the option to apply a filter either (i)
+to the whole `QFeatures` object and all of its `SummarizedExperiment`s, or (ii)
+to specific `SummarizedExperiment`s within the `QFeatures` object, by passing
+the name or index of the desired set to the `i` argument.
+
+Since we want to apply the Q-value filter across all per-sample
+`SummarizedExperiment`s simultaneously, we do not pass an `i` argument --- this
+causes `filterFeatures` to apply the filter to every set in the `QFeatures`
+object.
+
+```{r}
+# qc
+qf <- qf %>%
+  filterFeatures(~ Q.Value < 0.01) |>        # Run-level precursor Q-value
+  filterFeatures(~ PG.Q.Value < 0.01)  |>    #  Run-level protein group Q-value
+  filterFeatures(~ Lib.Q.Value <= 0.01)  |>  # Library-level precursor Q-value
+  filterFeatures(~ Lib.PG.Q.Value < 0.01)    # Library level protein group (PG) Q-value
+
+
+# check
+qf
+```
+
+We can see how many precursors remain per sample after filtering by inspecting
+the number of rows in each per-sample set.
+
+## Joining per-sample sets into a single precursor set
+
+After filtering, our `QFeatures` object contains one `SummarizedExperiment` per
+sample run. To work with the data combined across all samples, we use the
+`joinAssays` function. This merges all per-sample sets into a single combined
+set called `"precursors"`, aligning features (precursors) by their
+`Precursor.Id`. Where a precursor was not detected in a particular sample, the
+corresponding entry will be `NA`.
+
+
+```{r}
+# Total number of samples
+N <- 30
+
+# Number of replicates
+R <- 1:3
+
+# make combined precursor SE
+qf <- joinAssays(x = qf, 
+                 i = seq(N),
+                 name = "precursors",
+                 fcol = "Precursor.Id")
+
+qf
+```
+
+Note that `joinAssays` only retains `rowData` columns that are shared across all
+sets and have consistent values --- run-specific metrics such as `Q.Value`,
+`PEP`, and `Run` are therefore dropped from the combined set. This is expected:
+these per-run quality metrics were used for filtering in the previous step and
+are no longer needed. 
+
+We see a new SE dataset within the QF has been created called "precursors".
+Let's check it contains the joined data.
+
+```{r}
+# check quant values
+qf[["precursors"]] %>%
+  assay() %>%
+  as.data.frame() %>%
+  head()
+```
+
+```{r, fig.width=5, fig.height=7}
+plot(qf)
+```
+
+#### Remove redundant samples
+
+When we have many fractions the QF object can get quite large over 10GB, quite
+quickly. Therefore, now we have obtained a single precursor level dataset we
+create a new QF object with only this dataset. This isn't strictly necessary for
+this dataset, but it may be if you have a very large experiment. It also helps
+to keep the object tidy and focused on the combined set for downstream analysis.
+
+In the code chunk below we create a new QF object with only the final joined
+precursor level data.
+
+```{r, warning=FALSE}
+## Identify which sets to remove
+sets_to_rm <- which(names(qf) != "precursors")
+
+## Now create a new object and remove them
+qf <- removeAssay(qf, i = sets_to_rm)
+
+## Verify
+qf
+```
+
+## Filtering (Part II) - Whole dataset quality control
+
+### Removing contaminant proteins
+
+In any proteomics experiment, some identified peptides will derive from
+contaminant proteins rather than the sample of biological interest. Common
+contaminants include proteins introduced during sample preparation --- for
+example, human keratins from skin or hair, bovine serum albumin from cell
+culture media, and trypsin used for proteolytic digestion. These proteins are
+not informative for the biological question and should be removed before
+downstream analysis.
+
+It is standard practice to include a curated contaminants database alongside the
+primary sequence database during the database search. For this data, we used a
+modified version of the contaminants fasta from [Hao Group's Protein Contaminant Libraries for DDA and DIA Proteomics](https://github.com/HaoGroup-ProtContLib/Protein-Contaminant-Libraries-for-DDA-and-DIA-Proteomics/)
+@Frankenfield2022, where we removed the contaminants from Fetal Bovine Serum,
+which are not relevant here. The entries in this contaminant database are named
+with a `Cont_` prefix, which is carried through into the `Protein.Ids` column of
+the DIA-NN output, making them straightforward to identify computationally.
+
+In this section we remove:
+
+1. Precursor peptides corresponding to contaminant proteins
+2. Precursor peptides which lack a master protein accession
+3. Precursor peptides which are not unique to a single protein within a single
+protein group
+
+We can inspect the `rowData` to check the contaminants can be identified as
+expected.
+
+```{r}
+# Extract the rowData
+rd <- rowData(qf[['precursors']]) %>%
+  data.frame()
+
+# Check for proteins with the prefix "Cont_"
+table(grepl('Cont_', rd$Protein.Ids))
+```
+
+We see we indeed have contaminants in the dataset. We will now proceed to 
+filtering them out.
+
+As with all data analyses, it is sensible to keep a copy of the data before
+applying filters, in case we need to refer back to the unfiltered data later.
+We therefore extract a copy of the dataset using `addAssay`, giving it a new name
+that reflects the processing step we are about to apply. We will only apply
+filters to this new copy, leaving the original set untouched.
+
+::: {.callout-note}
+#### Assay links
+`QFeatures` maintains hierarchical links between quantitative levels, allowing
+easy access to all data levels for individual features of interest. This is
+fundamental to the `QFeatures` infrastructure and will be exemplified
+throughout this course. When using `addAssay` to add a copy of an existing
+set, the newly created `SummarizedExperiment` does not automatically have a
+link to the set it was copied from. Where a link is required, it can be added
+explicitly using `addAssayLink`.
+:::
+
+```{r}
+# Add a copy of the existing data 
+qf <- addAssay(qf, 
+               qf[["precursors"]], 
+               name = "precursors_filtered")
+plot(qf)
+
+# Add a link between the original raw and filtered
+qf <- addAssayLink(qf, 
+                   from = "precursors", 
+                   to = "precursors_filtered")
+plot(qf)
+```
+
+We now use `filterFeatures` to retain only precursors whose `Protein.Ids` field
+contains no `Cont_` entry. We specifying the `i` argument to apply the filter
+only to the `"precursors_filtered"` set. This retains the original `"precursors"`
+assay with all precursors for reference, while the new set contains only those
+precursors that pass the missing value threshold.
+
+```{r}
+qf <- filterFeatures(
+  qf,
+  filter = ~ !grepl("Cont_", Protein.Ids),
+  i = "precursors_filtered"
+)
+
+qf
+```
+
+::: {.callout-note}
+#### Why filter on `Protein.Ids` and not `Protein.Group`?
+
+- `Protein.Ids` lists every protein in the FASTA that a precursor's peptide
+  could have come from.
+- `Protein.Group` is the group DIA-NN assigns after protein inference. A
+  peptide shared between a contaminant and a real protein can be assigned to
+  the real protein's group, so the contaminant accession never appears in
+  `Protein.Group`.
+- Filtering on `Protein.Ids` catches these shared peptides, which stops
+  contaminant signal leaking into your quantification. It is the more
+  conservative choice. The trade-off is losing a few peptides that genuinely
+  belong to non-contaminant proteins, which is usually acceptable.
+:::
+
+#### Filtering out contaminants manually
+
+If you didn't include a contaminant database in your search, you can still
+remove contaminants afterwards. The example below shows how. We read in a
+contaminant FASTA file, then identify and remove any proteins in the data whose
+accessions match an entry in that file.
+
+First let's load our contaminants FASTA file
+
+```{r}
+# load contaminant FASTA
+cont_fasta <- "data/220813_Universal_Protein_Contaminants_HaoGroup.fasta"
+conts <- fasta.index(cont_fasta, seqtype = "AA")
+
+# extract contaminant accessions
+cont_acc <- str_extract(conts$desc, "(?<=_).*?(?=\\|)")
+```
+
+
+In the next code chunk we define a function for contaminant filtering where we
+identify any rows (precursor peptides) with a contaminant protein in the
+`Protein.Ids` column and add a column to the data to indicate if a precursor
+is flagged as a contaminant.
+
+```{r}
+# define function to find contaminants
+find_contaminants <- function(se, contaminants) {
+  acc_match <- str_detect(
+    rowData(se)$Protein.Ids,
+    regex(paste0(contaminants, collapse = "|"))
+  )
+  default_cont <- str_detect(
+    rowData(se)$Protein.Ids,
+    regex("Cont|cRAP", ignore_case = TRUE)
+  )
+  acc_match | default_cont
+}
+```
+
+Now we run this function on our dataset to idenify any contaminant matches
+
+```{r}
+# create a new object called `cont_tf`
+cont_tf <- 
+  find_contaminants(se = qf[["precursors_filtered"]], 
+                    contaminants = cont_acc)
+
+table(cont_tf)
+```
+
+We add a new column to the `rowData` called `is_contaminant` which we can now
+filter on.
+
+```{r}
+rowData(qf[["precursors_filtered"]])$is_contaminant <- cont_tf
+```
+
+Let's check our `is_contaminant` column has been successfully created.
+
+```{r}
+# Check it has been created
+qf[["precursors_filtered"]] %>% 
+  rowData() %>% 
+  as_tibble() %>% 
+  pull(is_contaminant) %>% 
+  table()
+```
+
+Let's now use `filterFeatures` to remove contaminants.
+
+```{r}
+qf <- filterFeatures(qf, 
+                     filter = ~ !is_contaminant, 
+                     i = "precursors_filtered")
+
+qf
+```
+
+### Removal of peptides with no protein assignment
+
+Since the analysis will be carried out at the protein-level, we will need to
+aggregate precursor peptides into their corresponding proteins. Precursor
+entries which lack protein assignment cannot be used and must be removed.
+
+Let's see if we have any such precursors in the dataset.
+
+```{r}
+qf[["precursors_filtered"]] %>%
+  rowData() %>% 
+  as_tibble() %>% 
+  pull(Protein.Ids) %>%
+  anyNA()
+```
+
+This data does not contain any precursor peptides without a protein assignment,
+so we don't have to remove any here.
+
+### Removal of shared peptides
+
+As well as removing precursors without a protein assignment, we also wish to
+remove precursor peptides which are assigned to multiple proteins. Although most
+precursor peptides have a single accession in the `Protein.Ids` column, there
+are some precursors for which this column contains multiple accessions separated
+by a `;`. Since the output does not contain a column to specifically tell us how
+many proteins a peptide is mapped to, we take advantage of the `;` and remove
+all rows (precursors) with a `;` in the `Protein.Ids` column.
+
+```{r}
+qf <- qf %>%
+  filterFeatures(
+    ~ !str_detect(Protein.Ids, ";"),
+    i = "precursors_filtered"
+  )
+
+qf
+```
+
+
+
+```{r}
+#| label: create-final-filtered-dataset
+#| include: false
+
+save(qf, file = here("course_files/preprocessed/lesson03.rda"))
+```
+
+::: {.callout-tip}
+#### Key Points
+
+- DIA-NN Q-value columns (`Q.Value`, `PG.Q.Value`, `Lib.Q.Value`, `Lib.PG.Q.Value`) represent the local FDR for each identification; filtering at ≤ 0.01 retains only identifications at 1% FDR
+- When match-between-runs is enabled, library-level Q-values (`Lib.Q.Value`, `Lib.PG.Q.Value`) are the most appropriate filter as they reflect the confidence of cross-run matches
+- `filterFeatures` applies row-level filters based on `rowData` variables, and can be applied to the whole `QFeatures` object or to specific sets
+- Contaminant proteins (e.g., keratins, trypsin, BSA) should be removed before downstream analysis; including a curated contaminant database in the search and filtering on a `Cont_` prefix in `Protein.Ids` is a straightforward way to do this
+- `joinAssays` combines per-sample `SummarizedExperiment` objects into a single combined set, with missing values (`NA`) where a precursor was not detected in a given sample
+:::
+
+## References {-}
+
+
+
