@@ -145,7 +145,7 @@ qf[["precursors"]] %>%
 plot(qf)
 ```
 
-#### Remove redundant samples
+#### Removing redundant samples
 
 When we have many fractions the QF object can get quite large over 10GB, quite
 quickly. Therefore, now we have obtained a single precursor level dataset we
@@ -165,6 +165,15 @@ qf <- removeAssay(qf, i = sets_to_rm)
 
 ## Verify
 qf
+```
+
+
+#### Propogating the column metadata
+
+Propagate the `colData` 
+
+```{r}
+colData(qf[["precursors"]]) <- colData(qf)
 ```
 
 ## Filtering (Part II) - Whole dataset quality control

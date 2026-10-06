@@ -8,11 +8,19 @@ editor_options:
 ::: {.callout-tip}
 #### Learning Objectives
 
-<!-- - Know how to use `filterFeatures` to filter DIA-NN precursor data by Q-value thresholds -->
-<!-- - Know how to use `joinAssays` to combine per-sample `SummarizedExperiment` objects into a single combined set -->
-<!-- - Know how to identify and remove contaminant proteins -->
-- Be able to explore and visualise missing values in DIA proteomics data
-- Understand how to filter sparse precursors based on a missing value threshold
+- Be able to check how missing values are encoded in subcellular proteomics 
+output, and convert zeros to `NA` with `zeroIsNA()`
+- Be able to explore and visualise missing values at the sample (fraction)
+  and precursor level using `nNA()`
+- Know how to identify and remove fractions with excessive missing data
+- Understand how to apply intensity-based filtering to remove low-signal
+  precursors with `filterFeatures()`
+- Know how to split a `QFeatures` object by replicate and filter sparse
+  precursors with `filterNA()`
+- Understand the difference between values missing at random (MAR) and
+  missing not at random (MNAR), and why this matters for subcellular
+  proteomics data
+- Be able to apply a mixed imputation strategy with `impute()`
 :::
 
 ```{r}
@@ -25,6 +33,7 @@ library("tidyr")
 library("dplyr")
 library("ggplot2")
 library("patchwork")
+library("stringr")
 
 load(here("course_files/preprocessed/lesson03.rda"), verbose = TRUE)
 ```
@@ -54,37 +63,560 @@ in any dataset before deciding how to handle them. We start by examining the
 DIA-NN output to determine how missing values are represented, checking for both
 zeros and NA entries.
 
-<!-- ```{r} -->
-<!-- ## Does the data contain any zeros? -->
-<!-- qf[["precursors_filtered"]] %>% -->
-<!--   assay() %>% -->
-<!--   longForm() %>% -->
-<!--   filter(value == 0) %>% -->
-<!--   nrow() -->
-<!-- ``` -->
+```{r}
+## Does the data contain any zeros?
+qf[["precursors_filtered"]] |>
+  assay() |>
+  longForm() |>
+  filter(value == 0) |>
+  nrow()
+```
 
-<!-- The data does not contain any zeros. However, if the data did contain zero we -->
-<!-- would encode them as NA. We can use the `zeroIsNA` function to do this. Some -->
-<!-- proteomic softwares encode NAs as 0's by default. In order for proper evaluation -->
-<!-- of missing data it is necessary to return the 0 back to NA. -->
+The data does not contain any zeros. However, if the data did contain zeros we
+would encode them as NA. We can use the `zeroIsNA` function to do this. Some
+proteomic softwares encode NAs as 0's by default. In order for proper evaluation
+of missing data it is necessary to return the 0 back to NA.
 
-<!-- ```{r} -->
-<!-- qf <- zeroIsNA(qf, i = "precursors_filtered") -->
-<!-- ``` -->
+```{r}
+qf <- zeroIsNA(qf, i = "precursors_filtered")
+```
 
-<!-- Does the data contain missing values, i.e. values encoded as NAs or NaN?  -->
+Does the data contain missing values, i.e. values encoded as NAs or NaN?
 
-<!-- ```{r} -->
-<!-- ## Does the data contain NAs -->
-<!-- qf[["precursors_filtered"]] %>% -->
-<!--   assay() %>% -->
-<!--   longForm() %>% -->
-<!--   filter(is.na(value) == TRUE) %>% -->
-<!--   nrow() -->
-<!-- ## [1] 2838131 -->
-<!-- ``` -->
+```{r}
+## Does the data contain NAs
+qf[["precursors_filtered"]] |>
+  assay() |>
+  longForm() |>
+  filter(is.na(value) == TRUE) |>
+  nrow()
+```
 
-<!-- Yes, it does. Let's explore missingness on (1) column-wise and then later, (2)  -->
-<!-- row-wise levels. -->
+Yes, it does. Let's explore missingness on (1) column-wise and then later, (2)
+row-wise levels.
 
 
+### Column-wise filtering of fractions/samples
+
+The first step in handling missing values is to filter samples based on their
+overall completeness. Column-wise filtering identifies and removes
+samples/fractions that have an excessive proportion of missing values, which
+could bias downstream analyses. By excluding poorly quantified samples, we
+ensure that the dataset retains only those samples with sufficient coverage
+across peptides. This step improves the reliability of subsequent row-wise
+filtering, clustering, and machine learning classification, while preserving the
+overall structure and integrity of the dataset.
+
+Since our missing data is denoted as NA values, we can to use the `nNA` function
+to explore from the `QFeatures` infrastructure.
+
+```{r}
+nNA(qf, i = "precursors_filtered")
+```
+
+We see that we have `r nNA(qf, i = "precursors_filtered")$nNA$nNA` missing
+values, which represent 
+`r signif(nNA(qf, i = "precursors_filtered")$nNA$pNA, digits = 2)` of the 
+entire dataset. Let's plot the percentage of missing values per quantitative 
+sample (i.e., per biochemical fraction).
+
+Create a `data.frame` of missing value information at the sample level.
+
+```{r}
+na_cols <- nNA(qf[["precursors_filtered"]])$nNAcols
+df <- cbind(na_cols, colData(qf))
+```
+
+We can plot percentage of NAs across fractions.
+
+```{r}
+df |>
+  as_tibble() |>
+  ggplot(aes(x = factor(Fraction), y = pNA * 100)) +
+  geom_col() +
+  geom_hline(yintercept = 75, linetype = "dashed", colour = "red") +
+  facet_wrap(~ Replicate, nrow = 1, labeller = label_both) +
+  ylim(0, 100) +
+  labs(x = "Fraction", y = "Missing values (%)") +
+  theme_bw()
+```
+
+Several fractions show more than 75% missing data. Based on the plots above and
+the output of `nNA`, these correspond to fraction 10 in replicate 1, fraction 3
+in replicate 2, and fraction 2 in replicate 3. Because the high column-wise
+missingness occurs in different fractions across replicates, this pattern is
+more consistent with a mass spectrometry–related issue rather than a biological
+effect. A missingness level of 75% within a single sample is substantial, and
+exceeds what can be reliably addressed using current data imputation methods.
+
+::: {.callout-note}
+#### Considerations for fraction removal
+This DIA-LOP experiment represents a “static” setup, where the goal is to
+generate a cell-wide protein map for a single condition. In contrast, in a
+comparative experiment, we compare subcellular fraction profiles across two or
+more conditions. In that case, removing fractions requires caution, because the
+shape of the profiles is what informs localisation and protein movement between
+organelles. Current methods for detecting changes in localization depend on
+having the same number of fractions across replicates and conditions. Removing a
+problematic fraction would therefore require removing the corresponding fraction
+in all samples. In our case, this is not a concern, because we are building a
+map for a single condition. All fractions and replicates will be concatenated
+and carry equal weight before machine learning classification.
+:::
+
+In the below code chunk we generate boxplots of the intensities across samples.
+
+```{r}
+qf[, , "precursors_filtered"] |>
+  longForm(colvars = c("Replicate", "Fraction")) |>
+  as_tibble() |>
+  ggplot(aes(x = factor(Fraction), y = log2(value))) +
+  geom_boxplot() +
+  facet_wrap(~ Replicate, nrow = 1, labeller = label_both) +
+  labs(x = "Fraction", y = "log2 abundance", title = "Pre-normalisation") +
+  theme_bw()
+```
+
+Let's do a current count of how many precursors, peptides and proteins we have in 
+the data before removing fractions. 
+
+```{r}
+## Extract the rowData
+rd <- rowData(qf[["precursors_filtered"]])
+
+## Count
+nrow(rd)                               # precursors
+length(unique(rd$Stripped.Sequence))   # peptides
+length(unique(rd$Protein.Group))         # proteins
+```
+
+::: {.callout-note}
+## Recap: `Protein.Ids` or `Protein.Group`?
+
+Because we kept only proteotypic precursors (those mapping to a single
+protein), `Protein.Ids` and `Protein.Group` now contain the same accession
+for every precursor, so either column gives the same count. We use
+`Protein.Group` from here on because it is the column DIA-NN uses for
+protein-level quantification, and the one we will aggregate on later.
+:::
+
+Fractions with more than 75% missing values are marked for removal.
+
+```{r}
+(fracs_to_rm <- na_cols$name[na_cols$pNA > 0.75])
+```
+
+We remove these fractions from `precursors_filtered` and store the result
+in `se`.
+
+```{r}
+se <- qf[["precursors_filtered"]]
+se <- se[, !colnames(se) %in% fracs_to_rm]
+se
+```
+
+We can now add this back to the `qf` object.
+
+```{r}
+qf <- addAssay(qf, se, name = "precursors_subset")
+qf <- addAssayLink(qf, from = "precursors_filtered", to = "precursors_subset")
+qf
+```
+
+We see the last SE in the QF object now has 27 fractions, we have remove the 
+fractions with over 75% missingness.
+
+```{r, fig.width=5}
+plot(qf)
+```
+
+## Intensity-based filtering 
+
+Non-specific filtering by summing precursor intensities across rows (per
+replicate) allows us to identify features that contribute very little to the
+overall signal. Precursors whose total intensity represents less than 10% of the
+overall dataset provide limited quantitative information and are more likely to
+be dominated by noise. Removing these low-contributing precursors reduces
+technical variability, improves the signal-to-noise ratio, and focuses
+downstream analyses on features that meaningfully reflect protein abundance and
+subcellular localisation patterns. This approach helps ensure that clustering,
+profile visualisation, and machine learning classification are driven by
+reliable and informative signals.
+
+In the below code we sum the intensity across each precursor profile and then
+examine the distribution.
+
+```{r}
+## Calculate rowSums across profiles
+rs <- qf[["precursors_subset"]]  |> 
+    assay() |> 
+    rowSums(na.rm = TRUE)  
+
+## Add rowSums to rowData
+rowData(qf[["precursors_subset"]])$precursor_sum_intensity <- rs
+
+## Get quantiles
+rsq <- quantile(rs, probs = c(0.05, 0.1, 0.2, 0.3))
+
+## Plot
+rs |>  
+  as_tibble() |>  
+  ggplot(aes(x = log10(value))) +
+  geom_histogram(binwidth = 0.05) +
+  geom_vline(xintercept = log10(rsq), linetype = "dashed", color = "red") +
+  labs(x = "log10(Sum Intensity)", y = "Frequency") +
+  ggtitle("Sum Intensity QC") +
+  theme_bw()    
+```
+
+The distribution of total sum intensity per precursor across all samples
+
+```{r}
+summary(rs)
+```
+
+The summed intensity per precursor across all fractions is approximately
+normally distributed. The red lines indicate the log10-transformed summed
+intensity corresponding to the quantile thresholds tested. We see a threshold of
+10–30% of the total signal distribution  provides a practical balance between
+sensitivity and robustness. Precursors contributing below this level typically
+fall at the lower end of the dynamic range, where measurements are more variable
+and noise-prone. Removing these features improves signal-to-noise ratio and
+stabilises downstream analyses. Lower thresholds (e.g. 10%) are more permissive,
+while higher thresholds (e.g. 30%) favour robustness. Users are encouraged to
+explore different cut-offs and assess their impact, as the optimal threshold
+will depend on the specific dataset and analytical objectives.
+
+In the code chunk below we try 10% and calculate how many proteins we would
+lose if we used this filter.
+
+```{r}
+qf_10 <- filterFeatures(qf,
+                        i = "precursors_subset",
+                        ~ precursor_sum_intensity > rsq["10%"])
+
+
+qf_10
+```
+
+Comparing protein loss before and after implementing a 10% threshold on the sum
+intensity.
+
+```{r}
+## Number proteins currently
+prots_N <-
+  qf[["precursors_subset"]] |>
+  rowData() |>
+  as_tibble() |>
+  distinct(Protein.Group) |>
+  nrow()
+
+
+## Number proteins is 10% filter applied
+prots_N10 <-
+  qf_10[["precursors_subset"]] |>
+  rowData() |>
+  as_tibble() |>
+  distinct(Protein.Group) |>
+  nrow()
+
+prots_lost <- prots_N - prots_N10
+
+paste0("We lose ", prots_lost, " proteins from filtering out low intensity precursors")
+```
+
+We see this is quite conservative and we only lose a few hundred proteins. Let's
+proceed with a 10% threshold.
+
+```{r}
+qf <- filterFeatures(qf,
+                     i = "precursors_subset",
+                     ~ precursor_sum_intensity > rsq["10%"])
+
+
+qf
+```
+
+## Subsetting data into replicates
+
+To accurately assess missing values on a per-replicate basis, if you have
+replicated data it is necessary to subset the data by replicate prior to
+calculating row-wise (precursor peptide) missingness. When all replicates are
+combined, missing values can be obscured or diluted, making it difficult to
+detect replicate-specific issues. By examining each replicate separately, we can
+identify systematic problems affecting individual runs—such as fraction-specific
+MS performance issues—rather than confounding these with biological variation.
+This replicate-level assessment ensures that decisions about filtering or
+removal are based on technical data quality within each run, rather than
+aggregated summaries across the entire dataset.
+
+
+Information on the replicate structure has already been added to the `QFeatures`
+object during data import and is found in the `colData` slot under `Replicate`.
+
+```{r}
+qf[["precursors_subset"]] |> 
+  colData()
+```
+
+
+```{r}
+## get replicate data
+rep_info <- colData(qf[["precursors_subset"]])$Replicate
+```
+
+```{r}
+## Recall we have 3 replicates
+R <- 1:3 
+se <- vector("list", length(R))
+
+## Create names for the replicate SEs in QF
+rep_id <- paste0("precursors_R", R)
+
+## Subset data into replicates
+for (i in R) {
+  se[[i]] <- qf[["precursors_subset"]][, rep_info == i]
+  qf <- addAssay(qf, y = se[[i]], name = rep_id[i])
+  qf <- addAssayLink(qf, from = "precursors_subset", to = rep_id[i])
+}
+
+## Separate and add back to QF object
+qf
+```
+
+```{r, fig.width=5}
+plot(qf)
+```
+
+
+## Missing values (Part II) - Row-wise (precursor peptide) level
+
+Once column-wise missingness has been assessed, we apply row-wise filtering to
+remove peptides absent in a high proportion of fractions. Frequently missing
+peptides provide limited information for subcellular localisation and may
+introduce noise into clustering and machine learning analyses. However,
+filtering must be applied carefully, as overly stringent thresholds can remove
+genuine biological signal, particularly for proteins that are strongly enriched
+in a single compartment and therefore naturally sparse across the fractionation
+profile.
+
+This is especially relevant for label-free experimental designs. Although DIA
+generally provides more consistent measurements across runs, low-abundance or
+highly compartment-specific proteins may fluctuate around the detection
+threshold. As a result, biologically meaningful, singly localised proteins can
+appear partially missing rather than truly absent. Strict row-wise filtering may
+therefore bias the dataset towards highly abundant or broadly distributed
+proteins.
+
+In this specific example, we choose to allow up to 7 out of 9 missing values
+(i.e., require presence in at least two fractions) to retain sharply enriched
+profiles. However, the appropriate threshold depends on the specific dataset.
+Users are encouraged to explore different levels of allowable missingness and
+assess their impact on downstream analyses. Ultimately, the number of missing
+values permitted per replicate should be considered relative to the total number
+of fractions in the experiment.
+
+
+```{r missing_data_filtered_2}
+## Remove precursors with > x% MVs
+qf <- filterNA(qf,
+               pNA = 7/9,
+               i = rep_id)
+qf
+```
+
+In the below code chunk we calculate the current number of proteins per
+replicate.
+
+```{r}
+sapply(rep_id, function(z) {
+  qf[[z]]  |> 
+  rowData() |>
+  as_tibble() |>
+    pull(Protein.Group) |>
+    n_distinct()})
+```
+
+We can use `nNA()` to look at the overall amount of missing data in each
+replicate.
+
+```{r}
+na_reps <- nNA(qf, i = rep_id)$nNA
+as.data.frame(na_reps)
+```
+
+Recall, the `nNA` column gives the number of missing values in each set, and `pNA`
+gives this as a proportion of all values in the set.
+
+Replicate 1 is the most complete, with `r round(100 * na_reps$pNA[1])`% of
+values missing, compared with `r round(100 * na_reps$pNA[2])`% for
+replicate 2 and `r round(100 * na_reps$pNA[3])`% for replicate 3. Replicates
+1 and 2 contain a similar number of precursors, so the higher missingness in
+replicate 2 suggests lower detection across its fractions, rather than
+simply fewer precursors. Overall, the level of missing data is moderate and
+broadly similar across the three replicates, and no single replicate stands
+out as a concern.
+
+Missingness is also lower here than in the per-fraction values we saw
+earlier. This is expected, because we have now split the data by replicate
+and removed the fractions with the most missing values.
+
+Not all of these missing values reflect a failure to detect a precursor.
+Proteins are distributed unevenly across fractions, so a precursor may be
+genuinely low or absent in some of them. These values are therefore largely
+*missing not at random*, which is important to bear in mind when we decide
+how to handle missing data later on.
+
+## Imputation
+
+As we have seen, the data still contain missing (NA) values. This is expected,
+because our row-wise filtering only removed precursors quantified in fewer than
+two of the nine fractions per replicate (i.e. more than seven missing values).
+How many missing values remain, and how they are distributed across the
+gradient, depends on the experimental design and the acquisition method. For
+example, label-free (LFQ) methods typically produce more missing values than
+label-based approaches such as TMT. Among label-free methods, DDA datasets
+usually contain more missing values than DIA datasets.
+
+Imputation was discussed in our previous workflow [@Hutchings2023]. Rather
+than recommending a single approach, we encourage users to decide for
+themselves whether, and how, to deal with missing values in their own data.
+A key question is whether values are missing for **biological** or
+**technical** reasons.
+
+In several label-based datasets we found very few missing values, and those
+that did occur tended to be at the ends of the gradient. This suggests they
+are missing for biological reasons: the protein is genuinely low or absent
+in those fractions. Removing these precursors would therefore risk losing
+biologically meaningful information. Similarly, in label-free DIA-LOP data
+we found that much of the missingness was shared between matching fractions
+across replicates, again pointing to biological rather than technical
+causes.
+
+Missing values can be imputed with the `impute()` function in `QFeatures`.
+Several imputation methods are available, and they can be combined into a
+mixed strategy, for example using one method for values thought to be
+missing for biological reasons and another for values missing at random.
+
+
+```{r}
+## Which methods are available for imputation within the impute() function?
+MsCoreUtils::imputeMethods()
+```
+
+We next show how to implement a mixed imputation approach using the
+`impute()` function in `QFeatures`. Mixed imputation is useful when the data
+contain a mixture of values missing at random (MAR) and missing not at
+random (MNAR). Deciding which missing values belong to each category is
+extremely challenging. As an example, it seems reasonable to assume that
+proteins with narrow abundance distributions across the gradient will have
+more missing values per precursor, because they are genuinely absent from
+many fractions. This is the case for mitochondrial proteins in this dataset.
+These are biologically meaningful MNAR values. By contrast, values missing
+for technical reasons (MAR) should be spread evenly across the dataset and
+occur at low frequency for any given precursor. We therefore treat
+precursors with **two or fewer** missing values as MAR, and those with
+**more than two** as MNAR. This strategy is for demonstration only, and
+users should test different approaches on their own data.
+
+We first create a logical vector with one value per precursor, indicating
+whether its missing values should be treated as MAR (`TRUE`) or MNAR
+(`FALSE`). We add this, along with the number of missing values per
+precursor, to the `rowData` of each replicate.
+
+```{r}
+for (i in rep_id) {
+  ## Number of missing values per precursor
+  n_na <- rowSums(is.na(assay(qf[[i]])))
+  rowData(qf[[i]])$nNA <- n_na
+
+  ## MAR if <= 2 missing values, otherwise MNAR
+  rowData(qf[[i]])$randna <- n_na <= 2
+}
+```
+
+We can now see these columns in the `rowData` of each replicate.
+
+```{r}
+qf[["precursors_R1"]] |>
+  rowData() |>
+  names()
+```
+
+It is also useful to check how many precursors fall into each category.
+
+```{r}
+for (i in rep_id) {
+  cat(i, "\n")
+  print(table(ifelse(rowData(qf[[i]])$randna, "MAR", "MNAR")))
+}
+```
+
+We now use `impute()` with `method = "mixed"`, passing our vector to the
+`randna` argument and specifying a method for each category. Here we use
+`mar = "knn"` for MAR values and `mnar = "min"` for MNAR values.
+
+```{r, message=FALSE, results='hide', warning=FALSE}
+for (r in rep_id) {
+  qf <- QFeatures::impute(qf,
+                          i = r,
+                          name = paste0("imp_", r),
+                          method = "mixed",
+                          randna = rowData(qf[[r]])$randna,
+                          mar = "knn",
+                          mnar = "min")
+}
+```
+
+If imputation was successful, there should be no missing values left in the
+imputed sets.
+
+```{r}
+nNA(qf, i = paste0("imp_", rep_id))$nNA
+```
+
+There are no missing values remaining in any of the three replicates.
+
+```{r, fig.height=5}
+plot(qf)
+```
+
+```{r}
+#| label: create-imputed-dataset
+#| include: false
+
+save(qf, file = here("course_files/preprocessed/lesson04.rda"))
+```
+
+::: {.callout-tip}
+#### Key Points
+
+- Missing values are common in proteomics data. Always check how they are
+  encoded (zeros or `NA`) and assess how many there are, and where, before
+  filtering or imputing.
+- Column-wise filtering removes fractions with excessive missingness (here >
+  75%). If high missingness occurs in different fractions across
+  replicates, a technical rather than biological cause is likely.
+- In comparative experiments, removing a fraction means removing the same
+  fraction from every replicate and condition, so that profiles stay
+  comparable.
+- Intensity-based filtering removes precursors at the low end of the dynamic
+  range, where measurements are noisier. The threshold is a trade-off
+  between sensitivity and robustness and should be explored for each
+  dataset.
+- Row-wise missingness should be assessed per replicate, so that
+  replicate-specific problems are not hidden by combining the data.
+- Row-wise thresholds must be set relative to the number of fractions.
+  Overly strict filtering removes sharply enriched, singly localised
+  proteins and biases the data towards abundant, broadly distributed
+  proteins.
+- In subcellular proteomics, many missing values are biological (MNAR): the
+  protein is genuinely low or absent in some fractions. These should not be
+  treated in the same way as technical, random (MAR) missingness.
+- Mixed imputation with `impute(method = "mixed")` applies different methods
+  to MAR and MNAR values. How values are assigned to each category is a
+  modelling choice and should be tested on your own data.
+:::
+
+
+## References {-}
