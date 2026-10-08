@@ -22,7 +22,7 @@ library("pheatmap")
 load(here("course_files/preprocessed/lesson05.rda"), verbose = TRUE)
 ```
 
-# Part 2: Generating a subcellular spatial map
+## Part 2: Generating a subcellular spatial map
 
 Now that we have generated our final dataset containing protein correlation
 profiles, we can use this data to generate spatial maps. Specifically, 
@@ -52,7 +52,7 @@ classifier. The output of this algorithm will be a predicted subcellular
 localisation for each of our proteins. Finally, we show how to visualise the
 predicted protein localisations to generate a spatial map of the cell.
 
-# Assessment of resolution and unsupervised clustering
+## Assessment of resolution and unsupervised clustering
 
 ::: {.objectives}
 #### Learning objectives
