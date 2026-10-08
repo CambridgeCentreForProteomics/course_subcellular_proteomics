@@ -467,6 +467,33 @@ genuinely low or absent in some of them. These values are therefore largely
 *missing not at random*, which is important to bear in mind when we decide
 how to handle missing data later on.
 
+::: {.callout-note}
+#### An additional note on label-based vs. label-free missing values 
+The use-case data presented here used TMT-based peptide quantitation. When using 
+a DDA TMT approach, TMT co-isolation interference often results in very low
+abundance values where there should really be a missing value. As a result, 
+despite the potential for MNAR values due to biochemical fractionation, TMT
+correlation profiling based experiments tend to have a low proportion of missing
+data. As demonstrated below, this means that the datasets require minimal filtering
+and imputation. By contrast, label-free datasets have a much high proportion of 
+missingness. This is the case for several reasons. Firstly, label-free samples
+are each run independently on the MS rather than being multiplexed as is done 
+for label-based methods. For DDA label-free experiments this means that different
+peptides are measured across different samples, thus leading to lots of missing
+values. This effect is seen in all DDA label-free proteomics experiments but is
+even more dramatic for correlation profiling data as most approaches rely on 
+selecting the top N most abundant precursor peptides for analysis, but the most
+abundance peptides are expected to be different across fractions of the biochemical 
+gradient. In DIA label-free correlation profiling experiments missingness is not 
+due to the stochastic selection of precursors ions but rather due to the fact that 
+missing values present as truly missing, with no co-isolation interference to 
+buffer the effect of biochemical fractionation. As a result of greater missingness, 
+users should spend more time testing combinations of filtering and imputation for 
+label-free correlation profiling experiment data, as discussed further in the
+sample DIA workflow ("Using this workflow with DIA-NN data" ) presented in the
+Appendix.
+:::
+
 ## Imputation
 
 As we have seen, the data still contain missing (NA) values. This is expected,
@@ -581,8 +608,40 @@ There are no missing values remaining in any of the three replicates.
 plot(qf)
 ```
 
+-- XXX Move this callout note or combine with the callout note in notebook 05
+
+::: {.callout-note}
+#### An additional note on imputing before or after normalisation
+
+Some experimental designs yield a relatively low proportion of missing values,
+for example label-based methods that use TMT such as LOPIT. As a result, after
+an initial filtering step, there are very few values to impute. Applying a
+baseline k-NN imputation to such data can more successful when the data are in a
+similar space, as discussed in @Hutchings2025. We note that by applying
+imputation after normalisation, the final imputed profiles will no longer sum to
+exactly 1. However, since such designs have such low missingness, the sum should
+not greatly exceed 1. By contrast, where datasets have a greater proportion of
+missing data to impute, as is the case for this example where we have a LFQ
+design row sum normalisation of a limited number of fractions would generate a
+short profile summed to one and subsequent imputation could result in a
+correlation profile with an undesirably high sum value. Here it is necessary to
+impute prior to normalisation to ensure the generation of sensible correlation
+profiles in the same final space (between 0 and 1).
+
+
+###### Do I have to impute?
+Not always. Robust summarisation during
+aggregation (e.g. `MsCoreUtils::robustSummary` in `aggregateFeatures()`)
+can estimate protein-level values from incomplete precursor data. In
+practice, however, it does not always cope with highly sparse data or
+proteins with many precursors. Many classifiers used for spatial
+proteomics, such as those in `pRoloc`, also require a complete data matrix.
+The alternative, removing incomplete profiles, risks losing the sparse,
+sharply enriched profiles of singly localised proteins.
+:::
+
 ```{r}
-#| label: create-imputed-dataset
+#| label: save-data
 #| include: false
 
 save(qf, file = here("course_files/preprocessed/lesson04.rda"))

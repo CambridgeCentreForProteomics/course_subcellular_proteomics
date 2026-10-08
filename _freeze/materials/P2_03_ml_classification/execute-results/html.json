@@ -1,9 +1,11 @@
 {
-  "hash": "ed466f181ee483e58cb43cc9ac9d9e7c",
+  "hash": "75bbaa0a470e29d470c300411c5aa8bb",
   "result": {
     "engine": "knitr",
-    "markdown": "---\ntitle: Protein localisation prediction\nbibliography: ../course_refs.bib\neditor_options:\n  chunk_output_type: console\n---",
-    "supporting": [],
+    "markdown": "---\ntitle: Protein localisation prediction\nbibliography: ../course_refs.bib\neditor_options:\n  chunk_output_type: console\n---\n\n::: {.objectives}\n#### Learning objectives\n\n* Explain how supervised classifiers predict localisation by comparing unknown proteins' correlation profiles with marker profiles, and why proteins can only be assigned to classes present in the training data.\n* Tune SVM hyperparameters (`sigma`, `cost`) by cross-validation (`svmOptimisation`), with class weights to handle unequal class sizes, and judge performance by F1 scores (`getF1Scores`, `f1Count`, `getParams`).\n* Classify proteins with an SVM (`svmClassification`) and set organelle-specific score thresholds (`orgQuants`, `getPredictions`).\n* Train and apply the Bayesian TAGM-MAP model (`tagmMapTrain`, `tagmMapPredict`), check its convergence, and threshold predictions on combined localisation and outlier probabilities.\n* Describe how TAGM-MCMC differs from TAGM-MAP, and check MCMC convergence with trace and density plots and the Gelman–Rubin diagnostic, removing and pooling chains as needed.\n* Use TAGM-MCMC posterior distributions and Shannon entropy to find proteins with uncertain or multiple localisations.\n:::",
+    "supporting": [
+      "P2_03_ml_classification_files"
+    ],
     "filters": [
       "rmarkdown/pagebreak.lua"
     ],

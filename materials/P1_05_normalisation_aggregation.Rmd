@@ -1,6 +1,370 @@
 ---
-title: Data normalisation and data aggregation
+title: Data transformation and aggregation
 bibliography: ../course_refs.bib
 editor_options:
   chunk_output_type: console
 ---
+
+::: {.callout-tip}
+#### Learning Objectives
+
+- Understand why log transformation is not needed when preparing data for
+  spatial proteomics, unlike expression proteomics
+- Understand the different role normalisation plays in spatial proteomics,
+  and be able to apply row-sum normalisation with `normalize()`
+- Be able to aggregate precursor-level data to protein level with
+  `aggregateFeatures()`, and understand how the choice of aggregation
+  function relates to the scale of the data
+- Know how to concatenate replicates into a single dataset with
+  `joinAssays()` and keep only proteins found in all replicates
+- Understand the benefits and limitations of concatenating datasets for
+  downstream machine learning
+:::
+
+
+```{r}
+#| label: load-dia-data-filtered
+#| include: false
+
+library("here")
+library("QFeatures")
+library("tidyr")
+library("dplyr")
+library("ggplot2")
+library("patchwork")
+library("stringr")
+
+load(here("course_files/preprocessed/lesson04.rda"), verbose = TRUE)
+```
+
+In our previous expression proteomics workflow we described the processing steps
+required to prepare quantitative proteomics data for differential abundance 
+analysis [@Hutchings2023]. Such preparation involved log2 transformation of the
+peptide-level quantitation data before aggregating to the protein level and 
+normalising. These steps differ from those required when processing subcellular
+spatial proteomics data.
+
+Quantitative proteomics data often undergoes logarithmic transformation prior to
+statistical analysis. The reason for this is that the majority of statistical
+tests require the data to display a normal distribution. Whilst raw quantitative
+MS-based proteomics data is dramatically skewed towards 0, the log2 transformed 
+data is approximately normal. In this subcellular spatial proteomics workflow,
+however, the goal is not to prepare our data for downstream statistical differential 
+abundance analysis. Instead, we are preparing the data for a machine learning
+classifier for which the input is protein correlation profiles across a
+biochemical gradient. The machine learning algorithm which we will use does 
+not make the assumption that our data has a normal distribution, therefore we
+do not need to perform logarithmic transformation. In fact, logarithmic
+transformation would reduce the subcellular resolution by flattening our abundance
+distribution profiles. 
+
+The second data processing step which differs between expression and spatial 
+proteomics analysis is that of normalisation. In most proteomics experiments the
+goal of normalisation is to remove any technological variation and account for 
+experimental error. As a result, normalised data should contain near-identical
+samples in which the majority of variation is of biological importance. In spatial
+proteomics normalisation plays a different role because we are interested in the
+shape of protein abundance profiles rather than the magnitude of the intensity in
+each channel. Hence, the aim of normalisation here is to scale all of our
+quantitation data into the same space (within the range of 0 and 1) whilst 
+maintaining the shape of our abundance profiles.
+
+
+## Normalisation 
+
+Based on De Duve's principle [@deDuve1964] we know that proteins which are
+co-localised within the cell will exhibit similar abundance distribution profiles
+across a fractionation gradient. This means that we we can infer the location of 
+proteins by matching their abundance profiles to profiles of well-known organelle 
+residents, termed "markers". In order to get information about the abundance
+distribution of each protein across the fractionation gradient we need to carry 
+out row sum normalisation. To do this we make use of the `normalize` function 
+within the `QFeatures` infrastructure. 
+
+```{r}
+# Define number of replicates
+R <- 1:3
+```
+
+
+```{r}
+imp_names <- paste0("imp_precursors_R", R)
+norm_names <- paste0("norm_precursors_R", R)
+
+qf <- normalize(qf, 
+                i = imp_names,
+                name = norm_names,
+                method = "sum")
+
+qf
+```
+
+Let's take a look at what this normalisation has done to the data.
+
+```{r}
+## Before nornmalisation
+qf[["imp_precursors_R1"]] %>%
+  assay() %>%
+  head()
+
+## After normalisation
+qf[["norm_precursors_R1"]] %>%
+  assay() %>%
+  head()
+```
+
+Through the process of row sum normalisation we have now converted our raw
+quantitative values into a *correlation profile* or *protein profile* across the
+fractionation gradient. The abundance values represent the proportion of total
+quantification for each precursor that comes from each fraction, with each row
+sum being equal to 1. This scales all data into the same space so that we can
+use the shape rather than the intensity of profiles for downstream machine
+learning.
+
+
+```{r, fig.height=5}
+plot(qf)
+```
+
+
+::: {.callout-note}
+#### Normalise before or after aggregation? (In practice, it makes little difference)
+
+In this workflow we normalise each precursor profile to sum to 1 *before*
+aggregating to protein level. Precursors from the same protein can differ in
+raw intensity by orders of magnitude, mainly because they ionise differently,
+not because of the biology. If we aggregated raw intensities, a single very
+intense precursor could largely determine the protein's profile.
+
+For localisation, what matters is the *shape* of the profile across
+fractions, and each precursor is an independent measurement of that shape.
+Normalising first puts all precursors on the same scale, so each contributes
+equally to the protein profile. Aggregating with a median then gives a
+consensus profile that is robust to the occasional precursor with an
+unusual profile.
+
+The trade-off is that low-intensity, noisier precursors are given the same
+weight as high-intensity ones. Our earlier intensity-based filtering helps
+by removing the weakest precursors. Because the median of profiles that
+each sum to 1 does not itself sum exactly to 1, we normalise once more
+after aggregation.
+
+In practice, we find the order makes little difference to the resolution of
+the final spatial map. Either approach is reasonable, as long as the final
+protein profiles are normalised before downstream analysis.
+:::
+
+
+## Aggregation
+
+Now that we have our final precursor-level dataset we can aggregate this upward
+to the protein level. The aim of this step is to combine data from all component
+precursors into a single protein-level entry. This entry will have one master
+protein accession and one quantitative value per biochemical fraction per
+sample.
+
+Within the `QFeatures` infrastructure aggregation is carried out using the
+`aggregateFeatures` function. This function provides users with several options
+on how to aggregate multiple quantitation values into a single value. The
+methods differ with respect to how they deal with missing data as well as
+whether they require log2 or raw quantitation data as their input.
+
+In our sister workflow @Hutchings2023 we aggregate using `robustSummary`, a
+state-of-the-art aggregation method which is notably robust to outliers and
+missing values [@Sticker2020; @Goeminne2016]. However, our data is not currently
+suitable for `robustSummary` aggregation as this method requires log2
+transformed data. Whilst it would be relatively simple to log2 transform our
+quantitative data using the `logTransform` function within the `QFeatures`
+infrastructure, we would need to reverse this transformation by taking the
+exponential of the resulting protein data, which is not so simple. Instead we
+will aggregate precursors straight to protein level using `colMedians` method from the
+`matrixStats` package. We specify this method using the `fun = ` argument, as
+well as telling the function which `rowData` column we wish to use for
+aggregation.
+
+Here, we demonstrate one-step aggregation, from precursors directly to protein.
+This means aggregating all precursors with the same value of `"Protein.Group"`.
+For an example of two-step aggregation, from precursor to peptide followed by
+peptide to protein, users are directed to @Hutchings2023.
+
+```{r}
+agg_names <- paste0("proteins_R", R)
+
+qf <- QFeatures::aggregateFeatures(qf,
+                                   i = norm_names,
+                                   fcol = "Protein.Group", 
+                                   name = agg_names,
+                                   fun = matrixStats::colMedians)
+## Verify
+qf
+```
+
+We have now populated the `QFeatures` object with protein-level data containing
+the row normalised protein abundance profiles. From looking at the summary in 
+`experiments(qf)` we have around 9000 proteins in each experiment.
+These protein correlation profiles contain spatial information and are the input
+to downstream machine learning classifers.
+
+
+```{r, fig.height=5}
+plot(qf)
+```
+
+### Re-normalisation
+
+Before aggregation, each precursor profile summed to 1. However, the median
+of several profiles that each sum to 1 does not itself sum exactly to 1.
+Let's check the row sums of our protein-level data.
+
+```{r}
+qf[["proteins_R1"]] |>
+  assay() |>
+  rowSums() |>
+  summary()
+```
+
+The row sums are close to 1, but not exactly 1. To make sure every protein
+profile is on exactly the same scale before machine learning, we apply
+row-sum normalisation once more, this time at the protein level.
+
+```{r}
+prot_norm_names <- paste0("proteins_norm_R", R)
+
+qf <- normalize(qf,
+                i = agg_names,
+                name = prot_norm_names,
+                method = "sum")
+
+qf
+```
+
+Every protein profile should now sum to exactly 1.
+
+```{r}
+qf[["proteins_norm_R1"]] |>
+  assay() |>
+  rowSums() |>
+  summary()
+```
+
+This step changes the scale of each profile very slightly but does not change
+its shape, so the spatial information is preserved.
+
+## Concatenating datasets for machine learning
+
+Previous subcellular proteomics experiments utilising protein correlation
+profiles have benefited from the combining of datasets 
+[@Barylyuk2020; @Christoforou2016; @Moloney2023], that is the concatenation of 
+replicates or experiments that utilise different gradients [@Trotter2010]. Since
+the use-case experiment included three biological replicates each with 9
+biochemical fractions we can concatenate these data into a single dataset
+with 27 columns. In order to do this, the column names must be different in each
+replicate. By looking at the `colnames` of each experimental set per condition
+we verify we indeed have unique names.
+
+```{r}
+colnames(qf[["proteins_R1"]])
+colnames(qf[["proteins_R2"]])
+colnames(qf[["proteins_R3"]])
+```
+
+
+If the `colnames` were not unique to each replicate we would have to use the
+`renameColname` function, specifying which experimental set we wish to change
+the column names of (`i = ` argument) and then providing a vector of new column
+names (`value = ` argument).
+
+We can use `joinAssays` to concatenate the fractions across replicates to
+improve the discrimination between organelle signatures.
+
+```{r concatenate_replicates}
+agg_names <- c("proteins_norm_R1", "proteins_norm_R2", "proteins_norm_R3")
+
+qf <- joinAssays(qf, 
+                 i = agg_names, 
+                 name = "proteins_joined")
+## Verify
+qf
+```
+
+
+Finally, we filter to only keep proteins that are found in all replicates.
+
+```{r}
+qf <- filterNA(qf, i = "proteins_joined")
+
+## Verify
+qf
+```
+
+We see out final protein level data contain `r nrow(qf[["proteins_joined"]])`
+proteins.
+
+```{r, fig.height=5}
+plot(qf)
+```
+
+### Concatenation gives equal weight to all replicates
+
+By concatenating the datasets we give each biological replicate an equal weight 
+for the downstream machine learning classification. This means that any variability
+between experiments will be accounted for. For example, if a
+protein has an abundance distribution profile similar to that of nuclear protein
+markers in one of the three replicates, but is more similar to cytoplasmic markers
+in the remaining two replicates, this will be reflected by the fact that the 
+protein will either be classified with a lower confidence or not classified at
+all. If each replicate was analysed separately, the protein may receive conflicting
+classifications in each replicate which would require a user-defined resolution.
+
+Another potential advantage of concatenating datasets is the inclusion of data
+derived from different gradient variations [@Barylyuk2020; @Trotter2010]. Although
+many subcellular compartments are well resolved using a single gradient, some 
+compartments remain more challenging to resolve due to their similarities or
+connections with other compartments. For example, compartments within the endomembrane
+system can generate similar fractionation profiles. Where no single gradient will
+provide optimal separation of all organelles of interest, it is possible to design
+different gradients which provide optimal separation different organelles. These
+data can then be concatenated to generated a combined dataset with greater final
+resolution of all desired compartments. 
+
+Overall, data concatenation has been shown to have benefits for downstream machine
+learning in many cases. Ultimately, however, the decision to concatenate replicates 
+will depend on the goal of the experiment and type of data analysis required to
+answer the experimental question. In particular, where the experimental aim is to
+identify differential localisation between conditions it is recommended to repeat
+the same biochemical gradient across all three replicates to avoid complicating
+downstream analysis.
+
+```{r}
+#| label: create-protein-dataset
+#| include: false
+
+save(qf, file = here("course_files/preprocessed/lesson05.rda"))
+```
+
+
+::: {.callout-tip}
+#### Key Points
+
+- Spatial proteomics data are prepared for machine learning on profile
+  *shape*, not for statistical tests, so log transformation is not needed
+  and would flatten the profiles.
+- Row-sum normalisation turns raw intensities into profiles that sum to 1.
+  This puts all features on the same scale while preserving the shape of
+  their distribution across the gradient.
+- For sparse label-free data, impute before normalising, so that profiles
+  are complete before they are scaled.
+- Aggregation combines precursors into one profile per protein group. The
+  aggregation method must match the data: `robustSummary` needs
+  log-transformed input, whereas `colMedians` can be used on normalised
+  profiles directly.
+- Whether you normalise before or after aggregation makes little practical
+  difference, as long as the final protein profiles are normalised.
+- Concatenating replicates with `joinAssays()` gives each replicate equal
+  weight in classification, so inconsistent proteins are classified with
+  lower confidence rather than given conflicting labels.
+- Concatenation can also combine different gradients to improve resolution.
+  For differential localisation between conditions, however, the same
+  gradient should be used across all replicates.
+:::
+

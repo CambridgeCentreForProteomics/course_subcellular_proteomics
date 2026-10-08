@@ -1,0 +1,17 @@
+---
+title: Data annotation
+bibliography: ../course_refs.bib
+editor_options:
+  chunk_output_type: console
+---
+
+::: {.objectives}
+#### Learning objectives
+
+* Define a subcellular marker, and explain why curating markers for a specific cell type and condition is critical for supervised learning.
+* Describe the iterative marker curation process: pick the resolved compartments, source a starting list, evaluate it, refine it and reclassify.
+* Get published marker sets with `pRolocmarkers` and add your own or published markers to an `MSnSet` (`addMarkers`, `getMarkers`, `getMarkerClasses`).
+* Evaluate markers on PCA plots across several principal components, with marker profile plots (`plotDist`) and interactively (`pRolocVis`).
+* Measure how well compartments separate with QSep (`QSep`, `levelPlot`), and interpret raw and normalised QSep scores.
+* Refine marker lists by removing outlying markers and unresolved compartments (`fDataToUnknown`), without drifting away from the literature.
+:::

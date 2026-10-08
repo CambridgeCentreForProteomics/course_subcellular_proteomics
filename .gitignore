@@ -27,3 +27,4 @@ _site
 # Data
 materials/data/report.parquet
 course_files/preprocessed/lesson02.rda
+preprocessed

@@ -4,3 +4,14 @@ bibliography: ../course_refs.bib
 editor_options:
   chunk_output_type: console
 ---
+
+::: {.objectives}
+#### Learning objectives
+
+* Build subcellular spatial maps of classification results with `plot2D` (`fcol = "svm.pred"`, etc.), and compare the methods listed in `plot2Dmethods`.
+* Pre-compute PCA, t-SNE, UMAP and LDA coordinates (`plot = FALSE`) and reuse them (`method = "none"`) for efficient, reproducible figures.
+* Find proteins of interest, such as members of a protein complex, with `pRolocVis`, and highlight them on spatial maps (`highlightOnPlot`).
+* Add your own annotations, such as complexes, pathways or compartments left out of training, as new `fData` columns and plot them.
+* Visualise the distribution of localisation probabilities for individual proteins from TAGM-MCMC output.
+* Check classification results critically by plotting both maps and profiles of classified proteins across several dimensionality reduction methods, and refine markers again where needed.
+:::

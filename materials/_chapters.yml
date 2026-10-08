@@ -9,8 +9,8 @@ book:
         - materials/P1_05_normalisation_aggregation.Rmd
     - part: "Static localisation"
       chapters: 
-        - materials/P2_01_qsep.Rmd
-        - materials/P2_02_hdbscan_marker_annotation.Rmd
+        - materials/P2_01_resolution_clustering.Rmd
+        - materials/P2_02_marker_annotation.Rmd
         - materials/P2_03_ml_classification.Rmd
         - materials/P2_04_features_of_interest.Rmd
     - part: "Differential localisation"

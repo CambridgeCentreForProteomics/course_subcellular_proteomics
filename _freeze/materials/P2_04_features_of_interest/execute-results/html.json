@@ -1,9 +1,11 @@
 {
-  "hash": "79f17b1b8a2c02515d08c11404b9e3fc",
+  "hash": "f2c2e731a76a1a9756e61a028f3ca217",
   "result": {
     "engine": "knitr",
-    "markdown": "---\ntitle: Visualisation and exploration\nbibliography: ../course_refs.bib\neditor_options:\n  chunk_output_type: console\n---",
-    "supporting": [],
+    "markdown": "---\ntitle: Visualisation and exploration\nbibliography: ../course_refs.bib\neditor_options:\n  chunk_output_type: console\n---\n\n::: {.objectives}\n#### Learning objectives\n\n* Build subcellular spatial maps of classification results with `plot2D` (`fcol = \"svm.pred\"`, etc.), and compare the methods listed in `plot2Dmethods`.\n* Pre-compute PCA, t-SNE, UMAP and LDA coordinates (`plot = FALSE`) and reuse them (`method = \"none\"`) for efficient, reproducible figures.\n* Find proteins of interest, such as members of a protein complex, with `pRolocVis`, and highlight them on spatial maps (`highlightOnPlot`).\n* Add your own annotations, such as complexes, pathways or compartments left out of training, as new `fData` columns and plot them.\n* Visualise the distribution of localisation probabilities for individual proteins from TAGM-MCMC output.\n* Check classification results critically by plotting both maps and profiles of classified proteins across several dimensionality reduction methods, and refine markers again where needed.\n:::",
+    "supporting": [
+      "P2_04_features_of_interest_files"
+    ],
     "filters": [
       "rmarkdown/pagebreak.lua"
     ],

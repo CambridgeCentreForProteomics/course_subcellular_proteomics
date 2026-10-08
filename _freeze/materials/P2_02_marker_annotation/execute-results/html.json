@@ -1,0 +1,15 @@
+{
+  "hash": "cd4b9a83f9f594b58463938ef45cd633",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: Data annotation\nbibliography: ../course_refs.bib\neditor_options:\n  chunk_output_type: console\n---\n\n::: {.objectives}\n#### Learning objectives\n\n* Define a subcellular marker, and explain why curating markers for a specific cell type and condition is critical for supervised learning.\n* Describe the iterative marker curation process: pick the resolved compartments, source a starting list, evaluate it, refine it and reclassify.\n* Get published marker sets with `pRolocmarkers` and add your own or published markers to an `MSnSet` (`addMarkers`, `getMarkers`, `getMarkerClasses`).\n* Evaluate markers on PCA plots across several principal components, with marker profile plots (`plotDist`) and interactively (`pRolocVis`).\n* Measure how well compartments separate with QSep (`QSep`, `levelPlot`), and interpret raw and normalised QSep scores.\n* Refine marker lists by removing outlying markers and unresolved compartments (`fDataToUnknown`), without drifting away from the literature.\n:::",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}
