@@ -358,7 +358,7 @@ pass the two lists of replicates and the name of the marker column.
 The robust fitting step uses random subsampling, so we set a seed to make the
 result reproducible.
 
-```{r}
+```{r, warning=FALSE}
 set.seed(1)
 marker_res <- sandle_markers(control, treated, fcol = "markers")
 head(marker_res)
