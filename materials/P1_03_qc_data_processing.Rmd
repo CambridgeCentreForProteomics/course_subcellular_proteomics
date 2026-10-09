@@ -86,7 +86,7 @@ object.
 # qc
 qf <- qf |>
   filterFeatures(~ Q.Value < 0.01) |>        # Run-level precursor Q-value
-  filterFeatures(~ PG.Q.Value < 0.01)  |>    #  Run-level protein group Q-value
+  filterFeatures(~ PG.Q.Value < 0.01)  |>    # Run-level protein group Q-value
   filterFeatures(~ Lib.Q.Value <= 0.01)  |>  # Library-level precursor Q-value
   filterFeatures(~ Lib.PG.Q.Value < 0.01)    # Library level protein group (PG) Q-value
 
@@ -308,11 +308,14 @@ conts <- fasta.index(cont_fasta, seqtype = "AA")
 cont_acc <- str_extract(conts$desc, "(?<=_).*?(?=\\|)")
 ```
 
-
-In the next code chunk we define a function for contaminant filtering where we
-identify any rows (precursor peptides) with a contaminant protein in the
-`Protein.Ids` column and add a column to the data to indicate if a precursor
-is flagged as a contaminant.
+In the next code chunk we define a function for identifying
+any rows (precursor peptides) with a `Protein.Ids` entry that matches
+any entry in our contaminant fasta file (i.e., in the `cont_acc` vector we
+generated above). At the same time, to cover all cases, we search for any rows
+with a `Protein.Ids` containing either the `Cont` or `cRAP` pattern. The output
+of this function will be a logical vector with one entry per row - `TRUE` means
+that the row has a `Protein.Ids` value that matches either the imported fasta
+file accessions or contains `Cont` or `cRAP`.  
 
 ```{r}
 # define function to find contaminants
