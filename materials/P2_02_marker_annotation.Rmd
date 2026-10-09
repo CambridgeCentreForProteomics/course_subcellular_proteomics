@@ -133,7 +133,7 @@ the code below should be edited to pass the extracted named character object
 ```{r}
 ## Add markers to the MSnSet
 msn <- addMarkers(object = msn,
-                  markers = "data/hsap_dialop_markers.csv",
+                  markers = "data/dialop_markers.csv",
                   mcol = "markers_initial")
 ```
 
