@@ -4,3 +4,723 @@ bibliography: ../course_refs.bib
 editor_options:
   chunk_output_type: console
 ---
+
+
+::: {.callout-tip}
+#### Learning Objectives
+
+* Understand what is meant by **differential localisation** and why it is
+  studied with dynamic (multi-condition) correlation profiling experiments
+* Know the difference between the **BANDLE** and **SANDLE** approaches to
+  differential localisation, and when you might choose each
+* Run the **marker-based** and **marker-free** SANDLE tests on a replicated
+  two-condition LOPIT experiment
+* Combine and threshold the results to produce a ranked list of candidate
+  differentially localised proteins
+* Visualise candidate movers using protein profiles and PCA spatial maps, and
+  critically assess the evidence for movement
+:::
+
+```{r, include=FALSE}
+library("MSnbase")
+library("pRoloc")
+library("robustbase")
+library("glasso")
+library("mvtnorm")
+library("dplyr")
+library("ggplot2")
+library("here")
+```
+
+## From static maps to dynamic experiments
+
+In the previous lessons we generated a **static** spatial map: for a single
+condition we used marker proteins and machine learning to predict where each
+protein resides in the cell. Whilst the steady-state localisation of proteins
+can provide vital information about function, these localisations are specific
+to the system of interest under the study conditions. Given the functional
+importance of protein localisation, the question naturally extends from
+profiling the spatial proteome of a single condition to 
+**comparing the spatial proteome between conditions**. Correlation profiling 
+methods have been widely applied to study protein dynamics in response to drugs,
+stress, signalling and differentiation [@Itzhak2016; @Orre2019; @Mulvey2021;
+@Christopher2025].
+
+We say a protein is **differentially localised** if it is assigned to a
+different subcellular location (or *niche*) in one condition compared with
+another. Discovering these proteins is the main goal of a dynamic spatial
+proteomics experiment.
+
+:::{.callout-note}
+#### What does "differentially localised" mean in practice?
+A correlation profiling experiment measures the distribution of each protein
+across a set of biochemical fractions. If a protein relocates, its
+distribution across the fractions (its **profile**) changes shape so that it
+now looks like the profile of a different organelle. A change in the *amount*
+of a protein (expression) without a change in profile shape is not
+differential localisation.
+:::
+
+## The use-case data: insulin-stimulated adipocytes
+
+In this lesson we use a dynamic LOPIT dataset of 3T3-L1 adipocytes
+[@Conway2026]. Cells were analysed in two conditions:
+
+1. **basal** (unstimulated)
+2. **insulin-stimulated**
+
+Each condition was profiled in **three biological replicates**, and each
+replicate was fractionated into **10 fractions** and quantified with TMT
+10-plex labelling. Replicate 1 of the basal condition was processed alongside
+replicate 1 of the insulin condition, and so on, which means the replicates are
+**paired**.
+
+Insulin signalling in adipocytes is a classic example of regulated protein
+trafficking. The best-known example is the glucose transporter GLUT4 (Slc2a4),
+which is held in intracellular storage vesicles under basal conditions and is
+rapidly delivered to the plasma membrane in response to insulin, allowing the
+cell to take up glucose. We should therefore expect to see some proteins
+moving in this dataset.
+
+## BANDLE and SANDLE
+
+In the workflow paper accompanying this course [@Hutchings2025] we used
+**BANDLE** (Bayesian ANalysis of Differential Localisation Experiments)
+[@Crook2022] to find differentially localised proteins. BANDLE is a fully
+Bayesian model,  it uses Markov-chain Monte Carlo (MCMC) to sample from the
+posterior distribution of its parameters, and it outputs a differential
+localisation probability for each protein. It is powerful, but it requires the
+user to set priors, run several long MCMC chains (typically on a
+high-performance computing cluster), and check that the chains have converged
+before the results can be used.
+
+**SANDLE** (Statistical ANalysis of Differential Localisation Experiments)
+[@Crook2026] was designed to answer the same question quickly and robustly,
+and to handle more complex experimental designs.
+
+| | BANDLE | SANDLE |
+|---|---|---|
+| Model | Fully Bayesian (Gaussian processes + MCMC) | Robust mixture model + regression test |
+| Run time | Minutes to hours; HPC often needed | Seconds on a laptop |
+| Priors to set | Yes | No |
+| Convergence checks | Yes | No |
+| Needs markers | Yes | Marker-based test yes, marker-free test no |
+| Paired / multi-condition designs | Pairwise comparisons only | Supported |
+| Output | DL probability + localisation predictions | DL probability + p-value / FDR |
+
+SANDLE combines two complementary tests:
+
+1. **Marker-based test.** Using the markers, SANDLE models each subcellular
+   niche in each replicate with a robust multivariate *t*-distribution. The
+   centre and spread of each niche are estimated with the minimum covariance
+   determinant (MCD), which is insensitive to outlying markers, and graphical
+   lasso regularisation keeps the estimates stable when a niche has few
+   markers. Every protein then gets a probability of belonging to each niche.
+   The **differential localisation (DL) probability** is the probability that
+   the niche a protein is assigned to in the basal condition differs from the
+   niche it is assigned to in the insulin condition.
+   
+2. **Marker-free test.** This test ignores markers and organelles altogether.
+   It asks whether the *shape* of a protein's profile changes between the
+   conditions by more than we would expect from replicate-to-replicate noise.
+   The result is a classical **p-value**, corrected for multiple testing to
+   give a **false discovery rate (FDR)**.
+
+The two tests capture different kinds of evidence: "is the protein assigned to a
+different organelle?" and "has its profile changed?". Together they give each
+protein a DL probability and an FDR, which you can use to rank and explore
+candidates. There is no single correct way to decide which proteins are
+differentially localised, you might threshold on the DL probability, on the FDR,
+on both, or on either, and the thresholds themselves are a choice. Requiring
+both tests to pass gives a short, conservative list with few false positives
+[@Crook2026], while thresholding on either test, or using looser thresholds,
+gives a longer list for exploration. The right choice depends on your biological
+question and on what you plan to do with the candidates next.
+
+
+## SANDLE setup
+
+SANDLE has not yet been released as an R package. For this course, all the
+functions you need are in one script, `sandle_functions.R`, which we load with
+`source()`. You will also need the `MSnbase` and `pRoloc` packages from
+Bioconductor, which we used in previous lessons.
+
+```{r}
+source("code/sandle_functions.R")
+```
+
+The script provides the following functions:
+
+| Function | What it does |
+|---|---|
+| `split_by_replicate()` | Splits an `MSnSet` into a list of `MSnSet`s, one per replicate |
+| `sandle_markers()` | Marker-based test, returns a DL probability per protein |
+| `sandle_marker_free()` | Marker-free test, returns p-values and FDR per protein |
+| `combine_results()` | Joins the two result tables by protein |
+| `plot_marker_profiles()` | Quality control plot of the fitted organelle profiles |
+| `plot_dl_results()` | Plots DL probability against FDR |
+| `plot_protein_profiles()` | Plots the profiles of chosen proteins in both conditions |
+
+## Importing the data
+
+### Why `readMSnSet2()`?
+
+In the previous lessons we started from PSM-level output, processed it in a
+`QFeatures` object, aggregated it to protein level and then coerced the
+protein-level sets into `MSnSet`s with `as(..., "MSnSet")`, so that we could
+use `pRoloc`.
+
+In practice, you will often be given data that has *already* been processed
+to protein level: a table exported from Proteome Discoverer or MaxQuant, the
+output of a collaborator's pipeline, or a supplementary table from a paper.
+This is the case for the adipocyte data. There is no PSM-level data to
+process, so we don't need `QFeatures`. Instead, we can read the table straight
+into an `MSnSet` with the `readMSnSet2()` function from `MSnbase`. The end
+result is the same kind of object we created by coercion, and everything we
+learnt about `pRoloc` applies to it.
+
+:::{.callout-note}
+#### Reminder: the three parts of an `MSnSet`
+An `MSnSet` stores three linked tables:
+
+* `exprs()`: the quantitative data, with proteins in rows and samples (here,
+  fractions) in columns
+* `fData()`: the **feature data**, with one row per protein and any
+  information about it, such as marker annotation
+* `pData()`: the **sample data**, with one row per column of `exprs()`, such
+  as the TMT tag, condition and replicate
+
+`readMSnSet2()` builds the first two from a single spreadsheet. We add the
+third ourselves.
+:::
+
+### Look at the file first
+
+Before importing, it is good practice to look at the column names so we know
+which columns hold the quantitation and which hold the protein information.
+We read just the header row of the basal file using the `getEcols()` function.
+
+```{r}
+getEcols(f = "data/adipocytes2025_basal.csv", split = ",")
+```
+
+The first column, `Accession`, holds the UniProt accessions. Columns 2 to 31
+hold the quantitation: 10 TMT channels (the fractions) for each of the three
+replicates, named by tag, condition and replicate. All the remaining columns
+are information about each protein, including the `markers` column.
+
+### Read the data into an `MSnSet`
+
+`readMSnSet2()` needs to be told two things:
+
+* `ecol`: which columns hold the quantitative data. Here this is columns
+  `2:31`. These become the `exprs()` matrix.
+* `fnames`: which column holds the protein names. Here this is `"Accession"`.
+  These become the row names (`featureNames()`) of the `MSnSet`.
+
+All other columns go into the feature data. Any further arguments are passed
+on to `read.csv()`. We set `check.names = FALSE` so that R keeps the column
+names exactly as they are in the file. Without it, R would add an "X" to the
+start of names that begin with a number, such as `26_Basal_rep1`.
+
+
+```{r}
+basal   <- readMSnSet2("data/adipocytes2025_basal.csv",
+                       ecol = 2:31,
+                       fnames = "Accession",
+                       check.names = FALSE)
+
+insulin <- readMSnSet2("data/adipocytes2025_insulin.csv",
+                       ecol = 2:31,
+                       fnames = "Accession",
+                       check.names = FALSE)
+```
+
+Let's check that everything went where we expected:
+
+```{r}
+dim(basal)                 # proteins x quantitative columns
+head(exprs(basal)[, 1:5])  # quantitation
+head(fvarLabels(basal))    # feature data column names
+```
+
+### Add the sample data
+
+The `readMSnSet2()` function only reads the protein table, so the sample data is
+empty. We add it from a second, small file that describes each of the 30
+quantitative columns: its TMT tag, condition (`Treatment`) and `Replicate`. The
+row names of this table must match the column names of `exprs()`.
+
+```{r}
+pData(basal)   <- read.csv("data/sampleInfo_basal.csv",   row.names = 1)
+pData(insulin) <- read.csv("data/sampleInfo_insulin.csv", row.names = 1)
+
+pData(basal)
+```
+
+Our `MSnSet`s are now complete:
+
+```{r}
+basal
+```
+
+```{r}
+insulin
+```
+
+
+### Splitting the data by replicate
+
+SANDLE needs one `MSnSet` per replicate. The `split_by_replicate()` function
+splits the data using the `Replicate` column of the sample data.
+
+```{r}
+control <- split_by_replicate(basal, rep_col = "Replicate")    # basal
+treated <- split_by_replicate(insulin, rep_col = "Replicate")  # insulin
+
+length(control)
+length(treated)
+
+control[[1]]
+```
+
+:::{.callout-warning}
+#### Replicate order matters
+The replicates must be in the same order in both lists, so `control[[1]]` and
+`treated[[1]]` are the replicates that were processed together, and so on.
+The marker-free test compares each insulin replicate with its matching basal
+replicate, so it relies on this.
+:::
+
+The marker proteins are stored in the `markers` column of the feature data.
+As in BANDLE, **the same marker list must be used for all replicates of all
+conditions**. The markers are assumed not to move between conditions.
+
+```{r}
+table(fData(control[[1]])$markers)
+```
+
+## Exploring the data
+
+Differential localisation analysis relies on the same thing as static
+localisation: well-resolved subcellular niches. Before we run any test we
+should therefore look at each replicate. Here we use `plot2D()` to plot the
+first two principal components of each replicate, coloured by marker.
+
+```{r}
+#| fig-width: 10
+#| fig-height: 10
+par(mfrow = c(3, 3), mar = c(4, 4, 2, 1))
+for (i in 1:3) plot2D(control[[i]], fcol = "markers", main = paste("Basal, rep", i))
+for (i in 1:3) plot2D(treated[[i]], fcol = "markers", main = paste("Insulin, rep", i))
+addLegend(control[[1]], fcol = "markers", where = "other", ncol = 2)
+```
+
+We see clear, separated clusters for most organelles and a similar overall
+picture in every replicate of both conditions. Note that each PCA is computed
+separately, so the plots may be rotated or mirrored relative to each other.
+What matters is the relative position of the clusters.
+
+:::{.callout-exercise}
+#### Challenge 1: Assessing resolution
+{{< level 2 >}}
+
+In a previous lesson we used `QSep()` to quantify how well the subcellular
+niches are separated. Calculate the QSep scores for replicate 1 of the basal
+and insulin data and plot them. Are the organelles equally well resolved in
+both conditions? Which niches are least well separated?
+
+::: {.callout-answer collapse=true}
+
+```{r}
+qs_basal   <- QSep(control[[1]], fcol = "markers")
+qs_insulin <- QSep(treated[[1]], fcol = "markers")
+
+par(mfrow = c(1, 2))
+plot(qs_basal, main = "Basal, rep 1")
+plot(qs_insulin, main = "Insulin, rep 1")
+```
+
+The resolution is similar in both conditions. This is reassuring: if one
+condition were much less well resolved, we would expect more apparent
+"movement" simply because proteins are assigned less confidently.
+
+:::
+:::
+
+## Marker-based SANDLE
+
+The marker-based test is a single function call. `sandle_markers()` fits a
+robust *t*-distribution to every niche in every replicate, computes the niche
+probabilities for every protein, and combines them into a DL probability. We
+pass the two lists of replicates and the name of the marker column.
+
+The robust fitting step uses random subsampling, so we set a seed to make the
+result reproducible.
+
+```{r}
+set.seed(1)
+marker_res <- sandle_markers(control, treated, fcol = "markers")
+head(marker_res)
+```
+
+The output is a `data.frame` with one row per protein:
+
+* `dl_prob`: the differential localisation probability
+* `is_marker`: whether the protein is a marker. Markers are given a DL
+  probability of 0 because they are assumed not to move
+* `niche_control` and `niche_treated`: the most probable niche in each
+  condition, averaged over replicates. These tell us *where from* and *where
+  to*
+
+As a quality control step, we look at the fitted profile (mean ± 1 standard
+deviation) of each niche in one replicate. Each organelle should have a
+distinct and reasonably tight profile.
+
+```{r}
+#| fig-width: 8
+#| fig-height: 5
+plot_marker_profiles(marker_res, replicate = 1)
+```
+
+:::{.callout-note}
+#### How the DL probability is computed
+For each protein, SANDLE averages the niche probabilities over the replicates
+of each condition. The DL probability is then the probability that a niche
+drawn for the basal condition differs from a niche drawn for the insulin
+condition, $1 - \sum_k p_k^{\text{basal}}\, p_k^{\text{insulin}}$. A protein
+confidently assigned to the same niche in both conditions scores close to 0;
+a protein confidently assigned to different niches scores close to 1.
+:::
+
+## Marker-free SANDLE
+
+The marker-free test is also a single call. It needs no markers and no model
+fitting, so it takes well under a second.
+
+```{r}
+free_res <- sandle_marker_free(control, treated)
+head(free_res)
+```
+
+For each protein we get:
+
+* `p_value` and `fdr`: the p-value from the F-test and the Benjamini-Hochberg
+  adjusted FDR
+* `neg_log10_fdr`: $-\log_{10}(\text{FDR})$, convenient for plotting
+* `F_stat`: the F statistic
+* `RSS_diff`: the difference in residual sum of squares between the two
+  models, an **effect size** describing how much the profile changes
+
+## Combining the two tests
+
+We now join the two result tables by protein.
+
+```{r}
+results <- combine_results(marker_res, free_res)
+head(results)
+```
+
+To see how the two tests relate, we plot the DL probability on the x-axis
+against $-\log_{10}(\text{FDR})$ on the y-axis. The dashed lines show the
+thresholds we will use: DL probability > 0.9 and FDR < 0.1. Proteins in the
+top-right corner are supported by **both** tests. Point size shows the effect
+size (`RSS_diff`).
+
+We also highlight in red some proteins that were reported to move after
+insulin stimulation in the original study [@Conway2026].
+
+```{r}
+known_movers <- c("P14142", "Q8C129", "P40336", "P81122", "Q05512",
+                  "Q9JLN9", "Q8CFH6", "P61460", "Q8C0M0", "A2A9C3")
+```
+
+```{r}
+#| fig-width: 7
+#| fig-height: 5
+plot_dl_results(results, prob_cut = 0.9, fdr_cut = 0.1, highlight = known_movers)
+```
+
+How many candidates do we get with each criterion?
+
+```{r}
+c(marker_based = sum(results$dl_prob > 0.9),
+  marker_free  = sum(results$fdr < 0.1),
+  both         = sum(results$dl_prob > 0.9 & results$fdr < 0.1),
+  either       = sum(results$dl_prob > 0.9 | results$fdr < 0.1))
+```
+
+The marker-free test flags many more proteins than the marker-based test.
+This is expected: it detects *any* consistent change in profile, including
+small shifts within the same organelle and changes in proteins that sit
+between organelles, whereas the marker-based test only responds to a change
+of assigned niche. How you combine them is up to you. Here we take the
+conservative option and require both, which gives a short list to start
+exploring. Challenge 2 looks at what happens with other choices.
+
+Our candidate list, ordered by effect size:
+
+```{r}
+hits <- results %>%
+  filter(dl_prob > 0.9, fdr < 0.1) %>%
+  arrange(desc(RSS_diff)) %>%
+  dplyr::select(protein, dl_prob, fdr, niche_control, niche_treated)
+
+head(hits, 10)
+```
+
+And how do the previously reported movers score?
+
+```{r}
+results %>%
+  filter(protein %in% known_movers) %>%
+  dplyr::select(protein, dl_prob, fdr, niche_control, niche_treated)
+```
+
+:::{.callout-exercise}
+#### Challenge 2: Choosing thresholds
+{{< level 1 >}}
+
+Thresholds are a choice, not a law of nature. Find how many candidates you
+get if you use a more stringent threshold (DL probability > 0.95 and
+FDR < 0.01) and a more exploratory one (DL probability > 0.8 and FDR < 0.2).
+How many of the `known_movers` pass in each case?
+
+::: {.callout-answer collapse=true}
+
+```{r}
+stringent <- results %>% filter(dl_prob > 0.95, fdr < 0.01)
+explore   <- results %>% filter(dl_prob > 0.8,  fdr < 0.2)
+
+nrow(stringent)
+nrow(explore)
+
+sum(known_movers %in% stringent$protein)
+sum(known_movers %in% explore$protein)
+```
+
+Loosening the thresholds recovers more of the known movers, at the cost of a
+longer list that will contain more false positives. Which you choose depends
+on what you will do next: a short list for expensive validation, or a longer
+list for exploration and enrichment analysis.
+
+:::
+:::
+
+## Where do the proteins move?
+
+Because the marker-based test tells us the most probable niche in each
+condition, we can summarise the movements of our candidates as a table of
+*from* and *to* niches, similar to the `plotTable()` output of BANDLE.
+
+```{r}
+hits %>%
+  count(niche_control, niche_treated, sort = TRUE)
+```
+
+:::{.callout-exercise}
+#### Challenge 3: Proteins leaving the plasma membrane
+{{< level 2 >}}
+
+Using `results`, find all proteins that pass both thresholds and are
+assigned to the plasma membrane in the basal condition. Where are they
+assigned after insulin stimulation? Look back at the PCA plots and the
+marker profiles: how well separated are the plasma membrane and the niches
+they move to?
+
+::: {.callout-answer collapse=true}
+
+```{r}
+pm_leavers <- results %>%
+  filter(dl_prob > 0.9, fdr < 0.1,
+         niche_control == "Plasma membrane") %>%
+  dplyr::select(protein, dl_prob, fdr, niche_control, niche_treated)
+
+pm_leavers
+
+pm_leavers %>% count(niche_treated)
+```
+
+Most of these candidates move from the plasma membrane niche to the Golgi
+niche. In this dataset the plasma membrane and Golgi markers are close
+together on the PCA plots and have similar profiles, so niche assignments
+between them are less certain than between more distinct niches (you can
+confirm this with `QSep()`, where the Golgi is the plasma membrane's closest
+neighbour). This is a good example of why the niche labels should be
+interpreted together with the data and the literature: the change in profile is
+real (the marker-free test is significant), but "Golgi" may best be read as
+"an intracellular membrane compartment near the Golgi". A niche label can only
+be as specific as the markers that define it.
+
+:::
+:::
+
+## Visualising the candidates
+
+### Protein profiles
+
+Always look at the data. `plot_protein_profiles()` plots the profiles of
+chosen proteins in both conditions: thin lines are individual replicates,
+thick lines the mean, and the shaded band ± 1 standard deviation.
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+plot_protein_profiles(control, treated, proteins = hits$protein[1:12],
+                      labels = c("basal", "insulin"))
+```
+
+A convincing mover shows a consistent change in profile shape across all
+three replicates, with little overlap between the two conditions.
+
+Now let's look at two of the known movers. GLUT4 (P14142) is the classic
+insulin-responsive protein, and Q8C129 is one of the strongest signals in this
+dataset.
+
+```{r}
+#| fig-width: 8
+#| fig-height: 3.5
+plot_protein_profiles(control, treated, proteins = c("P14142", "Q8C129"),
+                      labels = c("basal", "insulin"))
+```
+
+Compare where each of these sits on the DL probability versus FDR plot above.
+A protein can give a clear signal in one test and be borderline in the other,
+which is why it helps to look at both.
+
+### Movers on the spatial map
+
+Finally, let's put a few movers back onto the PCA plots: the top four
+candidates from both methods plus GLUT4 and Q8C129. We write one small function
+that draws the PCA plot of a replicate and adds the movers on top. `plot2D()`
+returns the PCA coordinates of every protein, which we use to place the
+points. The `col` and `pch` arguments can be a single value (all movers look
+the same) or one value per mover.
+
+```{r}
+movers <- c(hits$protein[1:4], "P14142", "Q8C129")
+
+show_movers <- function(object, main, col = "yellow", pch = 21, labels = FALSE) {
+  col <- setNames(rep(col, length.out = length(movers)), movers)
+  pch <- setNames(rep(pch, length.out = length(movers)), movers)
+  pca <- plot2D(object, fcol = "markers", main = main)  # returns PCA coordinates
+  m <- movers[movers %in% rownames(pca)]
+  points(pca[m, 1], pca[m, 2], pch = pch[m], bg = col[m], col = "black",
+         cex = 2, lwd = 1.5)
+  if (labels) text(pca[m, 1], pca[m, 2], m, pos = 3, cex = 0.7, font = 2)
+}
+```
+
+First, all movers in yellow, labelled with their accession. The basal
+replicates are on the top row and the insulin replicates on the bottom row.
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+par(mfrow = c(2, 3), mar = c(4, 4, 2, 1))
+for (i in 1:3) show_movers(control[[i]], paste("Basal, rep", i), labels = TRUE)
+for (i in 1:3) show_movers(treated[[i]], paste("Insulin, rep", i), labels = TRUE)
+```
+
+It is easier to follow individual proteins if each has its own colour and
+symbol.
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+mover_col <- c("black", "red", "blue", "darkorange", "green3", "magenta")
+mover_pch <- c(21, 22, 23, 24, 25, 21)
+
+par(mfrow = c(2, 3), mar = c(4, 4, 2, 1))
+for (i in 1:3) show_movers(control[[i]], paste("Basal, rep", i), mover_col, mover_pch)
+for (i in 1:3) show_movers(treated[[i]], paste("Insulin, rep", i), mover_col, mover_pch)
+```
+
+```{r}
+#| fig-width: 6
+#| fig-height: 1.5
+par(mar = c(0, 0, 0, 0))
+plot.new()
+legend("center", legend = movers, pch = mover_pch, pt.bg = mover_col,
+       col = "black", pt.cex = 1.6, ncol = 3, bty = "n")
+```
+
+A mover should sit closer to a different organelle cluster after insulin
+stimulation, and it should do so consistently across all three replicates.
+
+:::{.callout-exercise}
+#### Challenge 4: Follow your own proteins
+{{< level 2 >}}
+
+Choose three proteins from Challenge 3 (or any other proteins you are
+interested in). Plot their profiles with `plot_protein_profiles()` and show
+them on the PCA plots using `show_movers()`. Remember that `show_movers()` uses
+the `movers` object, so you will need to redefine it first.
+
+::: {.callout-answer collapse=true}
+
+```{r}
+# Here are the possible movers
+hits$protein
+
+# Randomly select a few for this example
+movers <- c("Q6P8I4", "P63073")
+
+plot_protein_profiles(control, treated, proteins = movers,
+                      labels = c("basal", "insulin"))
+
+par(mfrow = c(2, 3), mar = c(4, 4, 2, 1))
+for (i in 1:3) show_movers(control[[i]], paste("Basal, rep", i),
+                           col = c("black", "brown"), pch = 21:23)
+for (i in 1:3) show_movers(treated[[i]], paste("Insulin, rep", i),
+                           col = c("black", "brown"), pch = 21:23)
+```
+
+:::
+:::
+
+## Interpreting the results
+
+Computational prediction of differential localisation is largely
+**exploratory**. LOPIT data contains noise between fractions and replicates,
+and some proteins naturally sit between organelles or in several at once. The
+results should be used as a starting point for further investigation (for
+example, searching the literature for evidence of movement, imaging, or
+biochemical follow-up), rather than as validation in themselves.
+
+Some things to keep in mind:
+
+* **Markers are assumed not to move.** If a marker protein does relocate, the
+  marker-based test cannot detect it, and it may distort the niche model. The
+  marker-free test does not have this limitation.
+* **Results depend on data quality.** Poorly resolved niches lead to uncertain
+  assignments, which in turn inflate DL probabilities. Always check
+  resolution first.
+* **The marker-based test has a random component.** The robust fitting step
+  uses random subsampling, particularly for niches with few markers. Set a
+  seed for reproducibility, and treat proteins close to a threshold with
+  caution.
+* **Thresholds are your choice.** Requiring both a high DL probability and a
+  low FDR gives a short list supported by two kinds of evidence. Using either
+  test, or looser thresholds, gives a longer list for exploration. Choose
+  based on your question and how you will follow up the candidates.
+
+::: {.callout-tip}
+#### Key Points
+
+* A protein is **differentially localised** if it changes subcellular niche
+  between conditions, seen as a change in the *shape* of its profile across
+  fractions.
+* **SANDLE** detects differential localisation in seconds, with no priors,
+  MCMC or HPC, making it a fast and robust alternative to BANDLE.
+* The **marker-based** test models each niche with a robust *t*-distribution
+  and gives a **DL probability**, together with the most likely niche in each
+  condition.
+* The **marker-free** test compares profiles between conditions and gives
+  a **p-value and FDR** without needing any markers.
+* How to threshold, and on which test, is up to you: stringent for a short
+  list, looser for exploration. Candidates should always be checked by
+  plotting profiles and spatial maps, and followed up experimentally.
+:::
+
+## References

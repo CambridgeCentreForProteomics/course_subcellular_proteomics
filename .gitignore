@@ -24,6 +24,8 @@ _site
 
 **/*.quarto_ipynb
 
+.DS_Store
+
 # Data
 materials/data/report.parquet
 course_files/preprocessed/*.rda
