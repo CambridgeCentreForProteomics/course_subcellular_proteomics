@@ -82,6 +82,7 @@ has been processed with DIA-NN>=2.0), opposed to one main report `.tsv` output f
 from earlier versions. We begin by using the `arrow` package to unpack the `parquet`
 files using the `read_parquet` function.
 
+
 ```{r}
 df <- read_parquet("data/report.parquet")
 ```
