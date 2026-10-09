@@ -67,7 +67,9 @@ proteomics normalisation plays a different role because we are interested in the
 shape of protein abundance profiles rather than the magnitude of the intensity in
 each channel. Hence, the aim of normalisation here is to scale all of our
 quantitation data into the same space (within the range of 0 and 1) whilst 
-maintaining the shape of our abundance profiles.
+maintaining the shape of our abundance profiles. If we did not do this, proteins
+with the same distribution across the gradient but different abundances would 
+display very different profiles.
 
 
 ## Normalisation 
@@ -88,7 +90,10 @@ R <- 1:3
 
 
 ```{r}
+## Define names for indexing imputed datasets
 imp_names <- paste0("imp_precursors_R", R)
+
+## Define new names for normalised datasets
 norm_names <- paste0("norm_precursors_R", R)
 
 qf <- normalize(qf, 
@@ -102,7 +107,7 @@ qf
 Let's take a look at what this normalisation has done to the data.
 
 ```{r}
-## Before nornmalisation
+## Before normalisation
 qf[["imp_precursors_R1"]] %>%
   assay() %>%
   head()
@@ -128,7 +133,26 @@ plot(qf)
 
 
 ::: {.callout-note}
-#### Normalise before or after aggregation? (In practice, it makes little difference)
+#### At what stage should I normalise to generate profiles?
+
+#### Before or after imputation? (Depends on extent of data missingness)
+
+Some experimental designs yield a relatively low proportion of missing values,
+for example label-based methods that use TMT such as LOPIT. As a result, after
+an initial filtering step, there are very few values to impute. Applying a
+baseline k-NN imputation to such data can be more successful when the data are in a
+similar space after normalisation, as discussed in @Hutchings2025. We note that by applying
+imputation after normalisation, the final imputed profiles will no longer sum to
+exactly 1. However, since such designs have such low missingness, the sum should
+not greatly exceed 1. By contrast, where datasets have a greater proportion of
+missing data to impute, as is the case for this example where we have a DIA LFQ
+design row sum normalisation of a limited number of fractions would generate a
+short profile summed to one and subsequent imputation could result in a
+correlation profile with an undesirably high sum value. Here it is necessary to
+impute prior to normalisation to ensure the generation of sensible correlation
+profiles in the same final space (between 0 and 1).
+
+#### Before or after aggregation? (In practice, it makes little difference)
 
 In this workflow we normalise each precursor profile to sum to 1 *before*
 aggregating to protein level. Precursors from the same protein can differ in
@@ -187,7 +211,7 @@ This means aggregating all precursors with the same value of `"Protein.Group"`.
 For an example of two-step aggregation, from precursor to peptide followed by
 peptide to protein, users are directed to @Hutchings2023.
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 agg_names <- paste0("proteins_R", R)
 
 qf <- QFeatures::aggregateFeatures(qf,
@@ -200,8 +224,8 @@ qf
 ```
 
 We have now populated the `QFeatures` object with protein-level data containing
-the row normalised protein abundance profiles. From looking at the summary in 
-`experiments(qf)` we have around 9000 proteins in each experiment.
+the row normalised protein correlation profiles. From looking at the summary in 
+`experiments(qf)` we have around 9000 proteins in each replicate experiment.
 These protein correlation profiles contain spatial information and are the input
 to downstream machine learning classifers.
 
@@ -287,8 +311,9 @@ qf <- joinAssays(qf,
 qf
 ```
 
-
-Finally, we filter to only keep proteins that are found in all replicates.
+Finally, we filter to only keep proteins that are found in all replicates. This
+is necessary because the machine learning algorithms in `pRoloc` do not accept
+missingness.
 
 ```{r}
 qf <- filterNA(qf, i = "proteins_joined")

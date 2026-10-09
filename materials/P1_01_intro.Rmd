@@ -6,9 +6,9 @@ bibliography: course_refs.bib
 ::: {.callout-tip}
 #### Learning Objectives
 
-* Understand the aim and design of a typical subcellular proteomics experiment
+* Understand the aim and design of a typical correlation profiling subcellular proteomics experiment
 * Understand De Duve's principle
-* Understand the aim and design of the use-case DIA subcellular proteomics experiment
+* Understand the the use-case DIA-LOP subcellular proteomics experiment
 * Understand what DIA-NN does and what data it outputs for downstream analysis
 
 :::
@@ -18,7 +18,8 @@ bibliography: course_refs.bib
 The field of subcellular spatial proteomics is centered on the determination of
 protein localisation within the cell. Importantly, protein localisation is
 intimately linked to protein function and is vital for research into basic
-biological mechanisms impacting the health and disease of all organisms.
+biological mechanisms impacting the health and disease of all organisms [@Sigaeva2026].
+
 Quantitative mass spectrometry (MS)-based proteomics methods have been developed
 to study protein localisation at the proteome-wide level and generate
 subcellular "maps". Several high throughput MS-based correlation profiling
@@ -27,12 +28,15 @@ methods have been established and include the Localisation of Organelle Proteins
 @Kieran2025], dynamic organellar maps (DOMs) [@Itzhak2016], protein correlation
 profiling (PCP) [@Foster2006], sequential detergent-based solubilisation
 [@MartinezVal2021], COLA [@Mardakheh2017], Prolocate [@Jadot2017] and
-SubcellBarCode [@Orre2019]. 
+SubcellBarCode [@Orre2019]. Despite subtle differences in experimental design, 
+as summarized in the figure below, all of these methods generate a similar data 
+matrix (PSM, peptide or protein abundance across fractions) and can be analysed 
+using the same subcellular proteomics software. 
 
-Generation of protein correlation profiling data requires considerable effort,
+Generation of correlation profiling data requires considerable effort,
 expense and well thought-out experimental designs for successful implementation.
 Equally, data analysis involves considerable time and investment to produce high
-quality, robust datasets which enables meaningful biological interpretation and
+quality, robust datasets which enable meaningful biological interpretation and
 utility to the research community.
 
 
@@ -42,7 +46,7 @@ knitr::include_graphics("figs/pcp_steps.png", error = FALSE)
 
 In this course material, we provide an updated workflow for the processing and
 analysis of correlation profiling-based spatial proteomics data, based on our
-f1000 workflow [@Hutchings2025]. We cover the key steps required to extract
+F1000 workflow [@Hutchings2025]. We cover the key steps required to extract
 spatial information from quantitative correlation profiling MS data. The first
 step requires data importation, processing, and quality control followed by the
 definition of subcellular markers. We discuss how to curate such markers using
@@ -78,8 +82,8 @@ in one single data container.
 
 As a use-case, we will analyse a label-free DIA subcellular proteomics dataset
 from a partially differentiated human osteosarcoma (OS) cell line (U-2 OS cells)
-[@Kieran2025]. U-2 OS cells are one of the earliest described cancer derived cell lines and 
-widely used across many areas of research. For subcellular proteomics they have
+[@Kieran2025]. U-2 OS cells are one of the earliest described cancer derived cell lines
+and have been applied across many areas of research. For subcellular proteomics they have
 been widely used in benchmarking as they provide a robust, flat, epithelial-like
 morphology and a deeply profiled human proteomic reference map.
 
@@ -93,19 +97,19 @@ Our use-case data was generated using the DIA-LOP method from the Lilley lab at
 the Universisty of Cambridge. DIA-LOP (Data-Independent Acquisition
 Localization of Organelle Proteins), it is a high throughput subcellular
 proteomics method that offers a faster, label-free, and cost-effective
-alternative to classic multiplexed LOPIT methods. The pipeline works by gently
+alternative to classic multiplexed LOPIT methods [@Kieran2025]. The pipeline works by gently
 lysing cells and using differential ultracentrifugation to separate intact
 organelles into 10 distinct fractions based on density. Instead of using
 expensive chemical tags e.g. tandem mass tags (TMT), these fractions undergo
 label-free peptide digestion and are analyzed via advanced DIA mass
 spectrometry, which systematically fragments all ions to capture low-abundance
-proteins from very low sample inputs. For each sample, a total of 750 ng of peptide
+proteins from very low sample inputs. For each fraction, a total of 750 ng of peptide
 was analysed using using a timsTOF HT mass spectrometer (Bruker Daltonics, Bremen, 
 Germany) coupled with a nanoElute 2 UHPLC system (Bruker Daltonics). 
 
-The data was processed using the freely available
-[DIA-NN](https://github.com/vdemichev/DiaNN) software [@Demichev2019] for
-peptide and protein identification and quantification, followed by the
+For the paper, the data was processed using the freely available
+[DIA-NN](https://github.com/vdemichev/DiaNN) software (v 1.8.2 beta 27) [@Demichev2019] 
+for peptide and protein identification and quantification, followed by the
 Bioconductor
 [QFeatures](https://www.bioconductor.org/packages/release/bioc/html/QFeatures.html)
 package to aggregate and process precursor-level data into robust protein
@@ -113,7 +117,7 @@ abundance profiles. Subsequently, the
 [pRoloc](https://www.bioconductor.org/packages/release/bioc/html/pRoloc.html)
 package was used for protein subcellular localisation and the generation of
 organelle maps, matching the abundance profiles of unknown proteins against
-known organelle markers to map over 8,000 protein groups across subcellular
+known organelle markers to map over 8,000 protein groups across 13 subcellular
 compartments. The raw MS data is available online through ProteomeXchange via
 the PRIDE repository under the identifier [PXD063082](https://www.ebi.ac.uk/pride/archive/projects/PXD063082).
 
@@ -201,8 +205,8 @@ the PRIDE repository under the identifier [PXD063082](https://www.ebi.ac.uk/prid
 ## Identification search of the raw MS data
 Database searching of MS data involves comparing the observed MS spectra
 to expected MS spectra generated via in silico digestion of a selected protein 
-database. Since the use-case data used human cells, we provided the human proteome
-to Proteome Discoverer as the database for searching. We also provided a 
+database. Since the use-case data used human cells, we provided the SwissProt 
+human proteome to DIA-NN as the database for searching. We also provided a 
 database of common contaminants that could be present in our sample due to (i)
 human contamination (e.g., keratin from nails, hair or skin), or (ii) sample
 preparation (e.g., enzymes used for protein digestion). These two databases are
@@ -212,7 +216,7 @@ can be found in the course materials and also
 The result of such a database search is a list of 
 **peptide spectrum matches (PSMs), or precursors**, that is a list of matches between observed and expected
 spectra. Most software will also aggregate the PSM or precursor level data
-upward and provide output files at all data levels (PSM, peptide and protein).
+upward and provide output files at all data levels (PSM/precursor, peptide and protein).
 It is up to the user which output file to use for further analysis.
 
 The starting point for this workshop and data processing workflow in R is an 
@@ -242,7 +246,8 @@ at the lowest level is not always possible.
 
 The data we will use in this workshop is label-free DIA-LOP, so we will start
 from the precursor level (rather than the PSM-level TMT data typical of DDA
-LOPIT).
+LOPIT). The data was reprocessed using DIA-NN v2.0 (Academia) meaning that the
+files are no longer the exact ones used by [@Kieran2025].
 
 ## Summary
 The use-case data that we will process and analyse in this workshop is a **DIA**

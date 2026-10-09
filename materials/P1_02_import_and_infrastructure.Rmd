@@ -25,7 +25,7 @@ library("here")
 The first part of this workflow will demonstrate how to import quantitative MS
 data into R using the `QFeatures` infrastructure. We will then discuss the key 
 data cleaning and quality control steps required to ensure that only high quality 
-data is retained. Finally, the quantitative data will be transformed into protein
+data is retained. Finally, the quantitative data will be transformed into 
 correlation profiles which hold the spatial information required for
 protein localisation prediction, as covered in part 2 of the workflow.
 
@@ -44,8 +44,8 @@ and manipulate quantitative proteomics data.
 
 We begin with importing the data at the lowest data-level. In this DIA-LOP
 experiment this is the precursor level. The raw DIA mass spectrometry data was
-processed using DIA-NN, which outputs a report file in `.parquet` format. Unlike
-a simple abundance matrix, this is a **long-format** table
+processed using DIA-NN v2.0 (Academic), which outputs a report file in `.parquet` 
+format. Unlike a simple abundance matrix, this is a **long-format** table
 --- each row corresponds to a single precursor--sample combination, rather than
 one row per precursor across all samples simultaneously. The file contains
 precursor-level identifications and quantities for every sample, along with
@@ -64,7 +64,7 @@ file also, newer versions output parquet files.
 
 We start with loading the packages we will be using in this workflow.
 
-```{r}
+```{r, warning = FALSE}
 suppressPackageStartupMessages({
   library("tidyverse")
   library("QFeatures")
@@ -86,9 +86,8 @@ files using the `read_parquet` function.
 df <- read_parquet("data/report.parquet")
 ```
 
-Let's have a look at the column names of the data to check we've imported the
-data correctly. We can also inspect the dimensions and column names to
-understand what the data contains.
+Let's have a look at the data to check we've imported it correctly. We can inspect 
+the dimensions and column names to understand what the data contains.
 
 ```{r}
 dim(df)
@@ -105,12 +104,12 @@ The key columns we will use in our analysis are:
 
 - **`Precursor.Id`**: a unique identifier for each precursor --- typically the modified peptide sequence and charge state (e.g. `"PEPTM[ox]IDEQ..2"`)
 - **`Protein.Group`**: the canonical protein group identifier used for aggregation to protein level.
-  Proteins that cannot be distinguished from each other based on proteotypic peptides detected in the data are grouped together under one Protein Group.
+  Proteins that cannot be distinguished from each other based on proteotypic peptides detected in the data are grouped together under one Protein Group
 - **`Protein.Ids`**: the UniProt accession(s) of the protein(s) to which the precursor is assigned
 - **`Genes`**: the gene symbol(s) associated with the identified proteins
 - **`Run`**: the identifier for the sample run --- one value per LC-MS sample injection
 - **`Precursor.Quantity`**: the quantified abundance of the precursor in that run
-- **`Q.Value`**: the precursor-level Q-value, representing the estimated false discovery rate at the precursor level; lower values indicate more confident identifications
+- **`Q.Value`**: the precursor-level Q-value, representing the estimated false discovery rate (FDR) at the precursor level; lower values indicate more confident identifications
 - **`Lib.Q.Value`**: the library-level Q-value --- the confidence that the precursor was matched to the correct entry in the spectral library
 - **`Protein.Q.Value`**: the protein-level Q-value, representing the estimated FDR at the protein level
 
@@ -120,7 +119,7 @@ Information about the precursor Id and its peptide sequence can be found in the
 below.
 
 ```{r}
-df %>% 
+df |> 
   dplyr::select(Precursor.Id, Stripped.Sequence, Modified.Sequence)
 ```
 
@@ -137,18 +136,20 @@ was derived from can be found in the `Run` column.
 
 ```{r}
 ## Check annotation of each sample in Run column
-df %>%
-  dplyr::pull(Run) %>%
+df |>
+  dplyr::pull(Run) |>
   unique()
 ```
 
 We see there are 30 unique run names corresponding to the 3 experiments which 
-each have 10 biochemical fractions within each experiment.
+each have 10 biochemical fractions within each experiment. The names of each run
+are generated during the DIA-NN search based on the names of the raw MS files
+that are provided.
 
 ```{r}
-df %>%
-  dplyr::pull(Run) %>%
-  unique() %>% 
+df |>
+  dplyr::pull(Run) |>
+  unique() |> 
   length()
 ```
 
@@ -183,7 +184,7 @@ can be conceptualised as data containers made up of three different parts:
 1. The `assay` - a matrix which contains the quantitative data from a proteomics
 experiment. Each row represents a feature (a precursor, peptide or protein) and
 each column contains the quantitative data (measurements) from one experimental
-sample.
+sample. Hence, the matrix is in a wide format.
 
 2. The `rowData` - a table (data frame) which contains all remaining
 information associated with each feature (i.e. every column from your search
@@ -222,7 +223,7 @@ the data.
 A [`QFeatures`](https://bioconductor.org/packages/release/bioc/html/QFeatures.html)
 object is essentially a list of `SummarizedExperiment` objects. However, the
 main benefit of using a `QFeatures` object over storing each data level as an
-independent `SummarizedExperiment` is that the `QFeatures` infrastructure
+independent `SummarizedExperiment`  or in a normal `list` object is that the `QFeatures` infrastructure
 maintains explicit links between the `SummarizedExperiment`s that it stores.
 This allows for maximum traceability when processing data across multiple levels
 — for example, tracking which precursors or peptides contribute to each protein
@@ -317,12 +318,12 @@ plotting the protein correlation profiles.
 Let's change it now.
 
 ```{r}
-df <- df %>%
+df <- df |>
   mutate(
     runCol = 
-      str_remove(Run, "_.*") %>%            # Remove text after 1st _ i.e.DIA_KM...
-      str_replace("^R8", "R2") %>%          # Recode R8 -> R2
-      str_replace("^R9", "R3") %>%          # Recode R9 -> R3
+      str_remove(Run, "_.*") |>            # Remove text after 1st _ i.e.DIA_KM...
+      str_replace("^R8", "R2") |>          # Recode R8 -> R2
+      str_replace("^R9", "R3") |>          # Recode R9 -> R3
       str_replace("F(\\d)$", "F0\\1")       # Add leading zero after F if single digit
   )
 ```
@@ -334,8 +335,8 @@ previously mentioned when we convert the data in the next section to a
 data.
 
 ```{r}
-df %>%
-  dplyr::pull(runCol) %>%
+df |>
+  dplyr::pull(runCol) |>
   unique()
 ```
 
@@ -360,14 +361,19 @@ R <- 1:3
 The `readQFeaturesFromDIANN` takes DIANN output as a `data.frame` and converts
 it into a multi-set `QFeatures` object. We pass the `runCol` as file names from
 the experiment, for our use case this is the new column called `Fraction` that
-we created in the `data.frame`.
+we created in the `data.frame`. This is the column that `readQFeaturesFromDIANN`
+uses to split the data into sets - we will end up with a `QFeatures` object with
+one set per unique value of `runCol` (`Fraction`). This is important because some
+quality control metrics are calculated on a per-run basis, so we need to keep 
+each run separate in order to use these.
 
 We also need to tell `QFeatures` where the quantitation data is located. As
 previously mentioned you will notice with DIA-NN output there are multiple
 qunatitative columns e.g. `PG.Quantity`, `PG.Normalised`,
-`Precursor.Quantity`,etc, and these will vary between DIA-NN versions, but these
-represent different types of quantitation rather than quantitation across
-different samples, as discussed below.
+`Precursor.Quantity` etc., and these will vary between DIA-NN versions. Make 
+sure to check the column names for the version you are using. As mentioned before,
+these columns represent different types of quantitation rather than quantitation
+across different samples.
 
 **Using `Precursor.Quantity` for quantitation**
 Since our analysis started from the precursor level, we will use precursor-level
@@ -375,7 +381,7 @@ quantitation and aggregate upwards to protein-level. Whilst DIA-NN provides the
 `Precursor.Normalised` column containing quantitative data pre-normalised using
 the MaxLFQ algorithm, this normalisation step makes the assumption that the
 majority of the proteome does not change between any two samples [@Cox2014].
-Since biochemical fractions derived from a protein correlation profiling
+Since biochemical fractions derived from a correlation profiling
 experiment are expected to be relatively different from each other in terms of
 their composition, our data does not meet the assumptions required. Hence, we
 use the `Precursor.Quantity` column which contains the raw quantitation
@@ -384,7 +390,7 @@ data.
 
 #### Creating the data object
 
-```{r, message=FALSE}
+```{r, message=FALSE, warning=FALSE}
 qf <- readQFeaturesFromDIANN(assayData = df, 
                              quantCols = "Precursor.Quantity", 
                              runCol = "runCol", 
@@ -394,16 +400,18 @@ qf <- readQFeaturesFromDIANN(assayData = df,
 qf
 ```
 
-You will notice that each fraction appears as a separate dataset within the
-`QFeatures` object and we now have 30 datasets (individual
+You will notice that each run (fraction) appears as a separate set within the
+`QFeatures` object and we now have 30 sets (individual
 `SummarizedExperiments`). Note, that this differs from when we import labelled
-correlation profiling data when we would have one dataset containing all the
-fractions together and as such the upstream processing is slightly different.
+correlation profiling data when we would have one set containing all the
+fractions together and as such the upstream processing is slightly different. 
+Information on the analysis of label-based LOPIT or correlation profiling data
+can be found in [@dataref].
 
 ## Exploring the data
 
 When we inspect our `QFeatures` object, we see that it contains 
-`r length(qf)` sets, each corresponding to a different sample run. Each set
+`r length(qf)` sets, each corresponding to a different sample run (fraction). Each set
 contains the precursor-level quantification data for that fraction, with feature
 names given by the `Precursor.Id` column from the original DIA-NN output.
 
@@ -412,8 +420,8 @@ names given by the `Precursor.Id` column from the original DIA-NN output.
 qf
 ```
 
-By default if a `QFeatures` object has more than 6 samples, only the first three
-and last three sample summaries are printed to the screen. To see all samples
+By default if a `QFeatures` object has more than 6 sets, only the first 
+and last three set summaries are printed to the screen. To see all sets
 and their respective data summary, we can use the `experiments` function.
 
 ```{r}
@@ -426,7 +434,7 @@ We can quickly see how many precursors were measured per sample for example, we
 see for the first sample called `r names(qf)[1]` there are 
 `r nrow(qf[[1]])` precursors.
 
-We can access individual samples (sets, or `SummarizedExperiment`s) using
+We can access individual sets (samples, or `SummarizedExperiment`s) using
 standard double bracket nomenclature (this is how you would normally access
 items of a list in R). As with all indexing we can use the list position or
 dataset name.
@@ -443,19 +451,41 @@ Is the same as,
 qf[["R1F01"]]
 ```
 
-The quantitation data for each sample is store in the `assay` container and can
+The quantitation data for each sample is stored in the `assay` container and can
 be extracted using the `assay` function.
 
 ```{r}
 #| label: show-dimensions
-assay(qf[[1]]) %>%
+qf[[1]] |>
+  assay() |>
   head()
 ```
 
 
+:::{.callout-note}
+## Alternative input methods
+There are several ways to import correlation profiling data into a `QFeatures` 
+object, and the correct way will depend upon the data structure (long vs. wide)
+as well as the quantitation (label-free vs. label-based) and acquisition (DDA vs.
+DIA) method. 
 
-- Before moving on add a callout to refer to f1000 about different types of input scenarios 
-for different types of quant methods (multi-set case etc.)
+For example, TMT-based methods (e.g., LOPIT) allow for sample multiplexing
+meaning that all biochemical fractions from a correlation profiling experiment 
+can be pooled and analysed in a single MS run. Here, the identification of a 
+peptide sequence across multiple fractions is derived from a single MS2 spectrum.
+Therefore, there is no per-run or per-fraction quality control metrics, only
+global statistics that apply to that peptide for all fractions. This data can 
+be imported into a `QFeatures` object in a single set with one row per feature
+(PSM, peptide or protein) and one quantitative column per fraction. When multiple
+replicates or conditions have been used, each experiment (one full correlation 
+gradient) can be imported as a separate set. Hence, if you had three replicate
+LOPIT-DC experiments, you would import the data as 3 sets within a `QFeatures` 
+object. 
+
+Details about different import options for DDA datasets is outlined in [@dataref].
+For label-free DIA datasets, we recommend using the multi-set import approach 
+demonstrated in this workflow, with one set per run.
+:::
 
 
 ::: {.callout-discussion}
@@ -470,17 +500,17 @@ each precursor. These are run-specific values and would be ambiguous or
 impossible to retain if all runs were immediately merged into a single matrix.
 
 By keeping one `SummarizedExperiment` per run, we can inspect and filter on
-these per-run metrics before joining the data. We will join the per-sample sets
-into a single combined precursor set in the next lesson, once filtering is
+these per-run metrics before joining the data. We will join the per-run sets
+into a single combined precursor set per replicate in the next lesson, once filtering is
 complete.
 :::
 
 ### How many precursors per sample?
 
-Each sample will have a different number of precursors identified and
+Each run will have a different number of precursors identified and
 quantified. We can explore this by inspecting the number of rows in each
-per-sample set, which corresponds to the number of precursors quantified in that
-sample.
+per-run set, which corresponds to the number of precursors quantified in that
+run (here a biochemical fraction from one replicate).
 
 ::: {.callout-exercise}
 #### Challenge: Precursors per sample
@@ -497,7 +527,7 @@ coloured by replicate. Based on your plot:
 - Is there any sample that looks like an outlier?
 
 <details><summary>Hint</summary>Browse the `QFeatures` documentation with
-`?QFeatures` to find a suitable function for obtaining per-sample feature
+`?QFeatures` to find a suitable function for obtaining per-run feature
 counts.</details>
 
 ::::: {.callout-answer collapse="true"}
@@ -516,12 +546,13 @@ hist(n, xlab = "Precursors", main = "Precursor counts per sample")
 
 ```{r}
 #| label: create-subset
-data.frame(
+plot_df <- data.frame(
   n_precursors = nrows(qf),
-  sample = names(nrows(qf))
-) %>%
-  merge(data.frame(colData(qf)), by.x = "sample", by.y = "runCol") %>%
-  ggplot(aes(x = sample, y = n_precursors, fill = Replicate)) +
+  sample = names(nrows(qf))) |>
+  merge(data.frame(colData(qf)), by.x = "sample", by.y = "runCol") 
+
+plot_df |>
+ggplot(aes(x = sample, y = n_precursors, fill = Replicate)) +
   geom_bar(stat = "identity") +
   labs(x = "Sample", y = "Number of precursors") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
@@ -531,17 +562,19 @@ data.frame(
 
 ### Exploring the row data
 
-The `rowData` of each per-sample `SummarizedExperiment` contains quality metrics
-from DIA-NN. This information can be accessed on a sample by sample level by
-using the `rowData` function.
+The `rowData` of each per-run `SummarizedExperiment` contains quality metrics
+from DIA-NN. This information can be accessed on a rub-by-run level by
+using the `rowData` function. For example, let's look at the `rowData` for run 1
+stored in `qf[[1]]`.
 
 ```{r}
 #| label: compare-sample-counts
-rowData(qf[[1]]) %>%
+qf[[1]] |>
+  rowData() |>
   head(2)
 ```
 
-However, we want to access this information across all the samples.
+However, we want to access this information across all the MS runs.
 To do this we can use the `rbindRowData` function.
 
 ```{r}
@@ -550,12 +583,12 @@ rdata <- rbindRowData(qf, i = names(qf))
 ```
 
 The `rbindRowData` functions returns a `DFrame` table that contains the row
-binded `rowData` tables from the selected assays. In this context, `i` is a
-`character()`, `integer()` or `logical()` object for subsetting assays. Only
-`rowData` variables that are common to all assays are kept.
+binded `rowData` tables from the selected sets. In this context, `i` is a
+`character()`, `integer()` or `logical()` object for subsetting sets. Only
+`rowData` variables that are common to all sets are kept.
 
 Recall, there is also a slot in the `QFeatures` object that stores information
-on the samples. This is the `colData` slot.
+on the MS samples/runs. This is the `colData` slot.
 
 ```{r}
 #| label: compare-subset-counts
@@ -581,38 +614,59 @@ cdata <- data.frame(colData(qf))
 # column. We merge with the column data (using the runCol column) to get group
 # information for each sample
 
-rdata <- rdata %>%
-  data.frame() %>%
+rdata <- rdata |>
+  data.frame() |>
   merge(cdata, by.x = "assay", by.y = "runCol")
 ```
 
 Now we have one `data.frame` with precursor-level and sample-level information
 we can now visualise quality metrics from DIA-NN.
 
-- CHANGE NEXT EXERCISE
 
 ::: {.callout-exercise}
-#### Challenge: Exploring rowData quality metrics
+#### Challenge: Exploring rowData metrics
 
 {{< level 2 >}}
 
-The `rdata` object contains many columns from the DIA-NN `rowData`.
+1. Use the `rowData` to visualize the retention time distribution of precursors
+per run. 
 
-1. Use `str(rdata)` to identify numerical quality metric columns.
-2. Choose one metric and create a plot to visualise its distribution across samples, coloured by group.
-3. Do any metrics appear to differ systematically between groups, or between individual samples?
-:::
+2. Calculate the number of protein groups identified in each (i) replicate and
+(ii) fraction.
+
+
+::::: {.callout-answer collapse="true"}
+**Task 1**
 
 ```{r}
-#| label: join-features
-rdata %>%
-  ggplot(aes(FWHM, group = Replicate, colour = Replicate)) +
+#| label: plot retention time per run
+rdata |>
+  ggplot(aes(x = RT, group = runCol, colour = runCol)) +
   geom_density() +
-  theme_classic()
+  theme_classic() + 
+  labs(x = "Retention time", y = "Density", colour = "Run")
+
 ```
 
-::: {.callout-tip}
+**Task 2**
+```{r}
+#| label: Calculate the unique protein groups per replicate
+rdata |>
+  group_by(Replicate) |>
+  summarise(no_proteins = n_distinct(Protein.Group))
 
+#| label: Calculate the unique protein groups per fraction
+rdata |>
+  group_by(runCol) |>
+  summarise(no_proteins = n_distinct(Protein.Group)) |> 
+  ggplot(aes(x = runCol, y = no_proteins)) +
+  geom_col() + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Run", y = "Number of proteins")
+```
+
+:::::
+:::
 
 
 ```{r, include= FALSE}
@@ -622,12 +676,12 @@ save(qf, file = here("course_files/preprocessed/lesson02.rda"))
 #### Key Points
 
 - DIA-NN outputs a `.parquet` format report file containing precursor- and 
-protein-level quantification data for each sample
+protein-level quantification data for each MS sample/run
 - The `readQFeaturesFromDIANN` function imports DIA-NN output into a `QFeatures` 
 object, creating one `SummarizedExperiment` per sample run
 - Sample metadata is stored in the `colData` of the `QFeatures` object and can 
 be used to annotate samples with experimental group information
-- The `rowData` of each per-sample `SummarizedExperiment` contains quality 
+- The `rowData` of each per-run `SummarizedExperiment` contains quality 
 metrics from DIA-NN that can be used to explore data quality and guide 
 downstream filtering decisions
 :::

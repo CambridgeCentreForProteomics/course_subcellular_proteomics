@@ -55,7 +55,7 @@ The output from DIA-NN contains information about q-values at different data
 levels. As discussed in the main workflow, FDR should be controlled at the
 highest data level to minimise the impact of FDR inflation during data
 aggregation. Here, the highest data level corresponds to protein groups.
-Therefore, we set a 1% FDR on `Lib.PG.Q.Value` and `PG.Q.Value`, as well as the
+Therefore, we set a 1% FDR on `PG.Q.Value`, as well as the
 global experiment-wide `Q.Value`.
 
 Since our data was processed with match-between-runs (MBR) enabled, we
@@ -84,7 +84,7 @@ object.
 
 ```{r}
 # qc
-qf <- qf %>%
+qf <- qf |>
   filterFeatures(~ Q.Value < 0.01) |>        # Run-level precursor Q-value
   filterFeatures(~ PG.Q.Value < 0.01)  |>    #  Run-level protein group Q-value
   filterFeatures(~ Lib.Q.Value <= 0.01)  |>  # Library-level precursor Q-value
@@ -96,13 +96,13 @@ qf
 ```
 
 We can see how many precursors remain per sample after filtering by inspecting
-the number of rows in each per-sample set.
+the number of rows in each per-run set.
 
-## Joining per-sample sets into a single precursor set
+## Joining per-run sets into a single precursor set
 
 After filtering, our `QFeatures` object contains one `SummarizedExperiment` per
 sample run. To work with the data combined across all samples, we use the
-`joinAssays` function. This merges all per-sample sets into a single combined
+`joinAssays` function. This merges all per-run sets into a single combined
 set called `"precursors"`, aligning features (precursors) by their
 `Precursor.Id`. Where a precursor was not detected in a particular sample, the
 corresponding entry will be `NA`.
@@ -135,9 +135,9 @@ Let's check it contains the joined data.
 
 ```{r}
 # check quant values
-qf[["precursors"]] %>%
-  assay() %>%
-  as.data.frame() %>%
+qf[["precursors"]] |>
+  assay() |>
+  as.data.frame() |>
   head()
 ```
 
@@ -156,7 +156,7 @@ to keep the object tidy and focused on the combined set for downstream analysis.
 In the code chunk below we create a new QF object with only the final joined
 precursor level data.
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, message=FALSE}
 ## Identify which sets to remove
 sets_to_rm <- which(names(qf) != "precursors")
 
@@ -168,9 +168,12 @@ qf
 ```
 
 
-#### Propogating the column metadata
+#### Propagating the column metadata
 
-Propagate the `colData` 
+The `colData` is currently attached to the entire `QFeatures` object. Later on 
+we will need it to be directly linked to each individual set. So, we propagate 
+the `colData` to our first set, so that it is carried upward and attached to
+all future sets.
 
 ```{r}
 colData(qf[["precursors"]]) <- colData(qf)
@@ -194,7 +197,11 @@ modified version of the contaminants fasta from [Hao Group's Protein Contaminant
 @Frankenfield2022, where we removed the contaminants from Fetal Bovine Serum,
 which are not relevant here. The entries in this contaminant database are named
 with a `Cont_` prefix, which is carried through into the `Protein.Ids` column of
-the DIA-NN output, making them straightforward to identify computationally.
+the DIA-NN output, making them straightforward to identify computationally. In
+addition to this external database, we also selected the "Contaminants" option
+in the DIA-NN GUI. Therefore, DIA-NN also included its own built-in contaminant
+database, for which all contaminant protein accessions are preceded with `cRAP-`,
+again making these easy to find.
 
 In this section we remove:
 
@@ -208,14 +215,14 @@ expected.
 
 ```{r}
 # Extract the rowData
-rd <- rowData(qf[['precursors']]) %>%
+rd <- rowData(qf[['precursors']]) |>
   data.frame()
 
 # Check for proteins with the prefix "Cont_"
 table(grepl('Cont_', rd$Protein.Ids))
 ```
 
-We see we indeed have contaminants in the dataset. We will now proceed to 
+We see that we do have contaminants in the dataset. We will now proceed to 
 filtering them out.
 
 As with all data analyses, it is sensible to keep a copy of the data before
@@ -252,18 +259,20 @@ plot(qf)
 We now use `filterFeatures` to retain only precursors whose `Protein.Ids` field
 contains no `Cont_` entry. We specifying the `i` argument to apply the filter
 only to the `"precursors_filtered"` set. This retains the original `"precursors"`
-assay with all precursors for reference, while the new set contains only those
+set with all precursors for reference, while the new set contains only those
 precursors that pass the missing value threshold.
 
 ```{r}
-qf <- filterFeatures(
-  qf,
-  filter = ~ !grepl("Cont_", Protein.Ids),
-  i = "precursors_filtered"
-)
+qf <- qf |>
+  filterFeatures(~ !grepl("Cont_", Protein.Ids),
+                     i = "precursors_filtered")
 
 qf
 ```
+
+We could also use the same nomenclature to remove precursors whose `Protein.Ids` 
+field contains `cRAP`. For now, we leave these in so that we can demonstrate
+manual removal below.
 
 ::: {.callout-note}
 #### Why filter on `Protein.Ids` and not `Protein.Group`?
@@ -282,7 +291,8 @@ qf
 
 #### Filtering out contaminants manually
 
-If you didn't include a contaminant database in your search, you can still
+If you didn't include a contaminant database in your search, or your contaminant
+IDs do not have an easily recognisable pattern, you can still
 remove contaminants afterwards. The example below shows how. We read in a
 contaminant FASTA file, then identify and remove any proteins in the data whose
 accessions match an entry in that file.
@@ -319,7 +329,7 @@ find_contaminants <- function(se, contaminants) {
 }
 ```
 
-Now we run this function on our dataset to idenify any contaminant matches
+Now we run this function on our dataset to identify any contaminant matches
 
 ```{r}
 # create a new object called `cont_tf`
@@ -330,8 +340,27 @@ cont_tf <-
 table(cont_tf)
 ```
 
-We add a new column to the `rowData` called `is_contaminant` which we can now
-filter on.
+
+
+::: {.callout-exercise}
+#### Challenge: Manual filtering of remaining contaminants
+
+{{< level 2 >}}
+
+1. Create a column called `is_contaminant` that can be used with the `filterFeatures`
+function.
+
+2. Use the newly created `is_contaminant` column in the `rowData` to remove any
+precursors which match a protein accession in the manually imported contaminant
+fasta.
+
+
+::::: {.callout-answer collapse="true"}
+
+**Task 1**
+The `filterFeatures` function carries out conditional filtering based on columns
+within the `rowData`. So, we add a new column to the `rowData` called `is_contaminant` 
+which we can now filter on.
 
 ```{r}
 rowData(qf[["precursors_filtered"]])$is_contaminant <- cont_tf
@@ -341,22 +370,40 @@ Let's check our `is_contaminant` column has been successfully created.
 
 ```{r}
 # Check it has been created
-qf[["precursors_filtered"]] %>% 
-  rowData() %>% 
-  as_tibble() %>% 
-  pull(is_contaminant) %>% 
+qf[["precursors_filtered"]] |> 
+  rowData() |> 
+  as_tibble() |> 
+  pull(is_contaminant) |> 
   table()
 ```
 
-Let's now use `filterFeatures` to remove contaminants.
+Let's look at some of these proteins.
 
 ```{r}
-qf <- filterFeatures(qf, 
-                     filter = ~ !is_contaminant, 
-                     i = "precursors_filtered")
+qf[["precursors_filtered"]] |> 
+  rowData() |> 
+  as_tibble() |> 
+  filter(is_contaminant == TRUE) |>
+  dplyr::select(Protein.Ids, Protein.Group)
+```
+
+As expected, these are the contaminant proteins from DIA-NNs built-in database
+that contain `cRAP`. 
+
+**Task 2**
+Now we can easily apply `filterFeatures` as we have before. 
+
+```{r}
+#| label: filter out contaminants
+qf <- qf |>
+  filterFeatures(~ !is_contaminant, 
+                 i = "precursors_filtered")
 
 qf
 ```
+
+:::::
+:::
 
 ### Removal of peptides with no protein assignment
 
@@ -367,10 +414,10 @@ entries which lack protein assignment cannot be used and must be removed.
 Let's see if we have any such precursors in the dataset.
 
 ```{r}
-qf[["precursors_filtered"]] %>%
-  rowData() %>% 
-  as_tibble() %>% 
-  pull(Protein.Ids) %>%
+qf[["precursors_filtered"]] |>
+  rowData() |> 
+  as_tibble() |> 
+  pull(Protein.Ids) |>
   anyNA()
 ```
 
@@ -388,15 +435,12 @@ many proteins a peptide is mapped to, we take advantage of the `;` and remove
 all rows (precursors) with a `;` in the `Protein.Ids` column.
 
 ```{r}
-qf <- qf %>%
-  filterFeatures(
-    ~ !str_detect(Protein.Ids, ";"),
-    i = "precursors_filtered"
-  )
+qf <- qf |>
+  filterFeatures(~ !str_detect(Protein.Ids, ";"),
+                 i = "precursors_filtered")
 
 qf
 ```
-
 
 
 ```{r}

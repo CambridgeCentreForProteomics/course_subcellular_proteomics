@@ -15,7 +15,7 @@ output, and convert zeros to `NA` with `zeroIsNA()`
 - Know how to identify and remove fractions with excessive missing data
 - Understand how to apply intensity-based filtering to remove low-signal
   precursors with `filterFeatures()`
-- Know how to split a `QFeatures` object by replicate and filter sparse
+- Know how to subset a `QFeatures` object by replicate and filter sparse
   precursors with `filterNA()`
 - Understand the difference between values missing at random (MAR) and
   missing not at random (MNAR), and why this matters for subcellular
@@ -45,12 +45,14 @@ are missing and how they are distributed across samples and proteins.
 
 ## Missing data (Part I) - Sample level
 
-When processing protein profiling data, handling missing values is a crucial
+When processing correlation profiling data, handling missing values is a crucial
 first step to ensure reliable downstream analysis. Missing values can arise for
 a variety of reasons, including low peptide abundance, stochastic detection, or
-technical issues. To address this, we first filter column-wise, removing samples
+technical issues. Alternatively, missing values can be biologically meaningful 
+with proteins only distributed over a subset of biochemical fractions.
+To address this, we first filter column-wise, removing samples (fractions)
 with an excessive proportion of missing data, which helps avoid bias from poorly
-quantified replicates. Next, we filter row-wise, removing peptides that are
+quantified replicates. Next, we filter row-wise, removing precursor peptides that are
 missing in too many samples, ensuring that the remaining dataset contains
 sufficient information for accurate subcellular localisation and machine
 learning classification. This two-step approach balances data completeness with
@@ -58,21 +60,22 @@ retention of informative features.
 
 ### Overall presence of missing values
 
-It is important to first assess the frequency and distribution of missing values
+It is important to assess the frequency and distribution of missing values
 in any dataset before deciding how to handle them. We start by examining the
 DIA-NN output to determine how missing values are represented, checking for both
-zeros and NA entries.
+zeros and NA entries. Recall that the quantitative data and, therefore, missing
+values are stored in the `assay` of our `SummarizedExperiment`.
 
 ```{r}
 ## Does the data contain any zeros?
 qf[["precursors_filtered"]] |>
   assay() |>
   longForm() |>
-  filter(value == 0) |>
+  filter(is.na = TRUE) |>
   nrow()
 ```
 
-The data does not contain any zeros. However, if the data did contain zeros we
+The data does not contain any zeros. If the data did contain zeros we
 would encode them as NA. We can use the `zeroIsNA` function to do this. Some
 proteomic softwares encode NAs as 0's by default. In order for proper evaluation
 of missing data it is necessary to return the 0 back to NA.
@@ -129,7 +132,7 @@ df <- cbind(na_cols, colData(qf))
 
 We can plot percentage of NAs across fractions.
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 df |>
   as_tibble() |>
   ggplot(aes(x = factor(Fraction), y = pNA * 100)) +
@@ -166,7 +169,7 @@ and carry equal weight before machine learning classification.
 
 In the below code chunk we generate boxplots of the intensities across samples.
 
-```{r}
+```{r, message=FALSE, warning =FALSE}
 qf[, , "precursors_filtered"] |>
   longForm(colvars = c("Replicate", "Fraction")) |>
   as_tibble() |>
@@ -187,7 +190,7 @@ rd <- rowData(qf[["precursors_filtered"]])
 ## Count
 nrow(rd)                               # precursors
 length(unique(rd$Stripped.Sequence))   # peptides
-length(unique(rd$Protein.Group))         # proteins
+length(unique(rd$Protein.Group))       # proteins
 ```
 
 ::: {.callout-note}
@@ -246,7 +249,7 @@ reliable and informative signals.
 In the below code we sum the intensity across each precursor profile and then
 examine the distribution.
 
-```{r}
+```{r, warning = FALSE}
 ## Calculate rowSums across profiles
 rs <- qf[["precursors_subset"]]  |> 
     assay() |> 
@@ -288,12 +291,15 @@ explore different cut-offs and assess their impact, as the optimal threshold
 will depend on the specific dataset and analytical objectives.
 
 In the code chunk below we try 10% and calculate how many proteins we would
-lose if we used this filter.
+lose if we used this filter. During this testing phase, we save the newly
+filtered `QFeatures` container to a different object (here called `qf_10`). 
+Only once we decide whether we are happy with the threshold will we apply it to
+the `qf` object.
 
 ```{r}
-qf_10 <- filterFeatures(qf,
-                        i = "precursors_subset",
-                        ~ precursor_sum_intensity > rsq["10%"])
+qf_10 <- qf |>
+  filterFeatures(~ precursor_sum_intensity > rsq["10%"],
+                 i = "precursors_subset")
 
 
 qf_10
@@ -329,9 +335,9 @@ We see this is quite conservative and we only lose a few hundred proteins. Let's
 proceed with a 10% threshold.
 
 ```{r}
-qf <- filterFeatures(qf,
-                     i = "precursors_subset",
-                     ~ precursor_sum_intensity > rsq["10%"])
+qf <- qf |>
+  filterFeatures(~ precursor_sum_intensity > rsq["10%"],
+                 i = "precursors_subset")
 
 
 qf
@@ -339,9 +345,9 @@ qf
 
 ## Subsetting data into replicates
 
-To accurately assess missing values on a per-replicate basis, if you have
-replicated data it is necessary to subset the data by replicate prior to
-calculating row-wise (precursor peptide) missingness. When all replicates are
+If you have replicated data it is necessary to subset the data by replicate (i.e.,
+per complete biochemical gradient) prior to calculating row-wise (precursor peptide)
+missingness. When all replicates are
 combined, missing values can be obscured or diluted, making it difficult to
 detect replicate-specific issues. By examining each replicate separately, we can
 identify systematic problems affecting individual runs—such as fraction-specific
@@ -359,6 +365,7 @@ qf[["precursors_subset"]] |>
   colData()
 ```
 
+We can extract this information and use it to split our data by replicate.
 
 ```{r}
 ## get replicate data
@@ -368,6 +375,8 @@ rep_info <- colData(qf[["precursors_subset"]])$Replicate
 ```{r}
 ## Recall we have 3 replicates
 R <- 1:3 
+
+## Create an empty list of length (number replicates, R)
 se <- vector("list", length(R))
 
 ## Create names for the replicate SEs in QF
@@ -429,6 +438,7 @@ In the below code chunk we calculate the current number of proteins per
 replicate.
 
 ```{r}
+## Calculate number of proteins per replicate
 sapply(rep_id, function(z) {
   qf[[z]]  |> 
   rowData() |>
@@ -469,12 +479,12 @@ how to handle missing data later on.
 
 ::: {.callout-note}
 #### An additional note on label-based vs. label-free missing values 
-The use-case data presented here used TMT-based peptide quantitation. When using 
-a DDA TMT approach, TMT co-isolation interference often results in very low
-abundance values where there should really be a missing value. As a result, 
-despite the potential for MNAR values due to biochemical fractionation, TMT
+Our previous workflow ([@dataref]) focused on a use-case with DDA TMT-based
+peptide quantitation. When using a DDA TMT approach, TMT co-isolation interference 
+often results in very low abundance values where there should really be a missing 
+value. As a result, despite the potential for MNAR values due to biochemical fractionation, TMT
 correlation profiling based experiments tend to have a low proportion of missing
-data. As demonstrated below, this means that the datasets require minimal filtering
+data. This means that the datasets require minimal filtering
 and imputation. By contrast, label-free datasets have a much high proportion of 
 missingness. This is the case for several reasons. Firstly, label-free samples
 are each run independently on the MS rather than being multiplexed as is done 
@@ -484,14 +494,13 @@ values. This effect is seen in all DDA label-free proteomics experiments but is
 even more dramatic for correlation profiling data as most approaches rely on 
 selecting the top N most abundant precursor peptides for analysis, but the most
 abundance peptides are expected to be different across fractions of the biochemical 
-gradient. In DIA label-free correlation profiling experiments missingness is not 
+gradient. In DIA label-free correlation profiling experiments, as we show in this
+course, missingness is not 
 due to the stochastic selection of precursors ions but rather due to the fact that 
 missing values present as truly missing, with no co-isolation interference to 
 buffer the effect of biochemical fractionation. As a result of greater missingness, 
 users should spend more time testing combinations of filtering and imputation for 
-label-free correlation profiling experiment data, as discussed further in the
-sample DIA workflow ("Using this workflow with DIA-NN data" ) presented in the
-Appendix.
+label-free correlation profiling experiment data.
 :::
 
 ## Imputation
@@ -608,27 +617,8 @@ There are no missing values remaining in any of the three replicates.
 plot(qf)
 ```
 
--- XXX Move this callout note or combine with the callout note in notebook 05
 
 ::: {.callout-note}
-#### An additional note on imputing before or after normalisation
-
-Some experimental designs yield a relatively low proportion of missing values,
-for example label-based methods that use TMT such as LOPIT. As a result, after
-an initial filtering step, there are very few values to impute. Applying a
-baseline k-NN imputation to such data can more successful when the data are in a
-similar space, as discussed in @Hutchings2025. We note that by applying
-imputation after normalisation, the final imputed profiles will no longer sum to
-exactly 1. However, since such designs have such low missingness, the sum should
-not greatly exceed 1. By contrast, where datasets have a greater proportion of
-missing data to impute, as is the case for this example where we have a LFQ
-design row sum normalisation of a limited number of fractions would generate a
-short profile summed to one and subsequent imputation could result in a
-correlation profile with an undesirably high sum value. Here it is necessary to
-impute prior to normalisation to ensure the generation of sensible correlation
-profiles in the same final space (between 0 and 1).
-
-
 ###### Do I have to impute?
 Not always. Robust summarisation during
 aggregation (e.g. `MsCoreUtils::robustSummary` in `aggregateFeatures()`)
@@ -656,14 +646,14 @@ save(qf, file = here("course_files/preprocessed/lesson04.rda"))
 - Column-wise filtering removes fractions with excessive missingness (here >
   75%). If high missingness occurs in different fractions across
   replicates, a technical rather than biological cause is likely.
-- In comparative experiments, removing a fraction means removing the same
+- In comparative/dynamic experiments, removing a fraction means removing the same
   fraction from every replicate and condition, so that profiles stay
   comparable.
 - Intensity-based filtering removes precursors at the low end of the dynamic
   range, where measurements are noisier. The threshold is a trade-off
   between sensitivity and robustness and should be explored for each
   dataset.
-- Row-wise missingness should be assessed per replicate, so that
+- Row-wise missingness should be assessed per replicate (complete gradient), so that
   replicate-specific problems are not hidden by combining the data.
 - Row-wise thresholds must be set relative to the number of fractions.
   Overly strict filtering removes sharply enriched, singly localised
