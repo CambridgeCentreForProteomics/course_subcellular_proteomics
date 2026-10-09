@@ -1,5 +1,5 @@
 ---
-author: "Lisa Breckels"
+author: "Lisa Breckels & Charlotte Hutchings"
 date: today
 number-sections: false
 ---
@@ -8,17 +8,21 @@ number-sections: false
 
 ## Overview
 
-These materials focus on subcellular spatial proteomics, 
+These materials focus on subcellular spatial proteomics using mass spectrometry-
+based correlation profiling experiments.
 
 ::: {.callout-tip}
 ### Learning Objectives
 
 You will learn about:
 
-- How mass spectrometry can be used to ...
-- The bioinformatics steps involved in processing and analysing subcellular proteomics data.
-- How to assess the quality of your data, deal with missing values, and summarise feature-level data to protein-level.
-- How to perform ...
+- The principles underlying subcellular proteomics using mass spectrometry-based correlation profiling
+-  How to import, process and analyse subcellular proteomics data in R using dedicated Bioconductor packages
+- Data quality control, dealing with missing values, aggregating feature-level data to protein-level, and 
+converting quantitative MS data into correlation profiles
+- Assessing subcellular resolution and defining sensible markers that are representative of your dataset
+- How to perform classification of static protein subcellular localisation using semi-supervised machine learning
+- Identifying candidate protein differential localisation events when comparing two conditions
 :::
 
 ### Target Audience

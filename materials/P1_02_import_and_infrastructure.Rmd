@@ -143,8 +143,8 @@ df |>
 ```
 
 We see there are 30 unique run names corresponding to the 3 experiments which 
-each have 10 biochemical fractions within each experiment. The names of each run
-are generated during the DIA-NN search based on the names of the raw MS files
+each have 10 biochemical fractions. The name of each run
+is generated during the DIA-NN search based on the name of the raw MS files
 that are provided.
 
 ```{r}
@@ -164,7 +164,7 @@ qunatitative columns (`PG.Quantity`, `PG.Normalised`, `PG.MaxLFQ`, `Genes.Quanti
 `Genes.Normalised`, `Genes.MaxLFQ`, `Genes.MaxLFQ.Unique`, `Precursor.Quantity`,
 `Precursor.Normalised`, `Precursor.Translated`, `Fragment.Quant.Raw`, 
 `Fragment.Quant.Corrected`), but these represent different types of quantitation
-rather than quantitation across different samples, as discussed below. Before 
+rather than quantitation across different samples. Before 
 we proceed to importing our data into `QFeatures` we do some initial data
 wrangling for ease of plotting and interpretation downstream.
 
@@ -331,7 +331,7 @@ df <- df |>
 
 Let's look at the new run names we have created in the new column called
 `runCol`. Note: the naming of this column as `runCol` is a consious choice, as
-previously mentioned when we convert the data in the next section to a
+previously mentioned. When we convert the data in the next section to a
 `QFeatures` object we use this column to match out metadata and the experimental
 data.
 
@@ -345,9 +345,8 @@ df |>
 ## Setting some initial parameters for this workflow
 
 During the course of the workflow and in your own analysis, there will be
-some basic information you will repeatedly use. These are the number of samples,
-the number and names we use to define replicates and conditions. We define
-these here for use throughout the workflow.
+some basic information you will repeatedly use. For example, the number of samples,
+replicates and conditions. We define these here for use throughout the workflow.
 
 ```{r}
 ## Total number of samples
@@ -359,14 +358,14 @@ R <- 1:3
 
 ## Converting the data into a QFeatures object
 
-The `readQFeaturesFromDIANN` takes DIANN output as a `data.frame` and converts
-it into a multi-set `QFeatures` object. We pass the `runCol` as file names from
-the experiment, for our use case this is the new column called `Fraction` that
-we created in the `data.frame`. This is the column that `readQFeaturesFromDIANN`
+The `readQFeaturesFromDIANN` takes DIA-NN output as a `data.frame` and converts
+it into a multi-set `QFeatures` object. We pass the `runCol` column from our 
+`data.frame` to be the column that `readQFeaturesFromDIANN`
 uses to split the data into sets - we will end up with a `QFeatures` object with
-one set per unique value of `runCol` (`Fraction`). This is important because some
+one set per unique value of `runCol`. This is important because some
 quality control metrics are calculated on a per-run basis, so we need to keep 
-each run separate in order to use these.
+each run separate in order to use these. We also pass `Precursor.Id` to the `fnames`
+argument to tell `readQFeaturesFromDIANN` how to name the rows.
 
 We also need to tell `QFeatures` where the quantitation data is located. As
 previously mentioned you will notice with DIA-NN output there are multiple
@@ -391,12 +390,16 @@ data.
 
 #### Creating the data object
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, results = "hide"}
 qf <- readQFeaturesFromDIANN(assayData = df, 
                              quantCols = "Precursor.Quantity", 
                              runCol = "runCol", 
                              fnames = "Precursor.Id",
                              colData = sample_metadata)
+
+```
+
+```{r}
 # check
 qf
 ```
@@ -404,10 +407,10 @@ qf
 You will notice that each run (fraction) appears as a separate set within the
 `QFeatures` object and we now have 30 sets (individual
 `SummarizedExperiments`). Note, that this differs from when we import labelled
-correlation profiling data when we would have one set containing all the
+correlation profiling data when we would have one set containing all of the
 fractions together and as such the upstream processing is slightly different. 
-Information on the analysis of label-based LOPIT or correlation profiling data
-can be found in [@dataref].
+Information on the analysis of label-based or correlation profiling data
+can be found in [@Hutchings2025].
 
 ## Exploring the data
 
@@ -423,7 +426,7 @@ qf
 
 By default if a `QFeatures` object has more than 6 sets, only the first 
 and last three set summaries are printed to the screen. To see all sets
-and their respective data summary, we can use the `experiments` function.
+and their respective data summaries, we can use the `experiments` function.
 
 ```{r}
 #| label: count-unique-proteins
@@ -480,10 +483,10 @@ be imported into a `QFeatures` object in a single set with one row per feature
 (PSM, peptide or protein) and one quantitative column per fraction. When multiple
 replicates or conditions have been used, each experiment (one full correlation 
 gradient) can be imported as a separate set. Hence, if you had three replicate
-LOPIT-DC experiments, you would import the data as 3 sets within a `QFeatures` 
+LOPIT-DC experiments, you would import the data as three sets within a `QFeatures` 
 object. 
 
-Details about different import options for DDA datasets is outlined in [@dataref].
+Details about different import options for DDA datasets is outlined in [@Hutchings2025].
 For label-free DIA datasets, we recommend using the multi-set import approach 
 demonstrated in this workflow, with one set per run.
 :::
@@ -564,7 +567,7 @@ ggplot(aes(x = sample, y = n_precursors, fill = Replicate)) +
 ### Exploring the row data
 
 The `rowData` of each per-run `SummarizedExperiment` contains quality metrics
-from DIA-NN. This information can be accessed on a rub-by-run level by
+from DIA-NN. This information can be accessed on a run-by-run level by
 using the `rowData` function. For example, let's look at the `rowData` for run 1
 stored in `qf[[1]]`.
 
@@ -632,8 +635,10 @@ we can now visualise quality metrics from DIA-NN.
 1. Use the `rowData` to visualize the retention time distribution of precursors
 per run. 
 
-2. Calculate the number of protein groups identified in each (i) replicate and
-(ii) fraction.
+2. Calculate the number of protein groups identified in each replicate. Next 
+visualise the number of protein groups per run.
+
+- Why might the latter plot be helpful?
 
 
 ::::: {.callout-answer collapse="true"}
@@ -656,7 +661,6 @@ rdata |>
   group_by(Replicate) |>
   summarise(no_proteins = n_distinct(Protein.Group))
 
-#| label: Calculate the unique protein groups per fraction
 rdata |>
   group_by(runCol) |>
   summarise(no_proteins = n_distinct(Protein.Group)) |> 
@@ -674,6 +678,7 @@ rdata |>
 save(qf, file = here("course_files/preprocessed/lesson02.rda"))
 ```
 
+::: {.callout-tip}
 #### Key Points
 
 - DIA-NN outputs a `.parquet` format report file containing precursor- and 
