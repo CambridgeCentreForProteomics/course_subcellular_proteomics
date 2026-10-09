@@ -8,13 +8,38 @@ editor_options:
 ::: {.objectives}
 #### Learning objectives
 
-* Define a subcellular marker, and explain why curating markers for a specific cell type and condition is critical for supervised learning.
-* Describe the iterative marker curation process: pick the resolved compartments, source a starting list, evaluate it, refine it and reclassify.
-* Get published marker sets with `pRolocmarkers` and add your own or published markers to an `MSnSet` (`addMarkers`, `getMarkers`, `getMarkerClasses`).
-* Evaluate markers on PCA plots across several principal components, with marker profile plots (`plotDist`) and interactively (`pRolocVis`).
-* Measure how well compartments separate with QSep (`QSep`, `levelPlot`), and interpret raw and normalised QSep scores.
-* Refine marker lists by removing outlying markers and unresolved compartments (`fDataToUnknown`), without drifting away from the literature.
+* Define a subcellular marker, and explain why markers must be curated for the
+  specific cell type and conditions being studied
+* Describe the iterative process of marker curation: select resolved
+  compartments, source an initial list, evaluate, refine and reclassify
+* Retrieve published marker sets with `pRolocmarkers()` and add published or
+  user-defined markers to an `MSnSet` with `addMarkers()`
+* Evaluate markers visually using PCA and t-SNE across several principal
+  components (`plot2D()`), marker profile plots (`plotDist()`) and interactive
+  visualisation (`pRolocVis()`)
+* Quantify the separation of subcellular compartments with `QSep()`, and
+  interpret raw and normalised QSep scores using boxplots and `levelPlot()`
+* Refine a marker list by removing outlying markers and combining or removing
+  poorly resolved compartments, without over-curating the data
 :::
+
+
+```{r}
+#| label: load-dia-data-filtered
+#| include: false
+
+library("here")
+library("tidyr")
+library("dplyr")
+library("ggplot2")
+library("patchwork")
+library("stringr")
+library("pRoloc")
+library("magrittr")
+
+
+load(here("course_files/preprocessed/lesson_01_p2.rda"), verbose = TRUE)
+```
 
 ## Defining markers for machine learning
 
@@ -22,10 +47,10 @@ In the context of spatial proteomics data analysis, a marker is a protein known
 to reside in a single subcellular niche within a given system *and* under given
 conditions. In other words, markers are proteins which we can confidently assign
 to a known single localisation based on prior knowledge. In the context of
-protein localisation prediction, marker proteins constitute the labelled training data
-provided to the classification algorithm. Defining marker proteins can be
-challenging and time consuming, but it is critical to obtain a list of markers
-which are representative of the experiment and dataset of interest.
+protein localisation prediction, marker proteins constitute the labelled
+training data provided to the classification algorithm. Defining marker proteins
+can be challenging and time consuming, but it is critical to obtain a list of
+markers which are representative of the experiment and dataset of interest.
 
 The definition of subcellular markers can be broadly divided into five steps,
 with steps 3, 4 and 5 representing an iterative process, as outlined in Figure \@ref(fig:marker-curation).
@@ -39,3 +64,477 @@ with steps 3, 4 and 5 representing an iterative process, as outlined in Figure \
 ```{r marker-curation, out.width = '90%', echo = FALSE, fig.cap = 'A graphical representation of the process of marker curation. Markers are proteins which are known to localise to a single subcellular compartment in the given cell type and condition of interest. The selection of confident markers is critical for successful prediction of protein localisation and differential localisation. (!) After using curated markers for protein localisation classification, users might still need to do some final curation e.g., if localisation prediction results do not look sensible (over- or under-classification of a particular organelle). However, users should be cautious when repeatedly refining markers lists as to ensure that the final markers remain representative of the literature and data structure.'}
 knitr::include_graphics("figs/marker_curation.png", error = FALSE)
 ```
+
+
+Having visualised the data to validate the presence of clusters and explored
+which subcellular organelles may be resolved in the dataset, we can now start
+with an initial marker list. For model organisms, pre-existing marker lists can
+often be derived from published subcellular proteomics datasets. For simplicity,
+the `pRoloc` package stores a number of curated marker sets as well as published
+marker sets, as discussed below. However, for non-model organisms with limited
+pre-existing subcellular proteomics data it may be necessary to manually curate
+an initial marker list. In such cases we would advise users to apply
+unsupervised clustering to their data in order to guide marker discovery.
+
+## Marker lists from `pRolocmarkers`
+
+The `pRoloc` package contains marker protein lists for a number of organisms,
+including curated organism reference sets and published marker lists. To 
+see which marker sets are available we can use the `pRolocmarkers` function.
+Type `?pRolocmarkers` for more details.
+
+```{r}
+## View available marker sets within pRoloc
+pRolocmarkers()
+```
+
+We can see a number of lists, each labelled with species, ID type (UniProt
+protein accessions, species-specific gene IDs etc.) and the number of markers.
+The name of the marker set is indicated inside of square brackets. Reference 
+marker sets for model organisms are named after their species: `atha` for the 
+*Arabidopsis thaliana* reference set, `dmel` for *Drosophila melanogaster*, `hsap`
+for *Homo sapiens*, `mmus` for *Mus musculus*, and `ggal` for *Gallus gallus*.
+Marker sets extracted directly from publications are named using the
+nomenclature `species_author` e.g., `hsap_christopher` for the marker list used 
+in @Christopher2025. 
+
+To use one of the marker lists stored in `pRolocmarkers`, users should first 
+extract the marker list into a named character vector by using the `pRolocmarkers`
+function and passing the name of the desired marker list. 
+
+```{r}
+## Example extract markers from pRolocmarkers
+human_mrk <- pRolocmarkers("hsap")
+```
+
+These markers can then be used to annotate the data via the `addMarkers` function,
+as demonstrated below.
+
+## Adding user-defined marker lists
+
+It is possible to import and apply a user-defined marker list. The markers
+should be imported as either (i) a named vector where subcellular marker
+annotations are entries and feature accessions are the corresponding names, or
+(ii) from a `.csv` file with two columns, one for the subcellular marker
+annotation and another for the corresponding feature name. Of note, the feature
+names used in the marker list must be of the same format as those in the
+`featureNames` of the `MSnSet` to be annotated. In the use-case the format is
+UniProt protein accessions but `featureNames` could also be gene names or
+organisms-specific identifiers. 
+
+We show how to load from a `.csv` file in the below code chunk and add
+annotation to the proteins in the data based on the marker list we have
+provided. A new column will be added to the data, which we will call
+"markers_initial". This is done by passing the argument `mfcol =
+"markers_initial"`. For users who have extracted markers from `pRolocmarkers`,
+the code below should be edited to pass the extracted named character object
+(e.g., `hsap` generated above) to the `markers` argument.
+
+```{r}
+## Add markers to the MSnSet
+msn <- addMarkers(object = msn,
+                  markers = "data/hsap_dialop_markers.csv",
+                  mcol = "markers_initial")
+```
+
+Upon successfully annotating the markers, a table is printed to the screen
+summarising the number of markers that have been added to the data. We see a new
+column has been added to the `fData` of our `MSnSet` to annotate these proteins
+in our dataset, called "markers_initial".
+
+```{r}
+## Print the column names of the fData
+msn |>
+  fvarLabels()
+```
+
+If you wish to remove the markers from your data you can assign NULL to the
+output i.e., one would type `fData(msn)[, "markers_initial"] <- NULL` to remove
+the marker list. Additionally, if you wish to use a different name to "markers",
+to refer to your annotation list users can pass a new name using the argument
+`mcol` when using `addMarkers`. See the help documentation of `addMarkers` by
+typing `?addMarkers` for more details.
+
+**An additional note on minimum number of markers per compartment:**
+Determining the optimal number of markers to include in the training data can be
+challenging. The inclusion of more training data (markers) is usually thought to
+increase the generalisability of a model, although this is only true if these
+markers represent the full diversity of data and do not lead to model
+over-fitting. While there are no fixed rules on the minimum number of training
+examples needed to learn a classifier users we suggest (1) having a sufficient
+number of markers per class to run cross-validation e.g. 10-15 for a 5-fold
+cross validation, (2) more markers than quantitation features e.g. for
+correlation profiling experiment with 10 abundance channels, > 10. Some
+classifiers also require the number of examples per class to be balanced.
+Unfortunately, the number of proteins known to reside in a subcellular niche can
+vary greatly, and some niches simply have too few proteins to add more markers.
+For example, the peroxisome is a relatively small organelle with few available
+marker proteins. This means that for experiments with many fractions and
+multiple replicates it may not be possible to have the number of peroxisomal
+markers exceed the number of quantitative channels. Nevertheless, users should
+be aware of these general guidelines and try to meet them where possible.
+
+## Evaluating markers
+
+After annotating the markers we again use dimensionality reduction within the
+`plot2D` function as a visualisation tool. This time we pass `fcol = "markers_initial"`
+to colour our proteins based on the `markers` column within our `fData`. As
+outlined above, we expect markers to cluster together on these 2D plots.
+
+```{r, eval = TRUE}
+par(mfrow = c(1, 2))
+
+plot2D(msn, method = "PCA", fcol = "markers_initial",
+       main = "Initial marker resolution PCA")
+
+addLegend(msn, where = "bottomright", fcol = "markers_initial", cex = .7)
+
+set.seed(399)
+
+plot2D(msn, method = "t-SNE", fcol = "markers_initial", 
+       main = "Initial marker resolution t-SNE")
+
+addLegend(msn, where = "bottomright", fcol = "markers_initial", cex = .7)
+```
+
+As expected, the majority of markers cluster together with other proteins from
+the same subcellular compartment. However, we can see some protein markers which
+do not cluster as tightly with the rest of their compartment. Additionally,
+whilst the t-SNE plot shows all clusters to be relatively well separated, the
+PCA plot displays an overlap between the ER (dark green) and plasma membrane
+(light green). This is because the `plot2D` function uses PC1 and PC2 by default
+which limits visualisation to compartments resolved in these first two
+dimensions. We can pass a vector of alternative PC dimensions to the `dims`
+argument within `plot2D` to explore resolution in these lower PCs. Below we show
+that the ribosome compartments, Golgi and lysosome are better differentiated
+when visualised with other PCs.
+
+
+```{r, eval = TRUE}
+par(mfrow = c(2, 2))
+
+## Visualise PC1 and PC2 - the PCs which explain the most variance in our data
+plot2D(msn, method = "PCA", fcol = "markers_initial",
+       main = "Marker resolution in PC1 and PC2")
+addLegend(msn, where = "bottomright", fcol = "markers_initial", 
+          cex = .7, ncol = 2)
+
+
+## Visualise PC2 and PC3 
+plot2D(msn, method = "PCA", fcol = "markers_initial",
+       dims = c(2, 3), main = "Marker resolution in PC2 and PC3")
+
+## Visualise PC2 and PC3 
+plot2D(msn, method = "PCA", fcol = "markers_initial",
+       dims = c(1, 3), main = "Marker resolution in PC1 and PC3")
+
+## Visualise PC2 and PC3 
+plot2D(msn, method = "PCA", fcol = "markers_initial",
+       dims = c(3, 4), main = "Marker resolution in PC3 and PC4")
+```
+
+Importantly, although dimensionality reduction provides a convenient
+visualisation tool, neither the PCA nor the t-SNE co-ordinates represent the
+data input for downstream supervised machine learning classification algorithms.
+The training data for classification are the marker protein correlation
+profiles. Therefore, it is critical to look directly at these profiles as well
+as the 2D maps.
+
+The `plotDist` function within `pRoloc` generates a line plot showing the
+protein distribution profiles (Figure \@ref(fig:plotdist-fig)). We pass our
+`msn` object and subset the proteins annotated as `"mitochondrion"` in
+the `markers` column of the `fData`.
+
+Check the marker names in the data
+```{r}
+getMarkerClasses(msn, fcol = "markers_initial")
+```
+
+
+```{r, fig.width=5, fig.height=3, eval=FALSE}
+## Subset mitochondrial markers
+mt <- fData(msn)$markers_initial == "Mitochondrion"
+
+## Plot the distributions of mitochondrial markers
+plotDist(object = msn[mt, ], pcol = "#A65628", las = 2)
+title("Mitochondrial markers")
+```
+
+A `for` loop can be used to plot the distribution of each marker class, as
+outlined in the code chunk below. The `getMarkerClasses` function can be used
+to return a vector of all subcellular marker compartments in a given `MSnSet`.
+
+
+```{r, eval = FALSE}
+## Define marker compartments
+marker_organelles <- getMarkerClasses(msn, fcol = "markers_initial")
+
+## Define colours
+my_cols <- getStockcol()
+
+## Plot marker distribution profile per compartment
+par(mfrow = c(4, 4))
+for (i in 1:length(marker_organelles)) {
+  marker_indices <- fData(msn)$markers_initial == marker_organelles[i]
+  plotDist(msn[marker_indices, ],
+           pcol = my_cols[i],
+           xlab = "Fraction",
+           ylab = "Intensity")
+  title(marker_organelles[i])
+}
+```
+
+
+Plotting the concatenated profiles is useful as
+it allows us to assess the suitability of markers across all three replicates at
+once. Importantly, a protein can only be considered to be a marker if it behaves
+as such across all replicates. Overall, this marker set is a good fit to the
+data. Nevertheless, there are a few markers that could be removed. 
+
+<!-- For example, -->
+<!-- the third plot shows that one of the ER markers does not behave well in -->
+<!-- replicate 3 and, therefore, perhaps is not the best candidate as input for -->
+<!-- machine learning. Similarly, we can see a few outliers across the golgi -->
+<!-- apparatus (GA), lysosome, mitochondrion and peroxisome. -->
+
+
+
+
+::: {.callout-note}
+#### An additional note on outlier marker removal
+Decisions regarding what constitutes an "outlier marker" can be challenging. In
+most correlation profiling experiments the marker profiles will contain a
+certain degree of noise, and this is to be expected. Further, the degree of noise
+will differ across subcellular compartments depending upon how well they behave
+during the biochemical fractionation process. For instance, in the use-case data
+the proteasomal markers have a very tight profile with minimal noise whilst the
+nuclear markers have a wider profile indicating more variation in the behaviour
+of these proteins during fractionation. Whilst it would be possible to extract a
+subset of nuclear markers to generate a much tighter set of profiles (which would
+translate to a tighter cluster when visualised via dimensionality reduction),
+this would be an inaccurate representation of the data. Indeed, over-curation of
+markers to generate unrealistically tight clusters can lead to over-fitting of
+downstream protein localisation classification models. In other words, the
+nuclear markers would no longer be a true representation of the nucleus and the
+model may fail to recognise which of our unknown proteins should be classified
+as nuclear. The goal of marker curation is to select a set of markers which
+accurately represent the dataset being analysed. Moreover, some machine learning
+models are more robust to outliers than others.
+:::
+
+## Interactive data visualisation
+
+Visual exploration of correlation profiling datasets is a key aspect of the data
+analysis. As outlined above, the visualisation of marker protein distribution 
+profiles as well as the annotation of these proteins on 2D maps facilitates the
+marker curation process required prior to protein localisation classification.
+To make this process of visual data exploration easier and reduce the need for 
+excess plotting, the `pRolocVis` function from the [`pRolocGUI`](https://bioconductor.org/packages/release/bioc/html/pRolocGUI.html)
+package can be used. We simply pass our `MSnSet` object to the `pRolocVis`
+function, specify a method of dimensionality reduction and a column from our
+`fData` which we wish to visualise, here the `markers_initial` column.
+
+```{r, eval = FALSE}
+## Open pRolocGUI
+pRolocVis(object = msn, 
+          method = "PCA", 
+          fcol = "markers_initial")
+```
+
+```{r pRolocvis-picture, out.width = '80%', echo = FALSE, fig.cap = 'Screenshot of the pRolocVis GUI application'}
+knitr::include_graphics("figs/pRolocVis_screenshot.png", error = FALSE)
+```
+
+
+Using this interactive visualisation tool (Figure \@ref(fig:pRolocvis-picture)) 
+enables us to easily identify which proteins the outlier points and profiles
+correspond to.
+
+## Quantifying resolution using `QSep`
+
+In addition to identifying outlying markers in each of the annotated 
+compartments, users should also consider whether all of the initial compartments
+have sufficient resolution to be included in downstream classification. From 
+the marker plots generated above, the initial compartments in our marker set do
+seem to be reasonably well resolved. However, we can take a more quantitative
+approach to exploring resolution by using the `QSep` function within `pRoloc`.
+`QSep` is a method for quantifying the separation of clusters in subcellular spatial
+proteomics datasets [@Gatto2019].
+
+```{r}
+## Carry out QSep
+qsep_res <- QSep(object = msn, fcol = "markers_initial")
+
+## Verify
+qsep_res
+```
+
+The `QSep` function returns a specialised object of class `QSep`. Within this 
+object we can access matrices containing two types of QSep score: (1) the original
+and (2) normalised QSep scores. Original QSep scores are calculated as the average 
+Euclidean distance between two clusters and thus directly quantify how far apart
+the clusters are when visualised via PCA. These scores are calculated using one
+of the clusters as a reference cluster. Since the distance between two clusters
+is the same regardless of which is the reference, the original QSep scores will
+be a symmetrical matrix. We can access this matrix by executing `qsep_res@x`.
+
+```{r}
+## Look at original QSep scores 
+qsep_res@x
+```
+
+By contrast to these raw scores, normalised QSep scores are calculated as the
+ratio of average Euclidean distance between clusters to the average distance within
+the reference cluster. This means that the normalised QSep scores represent not
+only the distance between clusters but this distance relative to how tight the
+reference cluster is. As a result, we have an asymmetrical matrix where the
+score is different when we use each of the two compared clusters as the reference.
+This matrix is accessed using `qsep_res@xnorm`, as shown below.
+
+```{r}
+## Look at the normalised QSep scores 
+qsep_res@xnorm
+```
+
+For both raw and normalised QSep scores, a higher score indicates better 
+resolution between clusters.
+
+We can also visualise the results of QSep in multiple ways. Firstly, the `plot`
+function within the `pRoloc` package can be used to generate a boxplot of the 
+QSep scores for each included compartment. The `norm` argument takes a logical
+input to indicate whether to use normalised or raw QSep scores.
+
+```{r, eval=TRUE}
+## Plot a boxplot of raw QSep scores
+plot(x = qsep_res, norm = FALSE)
+
+## Plot a boxplot of normalised QSep scores
+plot(x = qsep_res, norm = TRUE)
+```
+
+
+From these boxplots we are able to see which of our subcellular compartments
+have higher overall normalised QSep scores, thus indicating that they are well
+resolved. In the use-case data, chromatin, mitochondrion, and lysoosme are
+our three most well-resolved compartments.
+
+Secondly, to take a closer look at the pairwise QSep scores we can use the 
+`levelPlot` function, again with the `norm` argument to specify which type of 
+score we are interested in.
+
+```{r, eval=TRUE}
+## Plot a level plot of raw QSep values between each compartment
+levelPlot(object = qsep_res, norm = FALSE)
+
+## Plot a level plot of normalised QSep values between each compartment
+levelPlot(object = qsep_res, norm = TRUE)
+```
+
+Looking at the pairwise QSep scores is particularly useful in identifying which
+subcellular compartments are the least resolved from each other. In the use-case
+data the riboosmes have the lowest pairwise resolution, some of this may be down
+to the annotation of individual subunits and class labelling. When resolution
+between two subcellular compartments is low (i.e., their pairwise QSep scores
+are low) there is a higher chance of proteins being misclassified between these
+compartments during downstream machine learning. Indeed, a subcellular
+compartment could have a high average QSep score, but the ability to correctly
+classify proteins to that compartment is determined almost entirely by its
+lowest pairwise QSep score. For compartments where all calculated QSep scores
+are low, users may consider whether it is appropriate to include the compartment
+at all or combine them with other classes under one umbrella term, for example
+here we could combine the 40S and 60S subunits into one term "Ribosome". By
+contrast, for compartments with high overall scores but one or two low pairwise
+QSep scores it may be worth combining the compartments with lower resolution.
+After making any changes, QSep scores can be recalculated on the updated
+annotated `MSnSet` to determine whether resolution has been improved.
+
+QSep scores are a quantitative measure of cluster (subcellular compartment)
+separation. Higher QSep scores indicate that clusters are more well resolved
+from each other. However, users should not aim for unreasonably high QSep scores.
+As discussed above in "An additional note on outlier marker removal", over-curation
+can generate unrealistically tight protein clusters which are no longer representative
+of the dataset. These clusters would have relatively higher QSep scores, since 
+they are tighter and further separated from other compartments, but could still 
+lead to over-fitting during protein localisation classification.
+
+## Refining marker lists
+
+Having made an initial assessment of marker suitability, we can now update our
+marker list accordingly. There are three different aspects to consider here:
+
+1. Removal of outlier markers
+2. Combining compartments which lack sufficient resolution
+3. Expansion or removal of marker compartments which have an insufficient
+number of proteins to use as training data for classification
+
+
+With respect to removing the annotation for individual outlier proteins, we
+previously visualised the correlation profiles of each marker compartment and
+used `pRolocGUI` to interactively identify which proteins the outlier profiles
+belong to. As we wish to keep track of marker annotation throughout our analysis
+we create a new column for our final marker list that we will use for analysis.
+We will call this "markers". This is the default value of the `fcol` argument in
+`pRoloc` for many of `pRolocs` functions. This means we can omit `fcol` in many
+arguments.
+
+Let's first create this new list,
+
+```{r}
+fData(msn)$markers <- fData(msn)$markers_initial
+```
+
+Check it's been created,
+
+```{r}
+msn |> fvarLabels()
+```
+
+We can now remove the annotation for the following outlying proteins in our
+new `markers` column,
+
+
+"Q7LBR1" is labelled as endosome but sit away from its friends
+"P11169" is PM (probably leave this but for demo will remove)
+
+<!-- ```{r} -->
+<!-- ## Define marker accessions identified as outliers -->
+<!-- outlier_acc <- c("Q9BSE5", "O75063", "O14832", "Q9BTZ2", "Q86T03", "Q9BUM1") -->
+
+<!-- ## Convert 'marker' column to unknown -->
+<!-- to_rm <- which(fData(msn)$Master.Protein.Accessions %in% outlier_acc) -->
+<!-- fData(msn)$markers[to_rm] <- "unknown" -->
+<!-- ``` -->
+
+
+
+
+---> Got as far as here
+
+
+
+::: {.callout-tip}
+#### Key Points
+
+* A marker is a protein known to reside in a single subcellular niche in the
+  system and conditions being studied. Markers are the labelled training data
+  for supervised machine learning, so their quality directly affects the
+  localisation predictions.
+* Marker curation is iterative: select the compartments resolved in the data,
+  start from an existing marker list (e.g. from `pRolocmarkers()` or a
+  publication), evaluate it against the data, refine it and reclassify.
+* Aim for enough markers per class to support cross-validation (around 10–15)
+  and, where possible, more markers than quantitative channels. Some small
+  organelles, such as the peroxisome, may not reach this.
+* PCA shows only two components at a time, so check several components
+  (`dims`) before concluding that compartments overlap. Dimensionality
+  reduction is only a visualisation: classifiers are trained on the marker
+  correlation profiles, so always inspect these with `plotDist()`.
+* `QSep()` quantifies how well compartments are separated. Normalised scores
+  account for how tight each cluster is. A compartment is only as well resolved
+  as its lowest pairwise score, so poorly separated compartments may need to be
+  combined (e.g. 40S and 60S ribosome into "Ribosome") or removed.
+* Remove clear outlier markers, but avoid over-curation: some noise is
+  expected, and unrealistically tight marker sets give inflated QSep scores and
+  can lead to over-fitting of the classifier.
+:::
+
