@@ -21,8 +21,6 @@ editor_options:
 library("here")
 ```
 
-# Part 1: Data processing and quality control within the `QFeatures` infrastructure
-
 
 The first part of this workflow will demonstrate how to import quantitative MS
 data into R using the `QFeatures` infrastructure. We will then discuss the key 
