@@ -515,7 +515,7 @@ condition, we can summarise the movements of our candidates as a table of
 
 ```{r}
 hits %>%
-  count(niche_control, niche_treated, sort = TRUE)
+  dplyr::count(niche_control, niche_treated, sort = TRUE)
 ```
 
 :::{.callout-exercise}

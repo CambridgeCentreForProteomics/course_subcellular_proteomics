@@ -18,11 +18,33 @@ library("patchwork")
 library("stringr")
 library("pRoloc")
 library("pheatmap")
+library("magrittr")
+library("dbscan")
+library("org.Hs.eg.db")
+library("clusterProfiler")
 
 load(here("course_files/preprocessed/lesson05.rda"), verbose = TRUE)
 ```
 
-## Part 2: Generating a subcellular spatial map
+::: {.objectives}
+#### Learning objectives
+
+* Convert protein-level data from a `QFeatures` object into an `MSnSet` so
+  that it can be used with `pRoloc`
+* Explain why the resolution of the data should be assessed before defining
+  markers or running a classifier
+* Visualise unlabelled protein correlation profiles using dimensionality
+  reduction (PCA and t-SNE with `plot2D`) and heatmaps (`pheatmap`)
+* Recognise the signs of good and poor resolution, and understand the
+  limitations of dimensionality reduction plots
+* Use unsupervised clustering (`hclust` and `hdbscan`) to find groups of
+  proteins with similar correlation profiles
+* Use GO cellular component enrichment (`enrichGO`) to identify which
+  subcellular compartments the clusters represent, and use this to decide which
+  compartments to include as classes for machine learning
+:::
+
+## Generating a subcellular spatial map
 
 Now that we have generated our final dataset containing protein correlation
 profiles, we can use this data to generate spatial maps. Specifically, 
@@ -51,22 +73,6 @@ marker proteins will then be used to train a supervised machine learning
 classifier. The output of this algorithm will be a predicted subcellular 
 localisation for each of our proteins. Finally, we show how to visualise the
 predicted protein localisations to generate a spatial map of the cell.
-
-## Assessment of resolution and unsupervised clustering
-
-::: {.objectives}
-#### Learning objectives
-
-* Convert protein-level data from a `QFeatures` object into an `MSnSet` for use with `pRoloc`
-* Explain why resolution must be checked before defining markers or running a classifier.
-* Show unlabelled protein correlation profiles with PCA and t-SNE (`plot2D`, `fcol = NULL`) and with heatmaps (`pheatmap`, `cluster_cols = FALSE`), using `set.seed` so stochastic methods can be reproduced.
-* Spot signs of good and poor resolution, and recognise when a lack of structure points to processing errors (e.g. log transformation) or a failed fractionation.
-* Describe the limits of linear (PCA) and non-linear (t-SNE, UMAP) dimensionality reduction when reading distances and clusters.
-* Use hierarchical clustering (`hclust`, `cutree`) and HDBSCAN (`hdbscan`, testing a range of `minPts` values) to find groups of proteins with similar profiles, and show the clusters on heatmaps and PCA or t-SNE maps.
-* Check clusters by testing for enrichment of GO cellular compartment terms (`enrichGO`, `ont = "CC"`) against a background of all proteins in the data.
-* Use the results to decide which subcellular compartments are resolved well enough to include as classes in the training data.
-:::
-
 
 ## Extract protein-level data into MSnset infrastructure for use in `pRoloc`
 
@@ -124,7 +130,7 @@ all precursors into peptides by passing either `Sequence` (ignore modifications)
 `Modified.Sequence` (include modifications) to the `fcol` argument in 
 `aggregateFeatures`, and then all peptides into proteins by passing
 `Protein.Group`. The peptide-level data could then be extracted into 
-an `MSnSet` in the same way as demonstrate above. All functions used throughout 
+an `MSnSet` in the same way as demonstrated above. All functions used throughout 
 the rest of the workflow could be equally applied to an `MSnSet` containing 
 peptide-level data, although some functions may require longer to run given that 
 the peptide-level data is larger than the corresponding protein-level dataset.
@@ -174,11 +180,11 @@ t-SNE plot each time the code is executed.
 par(mfrow = c(1, 2))
 
 ## Visualise unlabelled data using PCA and t-SNE
-msn %>%
+msn  |> 
   plot2D(fcol = NULL, col = "black", method = "PCA", main = "PCA")
 
 set.seed(399)
-msn %>%
+msn |>
   plot2D(fcol = NULL, col = "black", method = "t-SNE", main = "t-SNE")
 ```
 
@@ -196,7 +202,7 @@ subcellular structures prior to biochemical fractionation.
 ::: {.callout-note}
 #### An additional note on dimensionality reduction
 Dimensionality reduction methods are excellent visualisation tools for
-subcellular proteomics data. However, users should be carefully when interpreting
+subcellular proteomics data. However, users should be careful when interpreting
 such figures since they only represent a simplified snapshot of the data. PCA,
 for example, uses a linear data transformation which means that distance can be
 directly interpreted (proteins closer together have more similar fractionation
@@ -210,6 +216,26 @@ of the overall variation. Only visualisation of the protein correlation
 profiles themselves can provide a true picture of the data.
 :::
 
+### Visualisation using heatmaps
+
+In addition to dimensionality reduction, heatmaps are also a popular tool for
+visualising patterns and relationships in large datasets. To gain a snapshot of
+proteins behaviour across different fractions and replicates we can use 
+the `pheatmap` function from the `pheatmap` package to generate a clustered
+heatmap of the normalised protein correlation profiles. The input to `pheatmap` is the matrix of correlation
+profiles stored in the `exprs` slot of the `MSnSet`. By default a hierachical
+clustering is performed on the correlation profiles and the heatmap is ordered
+according to this clustering.
+
+Since we wish to visualise the correlation profile of each protein in an intuitive
+order (that is the order of the biochemical fractionation gradient), we tell 
+`pheatmap` not to cluster based on columns (quantitative channels) by setting
+`cluster_cols` to `FALSE`. This will retain the column order we have in our 
+`MSnSet` rather than clustering similar columns together. In order to get some 
+idea of which proteins (rows of the `MSnSet`) exhibit similar normalised abundance
+distributions and, therefore, could reside in the same subcellular compartment, we
+set `cluster_rows` to `TRUE`. This means that proteins (rows) with similar 
+correlation profiles will be grouped together.
 
 ```{r}
 ## Plot heatmap of protein correlation profiles - row clustering only
@@ -219,11 +245,438 @@ cluster_cols = FALSE,
 show_rownames = FALSE)
 ```
 
-- hierarcical clustering
 
-- hdbscan
+<!-- ```{r heatmap-lopit, out.width = '70%', echo = FALSE, fig.cap = "Heatmap of the correlation profiles from all replicates in the U-2 OS data."} -->
+<!-- knitr::include_graphics("figs/heatmap_protein_quant.pdf", error = FALSE) -->
+<!-- ``` -->
 
-- enrichGO validation of clusters
+
+We can quickly see patterns of similarity emerging for proteins across
+fractions, and also across replicates, indicated by coloured blocks, as
+displayed in Figure \@ref(fig:heatmap-lopit). The colours reflect the normalised
+relative abundance for each protein in each fraction and replicate; blue
+indicating a low recorded normalised abundance and yellow, orange and red
+indicating a high normalised abundance value for a given protein. Protein (row)
+names are omitted for clarity. Blocks with different colours across columns are
+indicative of structured correlation profiles. For example, the top-most cluster
+is comprised of several hundred rows with a peak abundance in the second
+biochemical fraction. This pattern is unique to this cluster, providing
+confidence that these profiles will be resolved from others in the dataset and
+that this set of proteins could represent a subcellular niche. Depending on the
+experimental design we expect to see a similar trend between replicates in where
+proteins peak in abundance across the same fractions.
+
+
+## Unsupervised learning
+
+### Hierarchical clustering with `hclust`
+
+Unsupervised learning via clustering analysis can be used to gain 
+insight into which subcellular niches we have the ability to resolve in our
+data. At a basic level, clustering methods simply seek to find structure in an
+unlabelled dataset via grouping data points whose members are similar in some way.
+This step is particularly useful for those studying the spatial proteome of
+non-model organisms or aiming to discover new subcellular structures. Several
+unsupervised machine learning algorithms including classic methods such as
+hierarchical clustering and *k*-means, are available
+in [`pRoloc`](https://www.bioconductor.org/packages/release/bioc/html/pRoloc.html) 
+via the [`MLInterfaces`](https://www.bioconductor.org/packages/release/bioc/html/MLInterfaces.html) 
+package, as outlined in the vignette [Using pRoloc for spatial protemics data analysis](https://bioconductor.org/packages/3.20/bioc/vignettes/pRoloc/inst/doc/v01-pRoloc-tutorial.html#51_Unsupervised_ML).
+
+In the section above we carried out hierarchical clustering and visualisation 
+using the `pheatmap` function. This allowed us to cluster rows and see groups
+of rows (proteins) with similar abundance profiles (correlation profiles). We 
+can take this a step further by annotating the discovered clusters on our data
+using dimensionality reduction. 
+
+First, we regenerate the same heatmap as above with some additional annotations
+to make the individual clusters easier to see. Here, we choose to do the 
+hierarchical clustering separately from the plotting so that we have all of the
+data we need in an accessible object. The same hierarchical clustering carried 
+out within the `pheatmap` function can also be completed using the `hclust`
+function from the `stats` package. We first pass the quantitative `exprs` data
+of our `msn` to the `dist` function to generate a distance matrix, and
+then pass this distance matrix to `hclust`. We will store the results in an 
+object called `hc`. Next, we use the `cutree` function to specify how many 
+clusters we wish to split the data into. The most appropriate number will vary
+depending on the data size and resolution, so users should test a few options. 
+Here, we demonstrate using 12 clusters since most high-quality correlation
+profiling experiments resolve 10-15 subcellular compartments.
+
+```{r}
+## Carry out hierarchical clustering with hclust
+hc <- msn |>
+  exprs() |>
+  dist() |>
+  hclust()
+
+## Specify number of clusters (k) and extract proteins in each cluster
+k <- 12
+cl <- cutree(hc, k)
+```
+
+
+Now that we have a named vector containing all of our proteins with an associated
+hierarchical cluster number, we can regenerate our heatmap and annotate this
+information (Figure \@ref(fig:hierarchical-clustering), left). To do so, we generate 
+a `data.frame` with a column called `Cluster` containing the cluster number and
+make sure that the `rownames` match the `featureNames` of our `msn` object.
+We also define our own colours to match the default colours used by `plot2D` such
+that our clusters have the same colour annotations in our heatmap and dimensionality 
+reduction visualisation. Finally, we use the `pheatmap` function as above but pass 
+our row annotation `data.frame` to `annotation_row` and our pre-defined colours
+to `annotation_colors`.
+
+```{r, eval = TRUE}
+## Create a dataframe containing cluster annotations
+cl_annot <- data.frame("Cluster" = factor(cl))
+
+## Define colours (to be same as PCA below = default plot2D)
+my_cols <- list("Cluster" = getStockcol()[1:k] |> set_names(1:k))
+
+## Plot heatmap with rows annotated by cluster number
+pheatmap(mat = exprs(msn), 
+         cluster_rows = TRUE,
+         cluster_cols = FALSE,
+         show_rownames = FALSE,
+         cutree_rows = k, 
+         annotation_row = cl_annot,
+         annotation_colors = my_cols)
+```
+
+
+To plot these hierarchical clusters on a dimensionality reduction map, we first
+add the cluster information to the `fData` of our `MSnSet`. We can then use the
+`plot2D` function to generate PCA plots with the discovered clusters annotated (Figure \@ref(fig:hierarchical-clustering), right). 
+As above, we pass our `msn` object and specify the dimensionality reduction 
+method to use. We also tell the function which column of our `fData` to be used
+for colouring the points - here we use the newly created `hc` column. 
+
+```{r, eval = TRUE, fig.width=6, fig.height=6}
+## Add hierarchical cluster information to MSnSet fData
+fData(msn)$hc <- cl
+
+## Visualise hierarchical clusters on PCA
+msn |>
+  plot2D(fcol = "hc", method = "PCA", main = "Hierarchical clustering results on PCA")
+
+## Add legend
+msn |>
+  addLegend(fcol = "hc", cex = 0.7)
+```
+
+### Hierarchical clustering with `HDBSCAN`
+
+Hierarchical DBSCAN (HDBSCAN) is another form of clustering which can be
+executed in R using the [`dbscan` package](https://cran.r-project.org/web/packages/dbscan/index.html) [@Hahsler2019]. This algorithm has been used to successfully uncover and validate 
+clusters in subcellular spatial proteomics data generated from *Toxoplasma gondii* [@Barylyuk2020] 
+and African trypanosomes [@Moloney2023]. Extensive documentation on the use of 
+HDBSCAN and related algorithms can be found at [https://hdbscan.readthedocs.io/en/latest/basic_hdbscan.html](https://hdbscan.readthedocs.io/en/latest/basic_hdbscan.html). The main benefit of the `hdbscan` function is its simplicity. Users are only
+required to optimise a single parameter; the minimum number of points to
+comprise a cluster, termed `minPts`. The optimal value for this parameter will
+depend upon the structure and resolution of the data, so some initial
+exploration is required. Given that a subcellular compartment will need to
+comprise at least 10-15 marker proteins for use in machine learning (discussed
+later in this workflow), we recommend testing values between 10 and 20 for
+`minPts`, as demonstrated below.
+
+```{r, fig.width=3, fig.height=3, eval=FALSE}
+## Test a cluster size between 10 and 20 proteins per cluster
+min_N <- c(10:20)
+cluster_N <- vector(mode = "numeric", length = 10L)
+
+## Run HDBSCAN -- this takes a few minutes to run
+for (i in seq_along(min_N)) {
+  result <- msn |>
+    exprs() |>
+    hdbscan(minPts = min_N[i])
+  cluster_N[i] <- max(result$cluster)
+}
+
+## Structure results into a data.frame
+hdb_opt <- data.frame(min_N, cluster_N)
+
+## Plot minimum cluster size against resulting number of clusters
+hdb_opt |>
+  ggplot(aes(x = min_N, y = cluster_N)) + 
+  geom_col() + 
+  theme_bw() +
+  labs(x = "Min proteins per cluster", 
+       y = "Number of clusters")
+```
+
+For this data the unsupervised algorithm has identified only a small number of
+clusters within our correlation profiling data. Whilst it may be worth exploring the results of
+clustering with various `minPts`, we will here demonstrate how to look at the
+results derived from a `minPts` value of 10. We first run the HDBSCAN algorithm
+with our selected `minPts` and append these results to the `fData` of our
+`msn` object to look at the results.
+
+```{r}
+## Run HDBSCAN using optimal minimum cluster size - here 10
+hdb_results <- msn |>
+  exprs() |>
+  hdbscan(minPts = 10)
+
+## Add the results of HDBSCAN to our MSnSet
+fData(msn)$hdb_cluster_id <- hdb_results$cluster
+fData(msn)$hdb_cluster_prob <- hdb_results$membership_prob
+
+## Check how many proteins are in each cluster 
+msn |>
+  fData() |>
+  pull(hdb_cluster_id) |>
+  table()
+```
+
+As we can see, `hdbscan` has allocated the proteins to 1 of the
+6 clusters it has found in the data. This information is found in
+`hdb_results$cluster` and we have added it to our `MSnSet` and it is can be
+accessed via `fData(msn)$hdb_cluster_id`. If we check the column names
+of the `fData` we can verify the results have been stored in the `MSnSet`.
+
+```{r}
+## Check columns in fData
+msn |> 
+  fvarLabels()
+```
+
+Notice that some proteins are allocated to cluster "0". The "0" category
+denotes proteins which did not fit into one of the 6 discovered clusters.
+
+We can use the `plot2D` function to generate PCA and t-SNE plots with the
+discovered clusters annotated (Figure \@ref(fig:plots-hdb)). As before, we pass our `msn` object and
+specify the dimensionality reduction method we wish to use. We also tell the
+function which column of our `fData` to be used for colouring the points - here
+we use the newly created `hdb_cluster_id` column. Finally, we pass the argument
+`unknown = "0"` so that the large cluster of uncertain proteins remains 
+unlabelled. 
+
+```{r, eval = TRUE}
+par(mfrow = c(1, 2))
+
+## Visualise HDBSCAN unsupervised clustering using PCA
+msn |>
+  plot2D(fcol = "hdb_cluster_id", method = "PCA", unknown = "0",
+         main = "HDBSCAN results on PCA")
+
+## Visualise HDBSCAN unsupervised clustering using t-SNE
+set.seed(399)
+msn |>
+  plot2D(fcol = "hdb_cluster_id", method = "t-SNE", unknown = "0",
+         main = "HDBSCAN results on t-SNE")
+
+## Add legend
+msn |> 
+  addLegend(fcol = "hdb_cluster_id", unknown = "0", cex = .7)
+```
+
+### Validation of clusters
+
+Visualisation confirms that the clustering looks real and sensible. Therefore, 
+we will use gene ontology (GO) enrichment analyses to determine which subcellular 
+niches each of the discovered clusters represent. Many packages exist to facilitate
+GO enrichment analysis in R, including 
+[`topGO`](https://bioconductor.org/packages/release/bioc/html/topGO.html) [@topGO], 
+[`GOfuncR`](https://www.bioconductor.org/packages/release/bioc/html/GOfuncR.html) [@GofuncR],
+and [`clusterProfiler`](https://bioconductor.org/packages/release/bioc/html/clusterProfiler.html) 
+[@Wu2021]. Here we will use `enrichGO` function in the `clusterProfiler` package.
+The aim of this gene ontology enrichment analysis is to determine whether the 
+proteins assigned to a given cluster are enriched for any cellular component (CC)
+GO terms. That is, we ask whether the proteins in a cluster are annotated with a
+CC GO term more than expected by chance based on the entire dataset.
+
+To use the `enrichGO` function we will pass a vector containing the protein 
+accessions of interest, here those within a given HDBSCAN cluster. We also need
+to provide a background, or '`universe`', which is a vector containing the 
+accessions of all proteins within our spatial map. Other arguments include the
+`keyType` to tell the function that we are using UniProt accessions, `OrgDb`
+to pass a database object for the species of interest (here `org.Hs.eg.db`
+for human samples), and `ont` to indicate that we wish to consider only GO 
+categories annotated as cellular component (CC). For users studying other model
+organisms, the `org.Hs.eg.db` object can be swapped out for a database 
+corresponding to the species of interest e.g., `org.Mm.eg.db` for mouse. Users 
+mapping the spatial proteome of a non-model organism may need to manually assess
+the proteins comprising each cluster to determine their identities.
+
+Below we demonstrate how to carry out GO enrichment on cluster number 6.
+
+```{r, eval=TRUE, warning=FALSE, message=FALSE}
+## Extract protein accessions in the cluster
+protein_id <- msn |>
+  fData() |>
+  filter(hdb_cluster_id == 6) |>
+  pull(Protein.Group)
+
+## Extract all protein accessions in the data
+background_proteins <- msn |>
+  fData() |>
+  pull(Protein.Group)
+
+## Carry out GO enrichment searching for CC terms
+cluster_6_go <- enrichGO(gene = protein_id,
+                         universe = background_proteins,
+                         OrgDb = org.Hs.eg.db,
+                         keyType = "UNIPROT",
+                         ont = "CC",
+                         pAdjustMethod = "BH",
+                         readable = TRUE,
+                         pvalueCutoff = 0.01,
+                         qvalueCutoff = 0.01)
+```
+
+
+```{r}
+## View the first few enriched terms
+cluster_6_go |> 
+  slot("result") |> 
+  pull(Description) |> 
+  head()
+```
+
+We can plot the results using the `barplot` function. We pass the argument
+`showCategory = 10` to tell `enrichGO` to only plot the first 10 enriched terms.
+Other plotting functions are available in the `enrichGO` package. We refer 
+users to the online book for the package which can be found at 
+https://yulab-smu.top/biomedical-knowledge-mining-book/.
+
+```{r, eval = TRUE}
+## Plot results
+barplot(cluster_6_go, showCategory = 10) +
+  ggtitle("Enriched terms in Cluster 6")
+```
+
+
+The results of GO enrichment indicate that cluster 6 represents proteins
+associated with the mitochondria This provides an additional unbiased level of
+evidence that the mitochondria is sufficiently resolved in our dataset to
+be included as a compartment in the downstream analyses.
+
+To simplify the investigation of all discovered clusters, the code below can be 
+used to generate a `list` of the enriched CC GO terms for each cluster.
+
+
+```{r, eval = TRUE}
+## Extract the number of clusters we have found
+n <- hdb_results[["cluster"]] |>
+  max()
+  
+## Define protein background
+background_proteins <- msn |>
+  fData() |>
+  pull(Protein.Group)
+```
+
+```{r, eval=TRUE, message=FALSE, warning=FALSE}
+## Initialise a container for the GO output
+go_result <- vector("list", n)
+
+## For loop over each cluster number carrying out GO enrichment
+for (i in 1:n) {
+  ## Step (1) - extract protein IDs in the cluster
+  protein_id <- msn |>
+    fData() |>
+    filter(hdb_cluster_id == i) |>
+    pull(Protein.Group)
+  
+  ## Step (2) - run enrichGO
+  go_result[[i]] <- enrichGO(gene = protein_id,
+                        universe = background_proteins,
+                        OrgDb = org.Hs.eg.db,
+                        keyType = "UNIPROT",
+                        ont = "CC",
+                        pAdjustMethod = "BH",
+                        readable = TRUE)
+}
+```
+
+
+You will notice that in the above code we did not pass thresholds the p-value
+cutoff i.e., `pvalueCutoff` and `qvalueCutoff` as we did in the first example.
+When no thresholds are passed all GO CC terms found per cluster are recovered
+whether they are significant or not. This can be useful if you wish to examine
+different thresholds.
+
+We can filter these results manually using `filter`, for example, at a given
+p- and q-value.
+
+```{r, eval=TRUE}
+## Filter results manually by p- and q-value.
+enriched_terms <- vector("list", n)
+for (i in 1:n) {
+  enriched_terms[[i]] <- go_result[[i]] |>
+    slot("result") |> 
+    filter(p.adjust < 0.01 & qvalue < 0.01) |> 
+    pull(Description)
+}
+
+names(enriched_terms) <- paste0("Cluster", 1:n)
+```
+
+To get an overview of the enrichment results, we plot a selection of
+significantly enriched GO cellular component terms for each cluster. All terms
+passed a p-value and q-value threshold of 0.01, and we show five terms from each
+cluster’s list. Each row is a GO term and each column a cluster. A dot means
+that term is significantly enriched in that cluster. A term can appear in more
+than one cluster, so the plot shows both what each cluster is enriched for and
+where clusters overlap.
+
+```{r}
+## First 5 terms of each cluster
+top_terms <- unique(unlist(lapply(enriched_terms, head, 5)))
+
+## which clusters is each of these terms enriched in?
+df <- expand.grid(term = top_terms, cluster = names(enriched_terms))
+df$enriched <- mapply(function(t, cl) t %in% enriched_terms[[cl]],
+                      df$term, df$cluster)
+
+ggplot(subset(df, enriched), aes(x = cluster, y = term)) +
+  geom_point(size = 4, colour = "steelblue") +
+  scale_y_discrete(limits = rev(top_terms)) +
+  labs(x = NULL, y = NULL, 
+       title = "Enriched GO cellular component terms per cluster") +
+  theme_bw()
+```
+
+The plot shows that most clusters correspond to a recognisable subcellular
+compartment:
+
+- Clusters 1 and 2 are enriched for chromatin and chromosome terms, such as
+heterochromatin, kinetochore and condensed chromosome, so they likely represent
+chromatin-associated nuclear proteins. They share many terms, which suggests the
+clustering has split one broad nuclear or chromatin compartment into two. These
+clusters may reflect real biological differences, or they may be technical: the
+clustering may have resolved two sub-populations of proteins that we would
+consider part of the same niche.
+- Cluster 3 is enriched for terms related to RNA processing and the ribosome: the
+spliceosome, preribosome and cytosolic ribosome. It also shares some chromosome
+terms with clusters 1 and 2. This cluster is likely a mixture of nuclear and
+cytosolic ribonucleoprotein complexes, which often co-fractionate in correlation
+profiling experiments.
+- Cluster 4 is enriched for endoplasmic reticulum, cell surface and extracellular
+matrix terms. Proteins of the secretory pathway and the plasma membrane often
+have similar fractionation profiles, so they can be hard to separate.
+- Cluster 5 is enriched for lysosome and Golgi terms. It shares terms such as
+primary lysosome and azurophil granule with cluster 4.
+- Cluster 6 is clearly mitochondrial, with terms such as mitochondrial inner
+membrane, mitochondrial matrix and respiratory chain complex.
+
+When interpreting this plot, keep in mind that GO terms are hierarchical. Many
+enriched terms are closely related (for example, "condensed chromosome" and
+"condensed chromosome, centromeric region"), so a cluster can have many
+significant terms that all describe the same compartment. Showing a few terms
+per cluster makes the main pattern easier to see. These terms are a selection
+rather than the most significant ones, so the full list of enriched terms should
+be checked before drawing conclusions.
+
+Overall, GO enrichment gives us confidence that the unsupervised clusters
+reflect real subcellular structure in the data. It also helps us decide which
+compartments are well resolved, and therefore which subcellular classes to
+include when defining markers. A cluster that maps cleanly to a single
+compartment, such as cluster 6, is a good candidate for marker selection.
+Clusters that are mixed or share many terms, such as clusters 1–3 and 4–5, may
+need to be combined into broader classes or examined more closely before markers
+are assigned.
 
 ```{r}
 #| label: save-data
@@ -232,3 +685,27 @@ show_rownames = FALSE)
 save(msn, file = here("course_files/preprocessed/lesson_01_p2.rda"))
 ```
 
+::: {.callout-tip}
+#### Key Points
+
+* Functions in `pRoloc` require data in an `MSnSet`. Protein-level sets in a
+  `QFeatures` object can be coerced with `as(..., "MSnSet")`, where `assay`,
+  `rowData` and `colData` become `exprs`, `fData` and `pData`.
+* Before defining markers, check that the data has resolution: distinct
+  patterns of co-fractionation that separate subcellular niches.
+* PCA, t-SNE and heatmaps of unlabelled data give a quick first look. Clear
+  shape and clusters indicate good resolution, whereas a single central mass of
+  proteins suggests a processing error (e.g. log transformation) or a failed
+  fractionation.
+* Dimensionality reduction is a simplified view of the data. PCA shows only a
+  few components, and distances in t-SNE and UMAP cannot be interpreted
+  directly. Always set a seed for methods that use random numbers.
+* Unsupervised clustering with `hclust` or `hdbscan` finds groups of proteins
+  with similar profiles without using any prior annotation. Parameters such as
+  the number of clusters (`k`) or `minPts` should be explored, not fixed.
+* GO cellular component enrichment against a background of all proteins in
+  the data links clusters to subcellular compartments. Clusters that map
+  cleanly to one compartment indicate a well-resolved niche. Mixed or
+  overlapping clusters indicate compartments that may need to be combined or
+  examined more closely before markers are defined.
+:::

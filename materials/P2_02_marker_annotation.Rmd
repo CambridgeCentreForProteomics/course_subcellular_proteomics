@@ -15,3 +15,27 @@ editor_options:
 * Measure how well compartments separate with QSep (`QSep`, `levelPlot`), and interpret raw and normalised QSep scores.
 * Refine marker lists by removing outlying markers and unresolved compartments (`fDataToUnknown`), without drifting away from the literature.
 :::
+
+## Defining markers for machine learning
+
+In the context of spatial proteomics data analysis, a marker is a protein known
+to reside in a single subcellular niche within a given system *and* under given
+conditions. In other words, markers are proteins which we can confidently assign
+to a known single localisation based on prior knowledge. In the context of
+protein localisation prediction, marker proteins constitute the labelled training data
+provided to the classification algorithm. Defining marker proteins can be
+challenging and time consuming, but it is critical to obtain a list of markers
+which are representative of the experiment and dataset of interest.
+
+The definition of subcellular markers can be broadly divided into five steps,
+with steps 3, 4 and 5 representing an iterative process, as outlined in Figure \@ref(fig:marker-curation).
+
+1. Determine which subcellular organelles have been sufficiently resolved in the data
+2. Generate or source an initial marker list for the selected compartments in your organism
+3. Evaluate the suitability of the marker list for your specific dataset
+4. Update the marker list by removing outliers, combining compartments or expanding markers
+5. Carrying out protein localisation classification using curated markers
+
+```{r marker-curation, out.width = '90%', echo = FALSE, fig.cap = 'A graphical representation of the process of marker curation. Markers are proteins which are known to localise to a single subcellular compartment in the given cell type and condition of interest. The selection of confident markers is critical for successful prediction of protein localisation and differential localisation. (!) After using curated markers for protein localisation classification, users might still need to do some final curation e.g., if localisation prediction results do not look sensible (over- or under-classification of a particular organelle). However, users should be cautious when repeatedly refining markers lists as to ensure that the final markers remain representative of the literature and data structure.'}
+knitr::include_graphics("figs/marker_curation.png", error = FALSE)
+```
