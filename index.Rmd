@@ -8,8 +8,8 @@ number-sections: false
 
 ## Overview
 
-These materials focus on subcellular spatial proteomics using mass spectrometry-
-based correlation profiling experiments.
+These materials focus on subcellular spatial proteomics using mass spectrometry-based
+correlation profiling experiments.
 
 ::: {.callout-tip}
 ### Learning Objectives
@@ -27,7 +27,8 @@ converting quantitative MS data into correlation profiles
 
 ### Target Audience
 
-Proteomics practitioners or data analysts/bioinformaticians that would like to learn how to use R to analyse proteomics data.
+Proteomics practitioners or data analysts/bioinformaticians that would like to learn how
+to use R to analyse subcellular proteomics data from correlation profiling experiments.
 
 ### Prerequisites
 
