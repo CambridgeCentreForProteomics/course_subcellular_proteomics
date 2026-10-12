@@ -285,19 +285,11 @@ for (i in 1:length(marker_organelles)) {
 ```
 
 
-Plotting the concatenated profiles is useful as
-it allows us to assess the suitability of markers across all three replicates at
-once. Importantly, a protein can only be considered to be a marker if it behaves
-as such across all replicates. Overall, this marker set is a good fit to the
-data. Nevertheless, there are a few markers that could be removed. 
-
-<!-- For example, -->
-<!-- the third plot shows that one of the ER markers does not behave well in -->
-<!-- replicate 3 and, therefore, perhaps is not the best candidate as input for -->
-<!-- machine learning. Similarly, we can see a few outliers across the golgi -->
-<!-- apparatus (GA), lysosome, mitochondrion and peroxisome. -->
-
-
+Plotting the concatenated profiles is useful as it allows us to assess the
+suitability of markers across all three replicates at once. Importantly, a
+protein can only be considered to be a marker if it behaves as such across all
+replicates. Overall, this marker set is a good fit to the data. Nevertheless,
+there are a few markers that could be removed. 
 
 
 ::: {.callout-note}
@@ -322,33 +314,7 @@ accurately represent the dataset being analysed. Moreover, some machine learning
 models are more robust to outliers than others.
 :::
 
-## Interactive data visualisation
 
-Visual exploration of correlation profiling datasets is a key aspect of the data
-analysis. As outlined above, the visualisation of marker protein distribution 
-profiles as well as the annotation of these proteins on 2D maps facilitates the
-marker curation process required prior to protein localisation classification.
-To make this process of visual data exploration easier and reduce the need for 
-excess plotting, the `pRolocVis` function from the [`pRolocGUI`](https://bioconductor.org/packages/release/bioc/html/pRolocGUI.html)
-package can be used. We simply pass our `MSnSet` object to the `pRolocVis`
-function, specify a method of dimensionality reduction and a column from our
-`fData` which we wish to visualise, here the `markers_initial` column.
-
-```{r, eval = FALSE}
-## Open pRolocGUI
-pRolocVis(object = msn, 
-          method = "PCA", 
-          fcol = "markers_initial")
-```
-
-```{r pRolocvis-picture, out.width = '80%', echo = FALSE, fig.cap = 'Screenshot of the pRolocVis GUI application'}
-knitr::include_graphics("figs/pRolocVis_screenshot.png", error = FALSE)
-```
-
-
-Using this interactive visualisation tool (Figure \@ref(fig:pRolocvis-picture)) 
-enables us to easily identify which proteins the outlier points and profiles
-correspond to.
 
 ## Quantifying resolution using `QSep`
 
@@ -405,11 +371,15 @@ QSep scores for each included compartment. The `norm` argument takes a logical
 input to indicate whether to use normalised or raw QSep scores.
 
 ```{r, eval=TRUE}
+par(mfrow = c(1, 2))
+
 ## Plot a boxplot of raw QSep scores
 plot(x = qsep_res, norm = FALSE)
+title("Raw QSep scores for inital markers")
 
 ## Plot a boxplot of normalised QSep scores
 plot(x = qsep_res, norm = TRUE)
+title("Normalised QSep scores for initial markers")
 ```
 
 
@@ -424,10 +394,14 @@ score we are interested in.
 
 ```{r, eval=TRUE}
 ## Plot a level plot of raw QSep values between each compartment
-levelPlot(object = qsep_res, norm = FALSE)
+levelPlot(object = qsep_res, norm = FALSE, 
+          main = "Raw QSep values for inital markers")
+```
 
+```{r}
 ## Plot a level plot of normalised QSep values between each compartment
-levelPlot(object = qsep_res, norm = TRUE)
+levelPlot(object = qsep_res, norm = TRUE,
+          main = "Normalised QSep values for inital markers")
 ```
 
 Looking at the pairwise QSep scores is particularly useful in identifying which
@@ -457,15 +431,116 @@ of the dataset. These clusters would have relatively higher QSep scores, since
 they are tighter and further separated from other compartments, but could still 
 lead to over-fitting during protein localisation classification.
 
+
+
+### Interactive data visualisation
+
+Visual exploration of correlation profiling datasets is a key aspect of the data
+analysis. As outlined above, the visualisation of marker protein distribution 
+profiles as well as the annotation of these proteins on 2D maps facilitates the
+marker curation process required prior to protein localisation classification.
+To make this process of visual data exploration easier and reduce the need for 
+excess plotting, the `pRolocVis` function from the [`pRolocGUI`](https://bioconductor.org/packages/release/bioc/html/pRolocGUI.html)
+package can be used. We simply pass our `MSnSet` object to the `pRolocVis`
+function, specify a method of dimensionality reduction and a column from our
+`fData` which we wish to visualise, here the `markers_initial` column.
+
+```{r, eval = FALSE}
+## Open pRolocGUI
+pRolocVis(object = msn, 
+          method = "PCA", 
+          fcol = "markers_initial")
+```
+
+
+```{r pRolocvis-picture, out.width = '80%', echo = FALSE, fig.cap = 'Screenshot of the pRolocVis GUI application.'}
+knitr::include_graphics("figs/pRolocVis_screenshot.png", error = FALSE)
+```
+
+Using this interactive visualisation tool (Figure \@ref(fig:pRolocvis-picture)) 
+enables us to easily identify which proteins the outlier points and profiles
+correspond to. 
+
+```{r pRolocvis-outlier, out.width = '80%', echo = FALSE, fig.cap = 'Example steps for identifying outlier with pRolocVis.'}
+knitr::include_graphics("figs/curation_example.png", error = FALSE)
+```
+
+In the example above we identify a clear endosomal outlier. We see Q7LBR1 is
+annotated as endosomal (orange) and does not cluster with the other endosomal
+markers. We can use the `pRolocVis` app to identify this protein and also
+check its correlation profile. We indeed see it's profile does not fit the
+average profile of the endosomal markers. For this reason we note this protein
+as not a good candidate for an endosomal markers in this dataset. 
+
+::: {.callout-exercise}
+#### Challenge: Identifying the actin markers
+
+**Task 1**
+Use `getMarkers` to find out how many actin cytoskeleton markers there are in
+this marker list. 
+
+**Task 2**
+Use the `pRolocVis` app from the `pRolocGUI` package to examine the profiles of
+the the actin markers, or the `plotDist` function. Do you think they should be
+included as as a marker class for downstream machine learning analysis?
+
+**Task 3**
+Extract the Uniprot accession numbers of the actin cytoskeleton markers and
+store them in your R notebook or `character` `vector`.
+
+
+::::: {.callout-answer collapse="true"}
+**Task 1**
+
+The `getMarkers` function prints a summary table of the number of markers per
+class in the dataset. The column "`markers_initial`" contains the current
+markers we are working with.
+
+```{r}
+getMarkers(msn, fcol = "markers_initial")
+```
+
+
+**Task 2**
+
+Using the `plotDist` function. 
+
+```{r}
+## Subset mitochondrial markers
+actin <- fData(msn)$markers_initial == "Actin Cytoskeleton"
+
+## Plot the distributions of mitochondrial markers
+plotDist(object = msn[actin, ], pcol = "red", las = 2)
+title("Actin cytoskeleton markers")
+```
+
+You could have also used the `pRolocVis` function and selected the "Profiles"
+tab to exmaine the actin markers. 
+
+**Task 3**
+There are several way to do this, one way -
+
+```{r}
+ind <- which(fData(msn)$markers_initial == "Actin Cytoskeleton")
+actin_names <- featureNames(msn)[ind]
+actin_names
+```
+
+
+:::::
+:::
+
 ## Refining marker lists
 
-Having made an initial assessment of marker suitability, we can now update our
-marker list accordingly. There are three different aspects to consider here:
+Having made an assessment of the suitability of our initial marker list, we can
+now update our marker list accordingly. There are three different aspects to
+consider here:
 
 1. Removal of outlier markers
 2. Combining compartments which lack sufficient resolution
 3. Expansion or removal of marker compartments which have an insufficient
 number of proteins to use as training data for classification
+
 
 
 With respect to removing the annotation for individual outlier proteins, we
@@ -474,7 +549,7 @@ used `pRolocGUI` to interactively identify which proteins the outlier profiles
 belong to. As we wish to keep track of marker annotation throughout our analysis
 we create a new column for our final marker list that we will use for analysis.
 We will call this "markers". This is the default value of the `fcol` argument in
-`pRoloc` for many of `pRolocs` functions. This means we can omit `fcol` in many
+`pRoloc` for many of `pRoloc`s functions. This means we can omit `fcol` in many
 arguments.
 
 Let's first create this new list,
@@ -493,8 +568,7 @@ We can now remove the annotation for the following outlying proteins in our
 new `markers` column,
 
 
-"Q7LBR1" is labelled as endosome but sit away from its friends
-"P11169" is PM (probably leave this but for demo will remove)
+"Q7LBR1" is labelled as endosome but sit away from the rest of the proteins in the actin cluster.
 
 <!-- ```{r} -->
 <!-- ## Define marker accessions identified as outliers -->

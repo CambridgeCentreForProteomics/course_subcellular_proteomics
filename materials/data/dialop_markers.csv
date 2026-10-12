@@ -1,4 +1,47 @@
 Accession,Markers
+Q01518,Actin Cytoskeleton
+P13796,Actin Cytoskeleton
+P63261,Actin Cytoskeleton
+P28289,Actin Cytoskeleton
+O15143,Actin Cytoskeleton
+O15144,Actin Cytoskeleton
+O15145,Actin Cytoskeleton
+O15511,Actin Cytoskeleton
+O75369,Actin Cytoskeleton
+O75369-8,Actin Cytoskeleton
+P06753,Actin Cytoskeleton
+P06753-2,Actin Cytoskeleton
+P06753-3,Actin Cytoskeleton
+P06753-5,Actin Cytoskeleton
+P09493,Actin Cytoskeleton
+P09493-10,Actin Cytoskeleton
+P09493-5,Actin Cytoskeleton
+P12814,Actin Cytoskeleton
+P23528,Actin Cytoskeleton
+P47755,Actin Cytoskeleton
+P47756,Actin Cytoskeleton
+P47756-2,Actin Cytoskeleton
+P52907,Actin Cytoskeleton
+P59998,Actin Cytoskeleton
+P60709,Actin Cytoskeleton
+P60981-2,Actin Cytoskeleton
+P61158,Actin Cytoskeleton
+P61160,Actin Cytoskeleton
+P68032,Actin Cytoskeleton
+Q16658,Actin Cytoskeleton
+Q562R1,Actin Cytoskeleton
+Q92747,Actin Cytoskeleton
+Q9BPX5,Actin Cytoskeleton
+Q9BR76,Actin Cytoskeleton
+Q9NYL9,Actin Cytoskeleton
+Q9NZ32,Actin Cytoskeleton
+Q9NZR1,Actin Cytoskeleton
+Q9P1U1-3,Actin Cytoskeleton
+Q9Y281,Actin Cytoskeleton
+Q9Y4G6,Actin Cytoskeleton
+P06753-6,Actin Cytoskeleton
+Q14847,Actin Cytoskeleton
+Q9UJW0,Actin Cytoskeleton
 A8MW92,Chromatin
 O15297,Chromatin
 O43913,Chromatin
@@ -61,13 +104,14 @@ Q96QE3,Chromatin
 Q96SB8,Chromatin
 Q9H9B1,Chromatin
 Q9HAF1,Chromatin
-Q9HC52,Chromatin
 Q9NPF5,Chromatin
 Q9NPI1,Chromatin
 Q9NRL2,Chromatin
 Q9UBD5,Chromatin
 Q9UFC0,Chromatin
 Q9Y6I4,Chromatin
+Q9HC52,Chromatin
+Q9NQS7,Chromatin
 A0AVT1,Cytosol
 A6NDG6,Cytosol
 O00151,Cytosol
@@ -775,6 +819,8 @@ Q9HAT2,Lysosome
 Q9HB40,Lysosome
 Q9UBR2,Lysosome
 Q9UHL4,Lysosome
+Q8NBJ9,Lysosome
+Q9NUN5,Lysosome
 A3KMH1,Mitochondrion
 O00165,Mitochondrion
 O00217,Mitochondrion
