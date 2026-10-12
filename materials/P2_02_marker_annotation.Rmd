@@ -564,26 +564,87 @@ Check it's been created,
 msn |> fvarLabels()
 ```
 
-We can now remove the annotation for the following outlying proteins in our
-new `markers` column,
+In the below code we remove the annotation for the following outlying proteins
+in our new `markers` column,
+
+- "Q7LBR1" is labelled as endosome but sit away from the rest of the proteins 
+in the actin cluster.
+- "Q8NBJ9", "Q9NUN5" are annoated to the lysosome but do not cluster with the 
+other lysosomal markers.
 
 
-"Q7LBR1" is labelled as endosome but sit away from the rest of the proteins in the actin cluster.
-
-<!-- ```{r} -->
-<!-- ## Define marker accessions identified as outliers -->
-<!-- outlier_acc <- c("Q9BSE5", "O75063", "O14832", "Q9BTZ2", "Q86T03", "Q9BUM1") -->
-
-<!-- ## Convert 'marker' column to unknown -->
-<!-- to_rm <- which(fData(msn)$Master.Protein.Accessions %in% outlier_acc) -->
-<!-- fData(msn)$markers[to_rm] <- "unknown" -->
-<!-- ``` -->
+```{r pRolocvis-outlier, out.width = '80%', echo = FALSE, fig.cap = 'Screenshots of the pRolocVis app with endosomal and lysosomal markers highlighted.'}
+knitr::include_graphics("figs/pRolocVis_mrk_end_lys.png", error = FALSE)
+```
 
 
+In the below code chunk we define the markers to be renamed.
 
+```{r}
+## Define marker accessions identified as outliers
+outlier_acc <- c("Q7LBR1", "Q8NBJ9", "Q9NUN5")
 
----> Got as far as here
+## Convert 'marker' column to unknown
+to_rm <- which(fData(msn)$Protein.Group %in% outlier_acc)
+fData(msn)$markers[to_rm] <- "unknown"
+```
 
+We can validate the removal of these 3 proteins by looking at a table of the
+markers using the `getMarkers` function. We see that previously had 7011
+"unknown" (unannotated) proteins, and now have 7014.
+
+```{r}
+getMarkers(msn, fcol = "markers_initial")
+getMarkers(msn, fcol = "markers")
+```
+
+Next, we consider whether to remove any compartment annotation and leave these
+proteins as "unknown" or "unlabelled". Visualisation of PCA and t-SNE plots and
+QSep analysis showed good overall resolution of the marker classes, with median
+normalised between-cluster distances of about 2–5 for all compartments.
+Mitochondrion and chromatin were the best-resolved classes, with the largest raw
+distances to other compartments (median about 1.15–1.2) and high normalised
+scores (median about 4–5). The mitochondrial markers also formed the tightest
+cluster (within-cluster distance about 0.15). In contrast, the actin
+cytoskeleton class was poorly defined. It had one of the most diffuse marker
+clusters (within-cluster distance about 0.48, second only to Chromatin) and,
+together with endosome, the shortest median distance to other compartments
+(about 0.7). Because its markers are both dispersed and close to the other
+compartments, the class does not form a distinct cluster and is likely to cause
+unreliable classifications. We therefore decide to remove it from the marker set.
+
+Should users wish to remove the annotation for an entire compartment, the
+`fDataToUnknown` function provides an easy way to achieve this. We
+pass our `MSnSet`, the `"markers"` column and then use the `from` and `to`
+arguments to change our annotations `from` a given organelle `to` `"unknown"`
+(the default), or another annotation if desired, as shown below. 
+
+```{r}
+## Change actin to "unknown" in the column "markers"
+msn <- fDataToUnknown(object = msn, fcol = "markers", 
+                      from = "Actin Cytoskeleton", to = "unknown")
+
+## We see the actin annotation has been removed and relabelled as "unknown"
+getMarkers(msn)
+```
+
+Similarly, this function can also be used to change the names of 
+compartments, replacing "unknown" in the above code chunk to the desired
+compartment name.
+
+Finally, if users find that their initial or curated marker lists include
+compartments of interest which appear to be sufficiently resolved but have too
+few marker proteins (see the note "An additional note on minimum number of
+markers") it may be necessary to find some additional marker proteins within the
+dataset. This could be informed by the results of unsupervised clustering, as
+demonstrated in the last lesson. Alternatively, users could consider looking at
+different marker sets to see whether there are any other well-established marker
+proteins for their compartment of interest.
+
+After updating the marker list, users are advised to re-plot the marker profiles
+and annotated dimensionality reduction plots to display the final markers. This
+can be achieved using the same code as above, so for the simplicity of this 
+workflow we will not repeat the plotting here.
 
 
 ::: {.callout-tip}
