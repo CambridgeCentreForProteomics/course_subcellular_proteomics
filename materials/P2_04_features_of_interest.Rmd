@@ -8,10 +8,533 @@ editor_options:
 ::: {.objectives}
 #### Learning objectives
 
-* Build subcellular spatial maps of classification results with `plot2D` (`fcol = "svm.pred"`, etc.), and compare the methods listed in `plot2Dmethods`.
-* Pre-compute PCA, t-SNE, UMAP and LDA coordinates (`plot = FALSE`) and reuse them (`method = "none"`) for efficient, reproducible figures.
-* Find proteins of interest, such as members of a protein complex, with `pRolocVis`, and highlight them on spatial maps (`highlightOnPlot`).
-* Add your own annotations, such as complexes, pathways or compartments left out of training, as new `fData` columns and plot them.
-* Visualise the distribution of localisation probabilities for individual proteins from TAGM-MCMC output.
-* Check classification results critically by plotting both maps and profiles of classified proteins across several dimensionality reduction methods, and refine markers again where needed.
+* Build subcellular spatial maps of classification results with `plot2D`, and
+  compare different dimensionality reduction methods (`plot2Dmethods`).
+* Pre-compute PCA, t-SNE, UMAP and LDA coordinates (`plot = FALSE`) and reuse
+  them (`method = "none"`) for efficient, reproducible figures.
+* Find proteins of interest, such as members of a protein complex, with
+  `pRolocVis`, and highlight them on spatial maps (`highlightOnPlot`).
+* Add your own annotations, such as complexes, pathways or compartments left
+  out of training, as new `fData` columns and plot them.
+* Show the confidence of organellar predictions on a spatial map by scaling
+  points by their probability.
+* Check classification results critically by plotting both maps and profiles
+  of classified proteins, and refine markers again where needed.
+:::
+
+
+```{r}
+#| label: load-data
+#| include: false
+
+library("here")
+library("tidyr")
+library("dplyr")
+library("ggplot2")
+library("pRoloc")
+library("pRolocGUI")
+library("magrittr")
+
+## msn with the SVM and TAGM-MAP results, saved at the end of the protein
+## localisation prediction lesson
+load(here("course_files/preprocessed/P2_lesson03.rda"), verbose = TRUE)
+```
+
+## Introduction
+
+In the previous lesson we classified the proteins in our U-2 OS data using an
+SVM and TAGM-MAP, and generated our first spatial maps. Our `msn` object now
+contains the curated markers (`markers`) and the thresholded predictions of
+both classifiers (`svm.pred` and `tagm.map.allocation.pred`).
+
+```{r}
+## Columns we will use in this lesson
+msn |>
+  fvarLabels()
+```
+
+In this lesson we look at how to get the most out of these results through
+visualisation: making spatial maps efficiently with different dimensionality
+reduction methods, overlaying proteins and annotations of interest, showing the
+confidence of predictions, and checking the results critically.
+
+
+## Spatial maps with different dimensionality reduction methods
+
+Regardless of the algorithm used, the result of classification is a list of
+proteins and their predicted subcellular localisations. These can be
+visualised as a "subcellular spatial map" using `plot2D`, by passing the
+column containing the thresholded predictions to `fcol`. In the previous
+lesson we used PCA, the default. However, `plot2D` supports several other
+methods, listed in `plot2Dmethods` (see `?plot2D` for details).
+
+```{r}
+plot2Dmethods
+```
+
+Each method summarises the data in a different way, and no single method shows
+everything. As discussed in the lesson on assessing resolution, PCA preserves
+distances but only shows two components at a time, whereas non-linear methods
+such as t-SNE and UMAP often separate clusters more clearly but distort
+distances. It is therefore good practice to look at more than one.
+
+### Pre-computing coordinates
+
+Non-linear methods such as t-SNE and UMAP can take from a minute to tens of
+minutes to compute on a dataset of this size. They are also stochastic, so
+each run gives a slightly different picture unless we set a seed. Rather than
+recomputing the coordinates every time we make a plot, it is good practice to
+compute them once, with a seed, and reuse them.
+
+To do this, we pass `plot = FALSE` to `plot2D`. Instead of drawing a plot,
+`plot2D` then returns a matrix of the two-dimensional coordinates of each
+protein. Below we pre-compute coordinates for PCA, UMAP, t-SNE and linear
+discriminant analysis (LDA). LDA is a supervised method: it uses the markers
+to find the projection that best separates the compartments.
+
+```{r, eval=FALSE}
+## PCA is deterministic, so we do not need to set a seed
+pcas <- msn |>
+  plot2D(method = "PCA", plot = FALSE)
+
+## UMAP
+set.seed(399)
+umap <- msn |>
+  plot2D(method = "UMAP", plot = FALSE)
+
+## t-SNE
+set.seed(399)
+tsne <- msn |>
+  plot2D(method = "t-SNE", plot = FALSE)
+
+## Linear discriminant analysis (uses the markers column)
+set.seed(399)
+lda <- msn |>
+  plot2D(method = "lda", plot = FALSE)
+```
+
+```{r, include=FALSE}
+## Pre-computed output of the chunk above
+load(here("course_files/preprocessed/viz_coords.rda"))
+```
+
+Each object is a matrix with one row per protein and two columns.
+
+```{r}
+head(pcas)
+```
+
+### Plotting pre-computed coordinates
+
+We can now pass these coordinates back to `plot2D` with `method = "none"`,
+which tells `plot2D` not to compute anything. Because a matrix of coordinates
+does not contain the feature data, we also pass our `MSnSet` to `methargs` so
+that `plot2D` knows where to find the `fcol` annotation. Here we visualise the
+SVM results with all four methods.
+
+```{r, fig.width=10, fig.height=10}
+par(mfrow = c(2, 2))
+plot2D(pcas, method = "none", methargs = list(msn),
+       fcol = "svm.pred", main = "PCA")
+plot2D(umap, method = "none", methargs = list(msn),
+       fcol = "svm.pred", main = "UMAP")
+plot2D(tsne, method = "none", methargs = list(msn),
+       fcol = "svm.pred", main = "t-SNE")
+plot2D(lda, method = "none", methargs = list(msn),
+       fcol = "svm.pred", main = "LDA")
+addLegend(msn, fcol = "svm.pred", where = "topright", ncol = 2, cex = .7)
+```
+
+The same compartments are found in all four maps, but each method shows them
+differently. Compartments that overlap in the PCA plot may be clearly separated
+in the t-SNE or UMAP plots, and vice versa. Remember that distances between
+clusters in t-SNE and UMAP plots cannot be interpreted directly.
+
+::: {.callout-exercise}
+#### Challenge: Comparing classifiers across methods
+{{< level 1 >}}
+
+Using the pre-computed coordinates, plot the TAGM-MAP results
+(`fcol = "tagm.map.allocation.pred"`) next to the SVM results for one of the
+non-linear methods (UMAP or t-SNE). Do the differences between the two
+classifiers that we saw on the PCA plot in the previous lesson also appear
+here?
+
+::: {.callout-answer collapse=true}
+
+```{r, fig.width=12, fig.height=6}
+par(mfrow = c(1, 2))
+plot2D(umap, method = "none", methargs = list(msn),
+       fcol = "svm.pred", main = "UMAP: SVM")
+plot2D(umap, method = "none", methargs = list(msn),
+       fcol = "tagm.map.allocation.pred", main = "UMAP: TAGM-MAP")
+addLegend(msn, fcol = "tagm.map.allocation.pred",
+          where = "topright", cex = .6)
+```
+
+As on the PCA plot, TAGM-MAP classifies more proteins than the SVM, and the
+additional proteins lie mostly at the edges of clusters and in the regions
+between them.
+
+:::
+:::
+
+
+## Overlaying features of interest
+
+Users may wish to add additional information to their maps, for example small
+protein complexes, pathways of interest, or compartments that were not used as
+training data because they lacked resolution or had too few marker proteins.
+If the aim of the experiment is to produce as comprehensive a map as possible
+for the community, it is important to add these other layers of information
+where they are available.
+
+### Finding proteins of interest with `pRolocVis`
+
+The `pRolocVis` function from the `pRolocGUI` package provides a searchable
+version of our feature data alongside an interactive spatial map.
+
+```{r, eval=FALSE}
+## Open pRolocGUI with the SVM results
+pRolocVis(msn, fcol = "svm.pred")
+```
+
+In the "Table Selection" tab, we can choose which columns of the feature data
+to display, for example a column of gene names or protein descriptions and the
+`svm.pred` column. Use `fvarLabels(msn)` to see which columns are available
+in your data. We can then search the table in the "Spatial Map" tab, for
+example by gene name, to find the proteins of interest and see where they lie
+on the map. Note that searching relies on the information contained in the
+feature data: if a column of gene names or descriptions is not available, it
+can be added from databases such as UniProt.
+
+Here, we look at two protein complexes: (1) the WASH complex, which activates
+the Arp2/3 complex and is involved in actin polymerisation at endosomes, and
+(2) the RNA exosome complex, which degrades RNA in the nucleus and cytoplasm.
+Having identified the UniProt accessions of the members of each complex, we
+store them as character vectors.
+
+```{r}
+## UniProt accessions of members of each complex
+wash <- c("Q12768", "Q2M389", "Q641Q2", "Q9NQA3", "Q9Y3C0", "Q9Y4E1")
+
+exosome <- c("Q06265", "Q13868", "Q15024", "Q5RKV6", "Q96B26",
+             "Q9NPD3", "Q9NQT4", "Q9NQT5", "Q9Y2L1", "Q9Y3B2")
+```
+
+Not every protein in a complex will necessarily be quantified in our
+experiment, so we first check which ones are present in our data.
+
+```{r}
+## Keep only the proteins quantified in our data
+wash <- intersect(wash, featureNames(msn))
+exosome <- intersect(exosome, featureNames(msn))
+
+length(wash)
+length(exosome)
+```
+
+### Highlighting proteins on a map with `highlightOnPlot`
+
+The `highlightOnPlot` function adds points for selected proteins on top of an
+existing spatial map. We first draw the map with `plot2D`, and then pass the
+same coordinates (here `pcas`) and our proteins of interest (`foi`, features
+of interest) to `highlightOnPlot`, along with arguments controlling the
+appearance of the points.
+
+```{r, fig.width=8, fig.height=7}
+## Spatial map of the SVM results
+plot2D(pcas, method = "none", methargs = list(msn),
+       fcol = "svm.pred", main = "PCA: WASH and exosome complexes")
+
+## Highlight the complexes
+highlightOnPlot(pcas, foi = wash, col = "black", bg = "grey",
+                pch = 24, cex = 2, lwd = 1.5)
+highlightOnPlot(pcas, foi = exosome, col = "red", bg = "white",
+                pch = 22, cex = 2, lwd = 1.5)
+
+## Legend for the compartments
+addLegend(msn, fcol = "svm.pred", where = "topright", cex = .6)
+
+## Legend for the complexes
+legend("topleft", legend = c("WASH", "Exosome"),
+       col = c("black", "red"), pt.bg = c("grey", "white"),
+       pch = c(24, 22), bty = "n", cex = .8)
+```
+
+Because the coordinates are pre-computed, we can highlight the same proteins
+on any of the other maps simply by replacing `pcas` with `umap`, `tsne` or
+`lda`.
+
+### Adding annotations as a new `fData` column
+
+Alternatively, we can store our annotations in a new column of the feature
+data, just as we did for markers. This keeps the annotation with the data and
+allows us to use all the usual plotting functions. The easiest way is to
+create a named vector, with the annotation as values and the protein
+accessions as names, and add it with `addMarkers`. All proteins not in the
+vector are labelled `"unknown"`.
+
+```{r}
+## Named vector of complex annotations
+complexes <- c(setNames(rep("WASH complex", length(wash)), wash),
+               setNames(rep("Exosome complex", length(exosome)), exosome))
+
+## Add as a new fData column called "complexes"
+msn <- addMarkers(msn, markers = complexes, mcol = "complexes")
+```
+
+We can now pass this column to `fcol` to plot a map in which only our
+proteins of interest are coloured.
+
+```{r, fig.width=7, fig.height=7}
+## Plot map with proteins coloured by complex
+plot2D(pcas, method = "none", methargs = list(msn),
+       fcol = "complexes", main = "PCA: protein complexes")
+addLegend(msn, fcol = "complexes", where = "topleft", cex = .8)
+```
+
+The same approach can be used for any annotation, for example proteins from a
+pathway of interest, proteins identified in another experiment, or a
+compartment that was not included in the training data.
+
+::: {.callout-exercise}
+#### Challenge: Where do your favourite proteins localise?
+{{< level 2 >}}
+
+Choose a small set of proteins you are interested in, for example the members
+of another protein complex or a few proteins from your own research. You can
+find their UniProt accessions using `pRolocVis` or the UniProt website.
+
+1. Check which of them are present in `msn`.
+2. Highlight them on the t-SNE or UMAP map of the SVM results using
+   `highlightOnPlot`.
+3. Look up their predicted localisation in the `svm.pred` and
+   `tagm.map.allocation.pred` columns. Do the two classifiers agree? Does the
+   result match what you would expect from the literature?
+
+::: {.callout-answer collapse=true}
+
+Here we use three subunits of the proteasome as an example. Replace the
+accessions with your own proteins of interest.
+
+```{r}
+## Example proteins of interest
+my_proteins <- c("P25786", "P25787", "P28066")
+
+## 1. Which are present in the data?
+my_proteins <- intersect(my_proteins, featureNames(msn))
+my_proteins
+```
+
+```{r, fig.width=7, fig.height=7}
+## 2. Highlight them on the t-SNE map
+plot2D(tsne, method = "none", methargs = list(msn),
+       fcol = "svm.pred", main = "t-SNE: my proteins")
+highlightOnPlot(tsne, foi = my_proteins, col = "black", bg = "yellow",
+                pch = 21, cex = 2, lwd = 1.5)
+```
+
+```{r}
+## 3. Predicted localisations from both classifiers
+fData(msn)[my_proteins, c("markers", "svm.pred", "tagm.map.allocation.pred")]
+```
+
+If a protein of interest is itself a marker, its prediction simply reflects
+its marker annotation.
+
+:::
+:::
+
+
+## Showing the confidence of predictions
+
+A spatial map coloured by predicted compartment shows *where* proteins are
+assigned, but not *how confident* we are in each assignment. One way to show
+this is to scale the size of each point by its score or probability, so that
+confident predictions appear as large points and uncertain ones as small
+points. The `plot2D` function accepts a vector of point sizes through its
+`cex` argument.
+
+Here we scale the points of the TAGM-MAP map by the `overall_prob` column we
+created in the previous lesson (the localisation probability multiplied by one
+minus the outlier probability). We use the full TAGM-MAP allocation
+(`tagm.map.allocation`), before thresholding, so that every protein is
+coloured by its most probable compartment.
+
+```{r, fig.width=8, fig.height=7}
+## Point size based on the overall TAGM-MAP probability
+ptsze <- exp(fData(msn)$overall_prob) - 1
+
+plot2D(pcas, method = "none", methargs = list(msn),
+       fcol = "tagm.map.allocation", cex = ptsze,
+       main = "PCA: TAGM-MAP allocations, sized by probability")
+addLegend(msn, fcol = "tagm.map.allocation", where = "topright", cex = .6)
+```
+
+Proteins near the centre of a cluster appear as large points, whereas proteins
+with a low probability, or a high probability of being an outlier, shrink
+towards nothing. Notice, however, how few points are small. As we saw in the
+previous lesson, the TAGM-MAP probabilities are very close to 0 or 1 for most
+proteins, so even proteins lying between compartments often appear with full
+size.
+
+::: {.callout-exercise}
+#### Challenge: Confidence of the SVM predictions
+{{< level 1 >}}
+
+Make the same plot for the SVM, using the `svm` column for colour and the
+`svm.scores` column for point size. How does the picture compare with the
+TAGM-MAP plot?
+
+::: {.callout-answer collapse=true}
+
+```{r, fig.width=8, fig.height=7}
+## Point size based on the SVM score
+ptsze_svm <- exp(fData(msn)$svm.scores) - 1
+
+plot2D(pcas, method = "none", methargs = list(msn),
+       fcol = "svm", cex = ptsze_svm,
+       main = "PCA: SVM classifications, sized by score")
+addLegend(msn, fcol = "svm", where = "topright", cex = .6)
+```
+
+Because the SVM scores are spread more evenly between 0 and 1, the point sizes
+vary much more. Proteins at the edges of clusters and between compartments
+appear as small points, giving a more graded picture of confidence than the
+TAGM-MAP probabilities.
+
+:::
+:::
+
+
+## Verifying the results of protein localisation classification
+
+As discussed in the data annotation lesson, the curation of markers and their
+use for classification is an iterative process. Having completed
+classification, we should check whether the results look realistic and
+whether each compartment is accurately represented. In particular, we should
+plot (1) maps and (2) profiles of the classified proteins, using more than one
+dimensionality reduction method.
+
+As an example, we return to the difference we saw between the two classifiers
+in the previous lesson: TAGM-MAP assigned many more proteins to the ER than the
+SVM. Do the profiles of these additional proteins look like those of the ER
+markers? To answer this, we extract the proteins classified as ER by TAGM-MAP
+but left as `"unknown"` by the SVM.
+
+```{r}
+## Proteins assigned to the ER by TAGM-MAP but not by the SVM
+er_extra <- msn |>
+  fData() |>
+  filter(markers == "unknown",
+         tagm.map.allocation.pred == "ER",
+         svm.pred == "unknown") |>
+  rownames()
+
+length(er_extra)
+
+## ER marker proteins
+er_markers <- featureNames(msn)[fData(msn)$markers == "ER"]
+```
+
+We can now plot the profiles of these proteins together with the ER markers
+using `plotDist`. The `markers` argument tells `plotDist` which proteins to
+highlight, here the ER markers in orange, while the additional proteins are
+plotted in grey.
+
+```{r, fig.width=10, fig.height=4}
+## Profiles of the additional ER proteins (grey) and the ER markers (orange)
+plotDist(msn[c(er_extra, er_markers), ],
+         markers = er_markers, type = "l",
+         mcol = "darkorange", pcol = "grey",
+         las = 2)
+title("ER markers (orange) and additional TAGM-MAP ER proteins (grey)")
+```
+
+We can also highlight these proteins on the maps.
+
+```{r, fig.width=12, fig.height=6}
+par(mfrow = c(1, 2))
+plot2D(pcas, method = "none", methargs = list(msn),
+       fcol = "svm.pred", main = "PCA")
+highlightOnPlot(pcas, foi = er_extra, col = "black", pch = 1, cex = .8)
+
+plot2D(tsne, method = "none", methargs = list(msn),
+       fcol = "svm.pred", main = "t-SNE")
+highlightOnPlot(tsne, foi = er_extra, col = "black", pch = 1, cex = .8)
+```
+
+If the additional proteins have profiles similar to those of the ER markers
+and lie close to the ER cluster in several maps, they may well be genuine ER
+proteins that the SVM was too conservative to assign. If, instead, their
+profiles differ and they lie between clusters, they are more likely to be
+proteins with mixed or uncertain localisation that TAGM-MAP has assigned with
+overconfidence.
+
+Checks such as these may reveal problems with the classification that lead us
+back to the markers. For example, a compartment that absorbs many proteins
+from between clusters may have markers that are too spread out, or a
+compartment that is consistently under-represented may need more markers. As
+discussed in the data annotation lesson, any changes should be made with care
+and recorded, and should keep the markers representative of the data and the
+literature.
+
+::: {.callout-exercise}
+#### Challenge: Checking another compartment
+{{< level 2 >}}
+
+Repeat the check above for chromatin, the other compartment where TAGM-MAP
+assigned many more proteins than the SVM. Do the additional proteins look like
+the chromatin markers?
+
+::: {.callout-answer collapse=true}
+
+```{r, fig.width=10, fig.height=4}
+## Proteins assigned to chromatin by TAGM-MAP but not by the SVM
+chrom_extra <- msn |>
+  fData() |>
+  filter(markers == "unknown",
+         tagm.map.allocation.pred == "Chromatin",
+         svm.pred == "unknown") |>
+  rownames()
+
+## Chromatin markers
+chrom_markers <- featureNames(msn)[fData(msn)$markers == "Chromatin"]
+
+## Plot profiles
+plotDist(msn[c(chrom_extra, chrom_markers), ],
+         markers = chrom_markers, type = "l",
+         mcol = "red", pcol = "grey",
+         las = 2)
+title("Chromatin markers (red) and additional TAGM-MAP proteins (grey)")
+```
+
+Compare the shape of the grey profiles with those of the markers, in each
+replicate. Then highlight `chrom_extra` on the PCA and t-SNE maps, as above,
+to see where these proteins lie relative to the chromatin cluster.
+
+:::
+:::
+
+
+::: {.callout-tip}
+#### Key Points
+
+* Spatial maps of classification results are made with `plot2D` by passing
+  the prediction column to `fcol`. Different dimensionality reduction methods
+  show the data in different ways, so it is good practice to look at more
+  than one.
+* Pre-computing coordinates with `plot = FALSE`, using a seed for stochastic
+  methods, and reusing them with `method = "none"` makes figures faster and
+  reproducible.
+* Proteins of interest can be found with `pRolocVis` and highlighted on any
+  map with `highlightOnPlot`. Annotations such as complexes, pathways or
+  compartments left out of training can be stored as new `fData` columns with
+  `addMarkers` and plotted like markers.
+* Scaling points by their score or probability shows the confidence of
+  predictions on a map, and makes differences between classifiers visible.
+* Classification results should always be checked critically by looking at
+  both maps and protein profiles. These checks may lead back to the markers,
+  as marker curation and classification are an iterative process.
 :::
