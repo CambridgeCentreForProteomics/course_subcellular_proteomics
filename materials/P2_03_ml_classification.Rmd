@@ -8,10 +8,1017 @@ editor_options:
 ::: {.objectives}
 #### Learning objectives
 
-* Explain how supervised classifiers predict localisation by comparing unknown proteins' correlation profiles with marker profiles, and why proteins can only be assigned to classes present in the training data.
-* Tune SVM hyperparameters (`sigma`, `cost`) by cross-validation (`svmOptimisation`), with class weights to handle unequal class sizes, and judge performance by F1 scores (`getF1Scores`, `f1Count`, `getParams`).
-* Classify proteins with an SVM (`svmClassification`) and set organelle-specific score thresholds (`orgQuants`, `getPredictions`).
-* Train and apply the Bayesian TAGM-MAP model (`tagmMapTrain`, `tagmMapPredict`), check its convergence, and threshold predictions on combined localisation and outlier probabilities.
-* Describe how TAGM-MCMC differs from TAGM-MAP, and check MCMC convergence with trace and density plots and the Gelman–Rubin diagnostic, removing and pooling chains as needed.
-* Use TAGM-MCMC posterior distributions and Shannon entropy to find proteins with uncertain or multiple localisations.
+* Explain how supervised classifiers predict localisation by comparing unknown
+  proteins' correlation profiles with marker profiles, and why proteins can
+  only be assigned to compartments present in the training data.
+* Optimise SVM parameters (`sigma`, `cost`) by cross-validation
+  (`svmOptimisation`), using class weights to handle unequal class sizes, and
+  assess performance using F1 scores (`getF1Scores`, `levelPlot`,
+  `getParams`).
+* Classify proteins with an SVM (`svmClassification`) and set
+  organelle-specific score thresholds (`orgQuants`, `getPredictions`).
+* Train and apply the Bayesian TAGM-MAP model (`tagmMapTrain`,
+  `tagmMapPredict`), check its convergence, and threshold predictions on the
+  combined localisation and outlier probabilities.
+* Visualise classification results as spatial maps (`plot2D`), and compare the
+  predictions of different classifiers using spatial maps, score distributions
+  and cross-tabulation.
+* Explain why TAGM-MAP probabilities can be overconfident, and describe
+  strategies for choosing confident predictions.
 :::
+
+
+```{r}
+#| label: load-dia-data-filtered
+#| include: false
+
+library("here")
+library("tidyr")
+library("dplyr")
+library("ggplot2")
+library("patchwork")
+library("stringr")
+library("pRoloc")
+library("magrittr")
+
+## msn with the curated "markers" column, saved at the end of the data
+## annotation lesson
+load(here("course_files/preprocessed/P2_lesson02.rda"), verbose = TRUE)
+```
+
+## Introduction
+
+In the previous lesson we curated a set of markers that are reliable and
+representative of the structure of our U-2 OS data, and stored them in the
+`markers` column of our `msn` object. We can now use these markers to predict
+the localisation of the remaining proteins using supervised machine learning.
+Whilst unsupervised methods such as hierarchical clustering and HDBSCAN are
+able to discover tight clusters of proteins with similar behaviours, these
+algorithms tend to struggle when it comes to identifying compartment borders.
+There are a number of supervised and semi-supervised machine learning
+algorithms available within the `pRoloc` infrastructure and these differ with
+respect to their data output, interpretability, and computational demand.
+Ultimately, the choice of algorithm is up to the user and we would recommend
+trying multiple models to determine which works best on a given set of data and
+biological question of interest.
+
+The `pRoloc` package provides a wide range of machine learning methods for
+predicting protein localisation, described in its dedicated vignette
+["Machine learning techniques available in pRoloc"](https://bioconductor.org/packages/release/bioc/html/pRoloc.html).
+We have also published two workflows showing how to apply these methods to
+correlation profiling data: one using classical machine learning
+[@Breckels2018] and one using Bayesian machine learning [@Crook2019]. In this
+course we focus on two complementary approaches. We start with a Support Vector
+Machine (SVM), a widely used classical classifier, and then move on to a
+Bayesian approach based on t-augmented Gaussian mixture (TAGM) models. Rather
+than giving only a single best guess, TAGM also estimates how confident we can
+be in each prediction and allows for proteins that do not fit any of the known
+compartments. We focus on how to apply these methods and interpret their
+results rather than on the details of the algorithms. Participants who want to
+learn more about TAGM are referred to @Crook2018 and @Crook2019.
+
+Remember that a supervised classifier can only assign proteins to the
+compartments represented in the training data. Any compartment we removed from
+the marker list in the previous lesson, such as the actin cytoskeleton, cannot
+be predicted.
+
+
+## Classification using a Support Vector Machine
+
+Support Vector Machines (SVMs) have been widely used for protein subcellular
+localisation prediction [@Itzhak2016; @Orre2019; @Christoforou2016;
+@Geladaki2019; @Mulvey2017; @Schessner2023]. To understand how an SVM works,
+imagine each protein as a point in space, with one axis per fraction (here,
+`r ncol(msn)` axes). Marker proteins from different compartments sit in
+different regions of this space. An SVM learns **boundaries** (hyperplanes)
+that separate these regions, placing each boundary as far as possible from the
+markers on either side. Unknown proteins are then classified according to
+which side of the boundaries they fall on. For more details about SVM
+algorithms readers are directed to @Noble2006.
+
+Real compartments rarely have straight-line boundaries, so the SVM uses a
+**kernel** that allows the boundaries to curve. Two parameters control this,
+and we will optimise both below:
+
+* `sigma` controls how flexible (curved) the boundaries can be.
+* `cost` controls how strictly the boundaries must separate the markers. A high
+  cost penalises misclassified markers heavily, while a low cost tolerates some
+  in exchange for simpler boundaries.
+
+For each protein, the SVM also returns a **score** reflecting how far it lies
+from a boundary: proteins deep within a compartment's region get high scores,
+whereas proteins near a boundary get low scores. The score is a measure of
+confidence, but it is not a probability.
+
+::: {.callout-note}
+#### The four steps of SVM classification in `pRoloc`
+
+1. **Optimise** the SVM parameters `sigma` and `cost` using the markers
+   (`svmOptimisation`)
+2. **Check** the results of the optimisation (`getF1Scores`, `levelPlot`) and
+   extract the best parameters (`getParams`)
+3. **Classify** all proteins using these parameters (`svmClassification`)
+4. **Threshold** the predictions so that only confident assignments are kept
+   (`orgQuants`, `getPredictions`)
+:::
+
+
+### Optimising SVM parameters
+
+As is the case with most supervised learning models, before we can perform any
+classification the model parameters need to be optimised. We adopt a classical
+view of training the model parameters and split the data into training and
+testing sets. By default in `pRoloc` all methods allocate 80% of the labelled
+data (marker proteins) for training and optimisation via cross-validation of the
+free parameters, namely `sigma` and `cost`. The remaining 20% labelled data acts
+as the test set to which the optimised parameters are applied in order to
+calculate F1 scores. Briefly, an F1 score can be used as a measure of model
+accuracy as it combines measurements of both precision and recall. A higher F1
+score indicates a better quality classifier.
+
+In `pRoloc` the SVM optimisation process is facilitated by the `svmOptimisation`
+function. We pass our `MSnSet` object (here, `msn`) to the `svmOptimisation`
+function and tell it the name of the `fData` column where our markers are held
+(here `"markers"`). We use the `times` argument to specify how many iterations
+of cross-validation to complete and the `xval` argument to set the value of *n*
+in n-fold cross validation. Here, we will use the default 5-fold
+cross-validation (`xval = 5`) with 10 iterations (`times = 10`). We would
+typically set `times = 100`, but we use 10 here to keep the run time manageable;
+100 iterations can take an hour or more on a laptop. Since our training data
+contains asymmetric class sizes (subcellular compartments with variable numbers
+of marker proteins), we also set class weights using the `class.weights`
+argument to avoid biasing our localisation towards compartments with a greater
+number of marker proteins [@YiMinHuang2005]. Hence, we weight each subcellular
+compartment by the inverse of the number of marker proteins it has. Finally, to
+ensure reproducibility of our results we set a seed using the `seed` argument.
+
+```{r}
+## Get the number of markers per class
+marker_tbl <- table(getMarkers(msn, verbose = FALSE))
+
+## Set class weights as inverse of class frequencies
+weights <- 1 / marker_tbl[names(marker_tbl) != "unknown"]
+weights
+```
+
+```{r, eval=FALSE}
+## SVM parameter optimisation (using times = 10 for demonstration, usually 100)
+svm_params <- svmOptimisation(object = msn,
+                              fcol = "markers",
+                              times = 10,
+                              xval = 5,
+                              class.weights = weights,
+                              seed = 399)
+```
+
+```{r, include=FALSE}
+## Pre-computed output of the chunk above
+load(here("course_files/preprocessed/svm_params.rda"))
+```
+
+The output of this code is an object of class `GenRegRes`, a dedicated data
+container used to store the results of machine learning optimisation (see
+@Breckels2018 for more details). Printing it gives a short summary of the
+optimisation.
+
+```{r}
+svm_params
+```
+
+### Checking the optimisation results
+
+#### Best parameters in each iteration with `getF1Scores`
+
+To see which pair of parameters resulted in the highest F1 score in each
+iteration we can use the `getF1Scores` function. This gives a matrix with one
+row per iteration.
+
+```{r}
+## Best F1 score, and the parameters that gave it, in each iteration
+getF1Scores(object = svm_params)
+```
+
+```{r, include = FALSE}
+## Summaries used in the text below
+f1_tbl <- getF1Scores(svm_params)
+f1_range <- round(range(f1_tbl[, "F1"]), 2)
+f1_mean <- round(mean(f1_tbl[, "F1"]), 2)
+best_params <- getParams(svm_params)
+n_best <- sum(f1_tbl[, "sigma"] == best_params["sigma"] &
+                f1_tbl[, "cost"] == best_params["cost"])
+```
+
+How do we interpret this output?
+
+* **Each row is one iteration of cross-validation.** In each iteration, a
+  different random 20% of the markers was held back as a test set, every
+  combination of `sigma` and `cost` was tested, and the best-performing
+  combination was recorded.
+* **The best parameters are consistent across iterations.** Here,
+  `sigma` = `r best_params["sigma"]` and `cost` = `r best_params["cost"]`
+  give the highest F1 score in `r n_best` of the `r nrow(f1_tbl)` iterations.
+  When the same combination wins in most or all iterations, the choice of
+  parameters is stable and does not depend on how the markers happened to be
+  split into training and test sets.
+* **The F1 scores are high.** They range from `r f1_range[1]` to
+  `r f1_range[2]`, with a mean of `r f1_mean`. The F1 score measures how well
+  the model, trained on one part of the markers, predicts the markers it has
+  not seen, balancing precision and recall. A score of 1 would be perfect, so
+  our classifier correctly predicts most held-out markers. This is also a good
+  sign that our curated markers separate the compartments well.
+* **Some variation between iterations is expected.** The small spread in F1
+  scores reflects which markers end up in each test set, and is not a cause
+  for concern.
+
+#### All parameter combinations with `levelPlot`
+
+The `getF1Scores` function only tells us which combination of parameters
+performed best in each iteration. It does not tell us how the other
+combinations performed, or whether the best combination is clearly better than
+its neighbours. For this, we can use the `levelPlot` function, which shows the
+F1 score for every combination of `sigma` and `cost` tested during
+optimisation as a heatmap.
+
+```{r, fig.width=6, fig.height=7}
+## Plot the average F1 score for every combination of sigma and cost
+levelPlot(svm_params)
+```
+
+Each cell of the heatmap is one combination of `sigma` and `cost`, and its
+colour shows the F1 score for that combination averaged over the
+iterations. When reading this plot, we look for three things:
+
+* **Where the highest F1 scores are.** This shows us which region of parameter
+  space gives the best classifier, and should agree with the results of
+  `getF1Scores`.
+* **Whether the best region is broad or narrow.** A broad region of similarly
+  high F1 scores means the classifier is not very sensitive to the exact
+  parameter values, which is reassuring. A single isolated cell with a high
+  score is less trustworthy, as it may reflect chance.
+* **Whether the best values lie at the edge of the grid.** If the highest F1
+  scores are found at the smallest or largest value of `sigma` or `cost`
+  tested, a value outside this range might perform even better. In that case,
+  it is worth re-running `svmOptimisation` with a wider range of values,
+  passed to its `sigma` and `cost` arguments.
+
+By default, `levelPlot` summarises the F1 scores across iterations using the
+mean. We can change this with the `fun` argument. For example, using the
+standard deviation shows how much the performance of each combination varied
+between iterations.
+
+::: {.callout-exercise}
+#### Challenge: How stable is the parameter search?
+{{< level 1 >}}
+
+Use `levelPlot` with `fun = median` and then `fun = sd`. Does the median give
+the same best region as the mean? Which combinations of `sigma` and `cost`
+give the most variable performance between iterations?
+
+::: {.callout-answer collapse=true}
+
+```{r}
+## Median F1 score across iterations
+levelPlot(svm_params, fun = median)
+
+## Standard deviation of F1 scores across iterations
+levelPlot(svm_params, fun = sd)
+```
+
+The median should highlight the same best region as the mean, because the
+same parameters performed best in most or all iterations. The standard
+deviation plot shows which combinations performed inconsistently between
+iterations. Ideally, the best combination should have both a high average F1
+score and a low standard deviation.
+
+:::
+:::
+
+::: {.callout-note}
+#### Other functions for exploring the optimisation
+`pRoloc` has further functions for exploring a `GenRegRes` object. For
+example, `f1Count(svm_params, t = 0.8)` counts how many times each combination
+of `sigma` and `cost` gave an F1 score above a threshold `t`, and the full F1
+matrix for each iteration can be accessed with `svm_params@f1Matrices`. With
+only 10 iterations these add little to `getF1Scores` and `levelPlot`, but
+they become more informative when `svmOptimisation` is run with the
+recommended 100 or more iterations.
+:::
+
+#### Extracting the best parameters with `getParams`
+
+When one combination of `sigma` and `cost` performs best in most iterations,
+the choice is clear. When several combinations perform similarly, the
+`getParams` function chooses the *best* parameters for us. We use it here to
+confirm the parameters that will be used for classification.
+
+```{r}
+## Return optimal parameters
+getParams(object = svm_params)
+```
+
+### Protein localisation classification using an SVM
+
+Now that we are happy with our parameters, we can apply the SVM model to our
+data using the `svmClassification` function. Rather than typing the values of
+`sigma` and `cost` by hand, we pass the whole `svm_params` object to the
+`assessRes` argument, and the best parameters (those returned by `getParams`)
+are extracted automatically. We again provide our weights to `class.weights`.
+
+```{r}
+## Carry out SVM classification using optimised parameters
+msn <- svmClassification(object = msn,
+                         fcol = "markers",
+                         assessRes = svm_params,
+                         class.weights = weights)
+```
+
+After carrying out the SVM classification, we now have two new columns added to
+the `fData` of our `MSnSet`.
+
+```{r}
+## Check the new columns in fData
+fvarLabels(msn)
+```
+
+The first of these is the `svm` column which contains the classification
+result i.e., the localisation prediction for each protein.
+
+```{r}
+## Look at svm classification column
+msn |>
+  fData() |>
+  pull(svm) |>
+  table()
+```
+
+The second new column is `svm.scores`, which contains the SVM score for each
+protein, as described above.
+
+```{r}
+## Look at svm.scores column
+msn |>
+  fData() |>
+  pull(svm.scores) |>
+  summary()
+```
+
+### Thresholding protein localisation classification using an SVM
+
+As we saw above, all proteins have been classified to one of the subcellular
+compartments included in our training data. However, when applying a supervised
+machine learning algorithm it is standard practice to set a specific confidence
+threshold at which we accept new assignments. Any protein with a confidence below
+this threshold will receive the final classification of `"unknown"`. The way in
+which confidence is defined differs between classification algorithms. In the
+case of SVMs, we rely on the SVM score to set our thresholds.
+
+Let's plot a boxplot of the SVM scores of proteins allocated to each subcellular
+compartment. We first use the `unknownMSnSet` function to return an `MSnSet` with
+the marker proteins removed. Markers are assigned to their own class with a
+score of 1, so they cannot tell us anything about the confidence of new
+predictions.
+
+```{r, fig.width=8, fig.height=5}
+## Remove markers
+msn_preds <- unknownMSnSet(object = msn)
+
+## Use the same colours as plot2D for each compartment
+org_cols <- getStockcol()[seq_along(getMarkerClasses(msn))]
+names(org_cols) <- getMarkerClasses(msn)
+
+## Visualise svm scores per organelle
+msn_preds |>
+  fData() |>
+  as_tibble() |>
+  ggplot(aes(x = svm, y = svm.scores, fill = svm)) +
+  geom_boxplot(alpha = 0.7, outlier.size = 0.8) +
+  scale_fill_manual(values = org_cols) +
+  labs(x = "SVM classification", y = "SVM score") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none")
+```
+
+We can see that each compartment displays a different distribution of SVM
+scores and, therefore, applying a global score threshold would not be
+appropriate here. Instead, there are several ways in which users can apply
+compartment-specific thresholding. One common approach is to manually set a
+compartment-specific FDR to allow up to 5% false discoveries, for example. This
+would involve putting the proteins localised to each compartment in descending
+order by their SVM score before going down the list to find the SVM score at
+which 5% of proteins are incorrectly classified based on reliable subcellular
+databases and prior knowledge from the literature. Unfortunately, such an
+approach can never be completely objective and is limited to organisms with well
+annotated subcellular proteomes. An alternative method would be to threshold
+each compartment at a set percentile of its SVM scores. Here, we will
+demonstrate the latter approach using the `orgQuants` and `getPredictions`
+functions within `pRoloc`.
+
+The `orgQuants` function takes an `MSnSet` containing classification results as
+its input. We pass the column in our `fData` where the classification
+assignments are stored (here `"svm"`), the score column (`"svm.scores"`) and the
+marker column (`"markers"`). Finally, we use the `t` argument to specify our
+threshold quantile. The quantile threshold is ultimately up to the user and will
+depend on (1) how exploratory the analysis aims to be, and (2) the data quality
+and resolution. In reality, we recommend testing multiple thresholds. Here, we
+demonstrate the use of a 0.75 quantile threshold, which keeps the 25% of
+proteins with the highest scores in each compartment.
+
+```{r}
+## Get organelle-specific quantile SVM scores
+score_thresholds <- orgQuants(object = msn,
+                              fcol = "svm",
+                              scol = "svm.scores",
+                              mcol = "markers",
+                              t = 0.75)
+```
+
+We can now use these quantile-based score thresholds in the `getPredictions`
+function.
+
+```{r}
+## Use organelle-specific quantiles to get thresholded localisation predictions
+msn <- getPredictions(object = msn,
+                      fcol = "svm",
+                      scol = "svm.scores",
+                      mcol = "markers",
+                      t = score_thresholds)
+```
+
+After thresholding we have a new column in our `fData` called `svm.pred`. This
+column contains the localisation allocations after thresholding. We also get
+a summary output when we applied the `getPredictions` function showing us the
+number of proteins classified to each subcellular compartment as well as the
+`r sum(fData(msn)$svm.pred == "unknown")` proteins which remain `"unknown"`.
+
+```{r}
+fvarLabels(msn)
+```
+
+
+::: {.callout-note}
+#### Why would proteins not meet the classification threshold and remain unknown?
+
+After thresholding our SVM classifications we have
+`r sum(fData(msn)$svm.pred == "unknown")` proteins which were not assigned to
+one of the subcellular compartments and instead remain as `"unknown"`. There
+are a number of reasons for which proteins may remain unknown after
+classification. Firstly, the subcellular structure and compartmentalisation of a
+cell is extremely complex and cannot be completely represented by our labelled
+training data (markers). For instance, some subcellular structures may have too
+few well-established marker proteins to be included in classification. This
+could be due to lack of prior knowledge or absence of a unique protein profile,
+as seen with P-bodies and stress granules, niches which are defined by many of
+the same proteins. Secondly, a large proportion of the proteome is known to
+reside in multiple subcellular niches within a given cell at a given time
+[@Thul2017]. The abundance profiles of these multi-localised proteins can
+represent a mixture of their localisations and, therefore, no longer match the
+marker profiles of any given compartment. Further, since correlation profiling
+experiments utilise bulk proteomics, the observed protein abundance profiles
+represent an average of the population. Proteins which differ in subcellular
+localisation across a heterogeneous starting population (e.g., due to
+differences in cell cycle status) could also display mixed localisation
+profiles and ultimately remain classified as `"unknown"`.
+:::
+
+
+## Classification using TAGM-MAP
+
+As an alternative to protein localisation classification using a classical SVM
+approach, users can also make use of newer Bayesian models available within
+`pRoloc`. The main advantages of applying a Bayesian framework are that (1)
+protein localisation predictions come with probabilities, which are on the same
+scale for every compartment and are, in principle, easier to interpret than SVM
+scores, and (2) the model includes an outlier component, so proteins that do
+not fit any of the known compartments can be identified explicitly rather than
+being forced into one. As we will see, however, these probabilities are only
+as good as the model that produces them, and they need to be interpreted with
+care.
+
+Both Bayesian classifiers available within `pRoloc` are based on a t-augmented
+Gaussian mixture (TAGM) model, as outlined in @Crook2018. In this course we use
+the first implementation of this model, TAGM-MAP, which uses *maximum a
+posteriori* estimates of the model parameters. The second implementation,
+TAGM-MCMC, is not covered here (see @Crook2019 for a worked example). Unlike
+TAGM-MCMC, TAGM-MAP does not sample the entire posterior distribution but
+instead uses an extended version of the expectation maximisation (EM)
+algorithm for inference. In terms of user experience, this means that TAGM-MAP
+is faster and requires less computational power. However, it also means that
+TAGM-MAP finds a single best set of model parameters and does not account for
+uncertainty in them. We will return to the consequences of this when we
+compare the SVM and TAGM-MAP results.
+
+::: {.callout-note}
+#### Bayesian methods, posteriors and the EM algorithm in brief
+
+* **Bayesian methods** combine what we already believe (the **prior**) with
+  what we observe in the data (the **likelihood**) to give an updated belief,
+  the **posterior**. Here, the posterior tells us how probable it is that a
+  protein belongs to each compartment, given its profile and the markers.
+* **TAGM** (t-augmented Gaussian mixture) describes each compartment as a
+  cloud of points with a centre and a spread (a Gaussian distribution), fitted
+  to the markers. An extra, very broad component (a *t*-distribution) captures
+  **outliers**: proteins that do not fit any compartment well.
+* **MAP** (*maximum a posteriori*) means finding the single most probable set
+  of model parameters, i.e. the best centre and spread for each compartment.
+* The **EM algorithm** (expectation maximisation) is how TAGM-MAP finds these
+  parameters. It alternates between two steps: (E) given the current
+  compartment shapes, estimate how likely each protein is to belong to each
+  compartment, and (M) given these estimates, update the compartment shapes.
+  It repeats until the results stop changing, which is why we check
+  **convergence**.
+* **TAGM-MCMC** (Markov-chain Monte Carlo), which we do not cover here, does
+  not stop at a single best set of parameters. Instead, it samples many
+  plausible sets, which gives a fuller picture of uncertainty but takes much
+  longer.
+:::
+
+
+### Optimising TAGM-MAP model parameters
+
+The first step in using TAGM-MAP is executing the `tagmMapTrain` function. We
+run the algorithm for 100 iterations (the default, `numIter = 100`). We set a
+seed to ensure reproducibility and pass our marker annotated `MSnSet` to the
+function.
+
+```{r, eval=FALSE}
+## Optimise the tagm-map model
+set.seed(2)
+map_params <- tagmMapTrain(msn, numIter = 100)
+```
+
+```{r, include=FALSE}
+## Pre-computed output of the chunk above
+load(here("course_files/preprocessed/tagm_map_params.rda"))
+```
+
+The output of the `tagmMapTrain` function is an object of class `MAPParams`
+which contains the optimised model parameters. Importantly, before applying
+these parameters we need to check that the model has converged. The TAGM-MAP
+expectation maximisation (EM) algorithm iterates between an expectation and
+maximisation step until the log-posterior is stable. To check that the model
+successfully reached this status, we use the `logPosteriors` function to extract
+the log-posteriors at each iteration and pass this to the `plot` function.
+
+```{r, fig.width=6, fig.height=4}
+## Plot to visualise convergence
+map_params |>
+  logPosteriors() |>
+  plot(type = "b", col = "blue", cex = 0.3,
+       ylab = "log-posterior",
+       xlab = "Iteration")
+```
+
+We can see that the value of the log-posterior increased until it
+stopped changing, thus indicating that the TAGM-MAP model has converged. This
+means that it is suitable to continue with our optimised parameters. For further
+details of the algorithm we refer readers to @Crook2019.
+
+
+### Protein localisation prediction with TAGM-MAP
+
+Next, we apply the optimised TAGM-MAP parameters to carry out protein localisation
+classification via the `tagmMapPredict` function. We pass our `MSnSet` object and
+the object storing our parameters, here called `map_params`.
+
+```{r}
+## Predict protein localisation using converged parameters
+msn <- tagmMapPredict(object = msn, params = map_params)
+```
+
+The `tagmMapPredict` function adds three new columns to the `fData` of our
+`MSnSet`:
+
+* **`tagm.map.allocation`**: the most probable compartment for each protein.
+  Like the `svm` column, every protein is assigned to a compartment at this
+  stage, before any thresholding.
+* **`tagm.map.probability`**: the probability that the protein belongs to its
+  allocated compartment, given the model. Values close to 1 indicate a
+  confident allocation.
+* **`tagm.map.outlier`**: the probability that the protein is an outlier,
+  i.e. that it does not belong to any of the compartments defined by our
+  markers. Values close to 1 indicate a protein that fits poorly with all
+  compartments.
+
+```{r}
+## Check which columns we have in the fData
+msn |>
+  fvarLabels()
+```
+
+Let's take a look at the initial classification results.
+
+```{r}
+## Check overall classifications prior to thresholding
+msn |>
+  fData() |>
+  pull(tagm.map.allocation) |>
+  table()
+```
+
+We can also look at the range of probabilities given for organelle
+classifications and outlier detection.
+
+```{r}
+## Check range of probabilities for compartment localisations
+msn |>
+  fData() |>
+  pull(tagm.map.probability) |>
+  summary()
+
+## Check range of probabilities for outliers
+msn |>
+  fData() |>
+  pull(tagm.map.outlier) |>
+  summary()
+```
+
+```{r, include = FALSE}
+## Summaries used in the text below
+tagm_q <- quantile(fData(msn)$tagm.map.probability, c(0.5, 0.75))
+svm_q <- quantile(fData(msn)$svm.scores, c(0.25, 0.5))
+```
+
+Notice how extreme the localisation probabilities are: the median is
+`r signif(tagm_q[1], 4)` and the upper quartile is `r signif(tagm_q[2], 4)`.
+Compare this with the SVM scores above, which are spread much more evenly
+between 0 and 1 (lower quartile `r round(svm_q[1], 2)`, median
+`r round(svm_q[2], 2)`). We will come back to this when we compare the two
+classifiers.
+
+
+### Thresholding protein localisation classification using TAGM-MAP
+
+As was the case when applying an SVM model, we still need to apply thresholding
+to the initial classification results to ensure confidence in our results. Again,
+proteins which do not meet our defined threshold will receive the final
+classification of `"unknown"`. Thresholding of TAGM-MAP outputs can be achieved
+by combining the probability of a predicted compartment classification being
+correct with the probability that a protein belongs to an outlier component. In
+the code chunk below we create a new column in the `fData` of our `MSnSet` called
+`overall_prob`. This value is calculated as the probability of the compartment
+classification multiplied by one minus the probability that a protein is an
+outlier. Hence, a larger `overall_prob` indicates a higher confidence in our
+classification.
+
+Because these are probabilities, they are on the same scale for every
+compartment, so we can use a single threshold for all compartments rather than
+the organelle-specific thresholds we needed for the SVM. We use the
+`getPredictions` function to update our classification predictions based on our
+score column (`scol`) `overall_prob` with a threshold (`t`) of 0.999.
+
+```{r}
+## Store classification and outlier probabilities
+tagm_prob <- fData(msn)[, "tagm.map.probability"]
+tagm_out <- 1 - fData(msn)[, "tagm.map.outlier"]
+
+## Create new column containing overall probability
+fData(msn)[, "overall_prob"] <- tagm_prob * tagm_out
+
+## Set prediction thresholds on overall probability
+msn <- getPredictions(msn,
+                      fcol = "tagm.map.allocation",
+                      scol = "overall_prob",
+                      t = .999)
+```
+
+As above, the `getPredictions` function has printed a summary of the thresholded
+classification results, which are stored in a new column called
+`tagm.map.allocation.pred`.
+
+
+## Generating a subcellular spatial map
+
+Regardless of the algorithm used, the result of classification is a list of
+proteins and their predicted subcellular localisations. As was the case for
+markers, these results can be visualised using dimensionality reduction methods
+via the `plot2D` function to create a "subcellular spatial map" of the data. It
+is also important to remember to plot the protein correlation profiles alongside
+maps of the data to aid interpretation and verify resolution.
+
+This time, we pass our `MSnSet` and specify the `fcol` as the column containing
+our thresholded localisation results. It is up to the user which dimensionality
+reduction method is applied. To see the full list of visualisation methods
+available for use with `plot2D` see `plot2Dmethods`, which are also listed in
+the `plot2D` documentation (see `?plot2D` for details).
+
+```{r}
+plot2Dmethods
+```
+
+First, as a reminder, we plot our markers using the default `plot2D` settings,
+which produce a PCA plot of the `markers` column.
+
+```{r, fig.width=6, fig.height=6}
+## Plot the markers
+msn |>
+  plot2D(main = "PCA: markers")
+msn |>
+  addLegend(where = "topright", cex = .6)
+```
+
+Next, we plot the thresholded results of both classifiers side by side by
+passing `fcol = "svm.pred"` and `fcol = "tagm.map.allocation.pred"`.
+
+```{r, fig.width=12, fig.height=6}
+par(mfrow = c(1, 2))
+
+## Plot the thresholded SVM results
+msn |>
+  plot2D(fcol = "svm.pred", main = "PCA: classification using SVM")
+
+## Plot the thresholded TAGM-MAP results
+msn |>
+  plot2D(fcol = "tagm.map.allocation.pred",
+         main = "PCA: classification using TAGM-MAP")
+msn |>
+  addLegend(fcol = "tagm.map.allocation.pred", where = "topright", cex = .6)
+```
+
+
+## Comparing the SVM and TAGM-MAP results
+
+At first glance the two spatial maps look similar: the same compartments are
+found in the same regions of the PCA plot. However, looking more closely, the
+TAGM-MAP map has many more coloured (classified) proteins and fewer grey
+(`"unknown"`) proteins, and some compartments extend much further into the
+regions between clusters. Let's look at this in more detail.
+
+### How many proteins are assigned to each compartment?
+
+```{r}
+## Number of proteins per compartment for each classifier
+data.frame(SVM = table(fData(msn)$svm.pred),
+           TAGM_MAP = table(fData(msn)$tagm.map.allocation.pred)) |>
+  dplyr::select(compartment = SVM.Var1,
+                SVM = SVM.Freq,
+                TAGM_MAP = TAGM_MAP.Freq)
+```
+
+TAGM-MAP leaves fewer proteins as `"unknown"`
+(`r sum(fData(msn)$tagm.map.allocation.pred == "unknown")` compared with
+`r sum(fData(msn)$svm.pred == "unknown")` for the SVM), and assigns many more
+proteins to some compartments. The difference is largest for the ER
+(`r sum(fData(msn)$tagm.map.allocation.pred == "ER")` proteins with TAGM-MAP
+compared with `r sum(fData(msn)$svm.pred == "ER")` with the SVM) and chromatin
+(`r sum(fData(msn)$tagm.map.allocation.pred == "Chromatin")` compared with
+`r sum(fData(msn)$svm.pred == "Chromatin")`). On the PCA plot, these extra
+assignments extend into the regions between compartments, where we would
+expect proteins to be less confidently localised.
+
+### Why does TAGM-MAP assign more proteins?
+
+The answer lies in the distribution of the scores and probabilities used for
+thresholding. Let's plot them for all proteins that are not markers.
+
+```{r, fig.width=10, fig.height=4}
+## Remove markers
+msn_preds <- unknownMSnSet(object = msn)
+
+## Scores and probabilities used for thresholding, in long format
+scores_df <- data.frame(
+  value = c(fData(msn_preds)$svm.scores, fData(msn_preds)$overall_prob),
+  classifier = rep(c("SVM score", "TAGM-MAP overall probability"),
+                   each = nrow(msn_preds)))
+
+## Plot their distributions
+ggplot(scores_df, aes(x = value)) +
+  geom_histogram(bins = 50, fill = "steelblue", colour = "white") +
+  facet_wrap(~ classifier, scales = "free_y") +
+  labs(x = "Score / probability", y = "Number of proteins") +
+  theme_bw()
+```
+
+The SVM scores are spread across the whole range from 0 to 1, so a threshold
+can separate confident from less confident assignments. The TAGM-MAP
+probabilities, by contrast, are almost all either very close to 0 or very
+close to 1. With so few proteins in between, a threshold of 0.999 removes
+very few proteins, and proteins lying between compartments are classified
+with a probability of 1.
+
+::: {.callout-note}
+#### Why are the TAGM-MAP probabilities so extreme?
+
+Probabilities are only as good as the model that produces them. There are
+several reasons why TAGM-MAP tends to be overconfident:
+
+* **TAGM-MAP finds a single best set of parameters.** It estimates the centre
+  and spread of each compartment once, and treats these estimates as exact.
+  It ignores any uncertainty in them, which makes the resulting probabilities
+  more extreme than they should be. TAGM-MCMC (not covered here, see
+  @Crook2019) averages over this uncertainty and generally produces more
+  informative probabilities.
+* **Many dimensions sharpen small differences.** Our data has `r ncol(msn)`
+  quantitative channels (three concatenated replicates). With this many
+  dimensions, a small difference in how well a protein fits two compartments
+  becomes a very large difference in likelihood, pushing the probability
+  towards 0 or 1.
+* **Broad compartments absorb proteins between clusters.** A compartment
+  with a large spread, such as the ER here, can fit proteins lying between
+  clusters well enough to claim them with high probability.
+* **The outlier component may be too small.** The expected proportion of
+  outliers is set by a prior (see the `u` and `v` arguments in
+  `?tagmMapTrain`). If our data contains more proteins that do not fit any
+  compartment than the prior allows for, they are pushed into a compartment
+  instead.
+:::
+
+### Do the two classifiers agree?
+
+Finally, we can check how often the two classifiers agree. We cross-tabulate
+the thresholded predictions and calculate the proportion of proteins
+classified by both methods that are assigned to the same compartment.
+
+```{r}
+## Cross-tabulate the thresholded predictions of the two classifiers
+agree_tbl <- table(SVM = fData(msn_preds)$svm.pred,
+                   TAGM_MAP = fData(msn_preds)$tagm.map.allocation.pred)
+agree_tbl
+```
+
+```{r}
+## Proteins classified (not "unknown") by both classifiers
+both <- fData(msn_preds)$svm.pred != "unknown" &
+  fData(msn_preds)$tagm.map.allocation.pred != "unknown"
+
+## Proportion of these assigned to the same compartment
+agree_prop <- mean(fData(msn_preds)$svm.pred[both] ==
+                     fData(msn_preds)$tagm.map.allocation.pred[both])
+agree_prop
+```
+
+```{r, include = FALSE}
+## Summaries used in the text below
+n_both <- sum(both)
+n_tagm_only <- sum(fData(msn_preds)$svm.pred == "unknown" &
+                     fData(msn_preds)$tagm.map.allocation.pred != "unknown")
+```
+
+Of the `r n_both` proteins classified by both methods,
+`r round(100 * agree_prop, 1)`% are assigned to the same compartment. A further
+`r n_tagm_only` proteins are left as `"unknown"` by the SVM but assigned to a
+compartment by TAGM-MAP. Proteins predicted to the same compartment by two
+quite different methods are good candidates for a confident localisation.
+
+### Which results should we use?
+
+There is no single correct answer. Probabilities are attractive because they
+are on the same scale for every compartment, are easy to interpret, and allow
+us to identify outliers. However, as we have seen, the probabilities from
+TAGM-MAP in this dataset are overconfident, and a fixed threshold
+discriminates poorly between confident and uncertain assignments. There are
+several ways to address this:
+
+* use a stricter or organelle-specific threshold on the TAGM-MAP probabilities
+  (see the challenge below)
+* compare the predictions of different classifiers and focus on proteins on
+  which they agree
+* use TAGM-MCMC, which accounts for uncertainty in the model parameters and
+  generally produces more informative probabilities, at a greater
+  computational cost (see @Crook2019)
+
+As with marker curation, the choice depends on the data and the question.
+Whichever approach is used, predictions should always be checked against the
+data, using spatial maps and protein profiles, and against prior knowledge.
+
+
+::: {.callout-exercise}
+#### Challenge: Organelle-specific thresholds for TAGM-MAP
+{{< level 2 >}}
+
+For the SVM, we used `orgQuants` to set a different score threshold for each
+compartment. For TAGM-MAP, we instead used a single threshold of 0.999 on the
+overall probability.
+
+**Task 1**
+Use `orgQuants` to calculate organelle-specific thresholds on the
+`overall_prob` column, using a quantile of `t = 0.75`, as we did for the SVM.
+Look at the thresholds. Are they similar across compartments?
+
+**Task 2**
+Use these thresholds with `getPredictions`. Store the result in a new object
+called `msn_q`, so that the results from the 0.999 threshold in `msn` are not
+overwritten.
+
+**Task 3**
+Compare the number of proteins assigned to each compartment using the fixed
+0.999 threshold (in `msn`), the quantile thresholds (in `msn_q`) and the SVM.
+Plot the new results on a PCA plot next to the SVM results. Are the results
+from the quantile thresholds closer to the SVM?
+
+**Task 4**
+Discuss with your neighbour: SVM scores are not probabilities, but the TAGM
+output is. Is it appropriate to use quantile-based thresholds on
+probabilities? What does a threshold of `t = 0.75` mean in each case?
+
+::: {.callout-answer collapse=true}
+
+**Task 1**
+
+```{r}
+## Organelle-specific 75% quantile of the overall TAGM-MAP probability
+tagm_thresholds <- orgQuants(object = msn,
+                             fcol = "tagm.map.allocation",
+                             scol = "overall_prob",
+                             mcol = "markers",
+                             t = 0.75)
+tagm_thresholds
+```
+
+Most thresholds are very close to 1, reflecting how extreme the TAGM-MAP
+probabilities are.
+
+**Task 2**
+
+```{r}
+## Apply the organelle-specific thresholds, saving to a new object
+msn_q <- getPredictions(object = msn,
+                        fcol = "tagm.map.allocation",
+                        scol = "overall_prob",
+                        mcol = "markers",
+                        t = tagm_thresholds)
+```
+
+**Task 3**
+
+```{r}
+## Compare the number of proteins per compartment
+data.frame(SVM = table(fData(msn)$svm.pred),
+           TAGM_fixed = table(fData(msn)$tagm.map.allocation.pred),
+           TAGM_quantile = table(fData(msn_q)$tagm.map.allocation.pred)) |>
+  dplyr::select(compartment = SVM.Var1,
+                SVM = SVM.Freq,
+                TAGM_fixed = TAGM_fixed.Freq,
+                TAGM_quantile = TAGM_quantile.Freq)
+```
+
+```{r, fig.width=12, fig.height=6}
+par(mfrow = c(1, 2))
+msn |>
+  plot2D(fcol = "svm.pred", main = "SVM")
+msn_q |>
+  plot2D(fcol = "tagm.map.allocation.pred",
+         main = "TAGM-MAP, organelle-specific thresholds")
+```
+
+**Task 4**
+
+`orgQuants` works on any score, so the code runs without error. However, the
+threshold means something different in each case:
+
+* **SVM scores** are not probabilities and are not comparable between
+  compartments, so setting a threshold relative to each compartment's own
+  score distribution is a sensible way to choose cutoffs.
+* **TAGM probabilities** are on the same scale for every compartment, so in
+  principle a single threshold such as 0.999 should be enough. A quantile
+  threshold ignores this: it keeps the top 25% of proteins in each
+  compartment, regardless of their actual probability.
+
+In practice, however, the TAGM-MAP probabilities in our data are very close to
+0 or 1, so a fixed threshold of 0.999 removes very few proteins.
+Organelle-specific quantiles bring back some discrimination within each
+compartment and give results closer to those of the SVM. So, although
+quantiles do not use the probabilities as probabilities, they can be a useful
+practical tool when the probabilities are poorly spread. Whichever approach
+you choose, check the results on a PCA plot and against prior knowledge.
+
+:::
+:::
+
+::: {.callout-tip}
+#### Key Points
+
+* Supervised classifiers predict the localisation of unknown proteins by
+  comparing their correlation profiles with those of the markers. Proteins can
+  only be assigned to compartments represented in the marker list.
+* SVM parameters (`sigma` and `cost`) are optimised by repeated
+  cross-validation on the markers with `svmOptimisation`. Class weights stop
+  the classifier favouring compartments with many markers.
+* `getF1Scores` shows the best parameters in each iteration and `levelPlot`
+  shows how every combination performed. Consistent best parameters and high
+  F1 scores indicate a stable, well-performing classifier.
+* `svmClassification` assigns every protein to a compartment, so predictions
+  must be thresholded. SVM scores differ between compartments, so
+  compartment-specific thresholds (`orgQuants`, `getPredictions`) are more
+  appropriate than a single global threshold.
+* TAGM-MAP gives a localisation probability and an outlier probability for
+  each protein. Probabilities are on the same scale for every compartment and
+  are easier to interpret than SVM scores, but they are only as reliable as
+  the model behind them.
+* In our data, TAGM-MAP probabilities are overconfident, so a fixed threshold
+  assigns more proteins than the SVM, particularly in regions between
+  compartments. Visualising predictions on spatial maps, comparing
+  classifiers and choosing thresholds carefully all help to identify
+  confident predictions.
+* Proteins that remain `"unknown"` after thresholding are not necessarily a
+  problem. They may belong to compartments not in the marker list, reside in
+  more than one location, or vary in localisation across the cell
+  population.
+:::
+
+```{r}
+#| label: save-data
+#| include: false
+
+save(msn, file = here("course_files/preprocessed/P2_lesson03.rda"))
+```

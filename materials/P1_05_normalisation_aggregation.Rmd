@@ -34,7 +34,7 @@ library("ggplot2")
 library("patchwork")
 library("stringr")
 
-load(here("course_files/preprocessed/lesson04.rda"), verbose = TRUE)
+load(here("course_files/preprocessed/P1_lesson04.rda"), verbose = TRUE)
 ```
 
 In our previous expression proteomics workflow we described the processing steps
@@ -364,7 +364,7 @@ downstream analysis.
 #| label: create-protein-dataset
 #| include: false
 
-save(qf, file = here("course_files/preprocessed/lesson05.rda"))
+save(qf, file = here("course_files/preprocessed/P1_lesson05.rda"))
 ```
 
 

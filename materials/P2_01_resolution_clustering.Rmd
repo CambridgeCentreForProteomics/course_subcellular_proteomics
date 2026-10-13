@@ -23,7 +23,7 @@ library("dbscan")
 library("org.Hs.eg.db")
 library("clusterProfiler")
 
-load(here("course_files/preprocessed/lesson05.rda"), verbose = TRUE)
+load(here("course_files/preprocessed/P1_lesson05.rda"), verbose = TRUE)
 ```
 
 ::: {.objectives}
@@ -682,7 +682,7 @@ are assigned.
 #| label: save-data
 #| include: false
 
-save(msn, file = here("course_files/preprocessed/lesson_01_p2.rda"))
+save(msn, file = here("course_files/preprocessed/P2_lesson01.rda"))
 ```
 
 ::: {.callout-tip}

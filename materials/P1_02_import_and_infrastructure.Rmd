@@ -675,7 +675,7 @@ rdata |>
 
 
 ```{r, include= FALSE}
-save(qf, file = here("course_files/preprocessed/lesson02.rda"))
+save(qf, file = here("course_files/preprocessed/P1_lesson02.rda"))
 ```
 
 ::: {.callout-tip}

@@ -28,7 +28,7 @@ library("patchwork")
 library("Biostrings")
 library("stringr")
 
-load(here("course_files/preprocessed/lesson02.rda"))
+load(here("course_files/preprocessed/P1_lesson02.rda"))
 ```
 
 ## Filtering (Part I): Sample specific quality control (FDR control)
@@ -452,7 +452,7 @@ qf
 #| label: create-final-filtered-dataset
 #| include: false
 
-save(qf, file = here("course_files/preprocessed/lesson03.rda"))
+save(qf, file = here("course_files/preprocessed/P1_lesson03.rda"))
 ```
 
 ::: {.callout-tip}

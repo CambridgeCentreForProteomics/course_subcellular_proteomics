@@ -38,7 +38,7 @@ library("pRoloc")
 library("magrittr")
 
 
-load(here("course_files/preprocessed/lesson_01_p2.rda"), verbose = TRUE)
+load(here("course_files/preprocessed/P2_lesson01.rda"), verbose = TRUE)
 ```
 
 ## Defining markers for machine learning
@@ -408,13 +408,13 @@ Secondly, to take a closer look at the pairwise QSep scores we can use the
 `levelPlot` function, again with the `norm` argument to specify which type of
 score we are interested in.
 
-```{r, eval=TRUE, fig.width=9, fig.height=9}
+```{r, eval=TRUE, fig.width=7, fig.height=7}
 ## Plot a level plot of raw QSep values between each compartment
 levelPlot(object = qsep_res, norm = FALSE,
           main = "Raw QSep values for initial markers")
 ```
 
-```{r, fig.width=9, fig.height=9}
+```{r, fig.width=7, fig.height=7}
 ## Plot a level plot of normalised QSep values between each compartment
 levelPlot(object = qsep_res, norm = TRUE,
           main = "Normalised QSep values for initial markers")
@@ -734,7 +734,7 @@ qsep_final
  
 **Task 2**
  
-```{r}
+```{r, fig.height=6, fig.width=12}
 ## Compare normalised QSep scores before and after curation
 par(mfrow = c(1, 2))
  
@@ -745,22 +745,37 @@ plot(x = qsep_final, norm = TRUE)
 title("Curated markers")
 ```
  
-```{r}
+```{r, fig.width=7, fig.height=7}
+## Pairwise normalised QSep scores for the curated markers
+levelPlot(object = qsep_res, norm = TRUE,
+          main = "Normalised QSep values for the inital markers")
+```
+ 
+```{r, fig.width=7, fig.height=7}
 ## Pairwise normalised QSep scores for the curated markers
 levelPlot(object = qsep_final, norm = TRUE,
           main = "Normalised QSep values for curated markers")
 ```
- 
+
 Removing the actin cytoskeleton class and the outlying endosomal and lysosomal
-markers should give slightly higher, or similar, QSep scores for the remaining
+markers should give similar, or slightly higher, QSep scores for the remaining
 compartments. Because normalised scores depend on how tight each reference
-cluster is, removing a few outliers from a compartment mainly increases the
+cluster is, removing a few outliers from a compartment can increase the
 scores of that compartment. The ribosomal subunits are likely to remain the
 least well separated pair.
+
+```{r, fig.width=10, fig.height=5}
+## Lysosome average QSep values initial markers
+qsep_res@xnorm["Lysosome", ] |> median()
+
+## Lysosome average QSep values after curation of markers
+qsep_final@xnorm["Lysosome", ] |> median()
+```
+
  
 **Task 3**
  
-```{r}
+```{r, fig.width=10, fig.height=5}
 ## PCA and t-SNE of the curated markers
 par(mfrow = c(1, 2))
  
@@ -773,7 +788,7 @@ plot2D(msn, method = "t-SNE", fcol = "markers",
        main = "Curated markers t-SNE")
 ```
  
-```{r}
+```{r, fig.width=10, fig.height=10}
 ## Marker profiles for each curated compartment
 marker_organelles <- getMarkerClasses(msn, fcol = "markers")
 my_cols <- getStockcol()
@@ -817,6 +832,13 @@ and keep a record of what you changed and why.
 :::::
 :::
 
+
+```{r}
+#| label: save-data
+#| include: false
+
+save(msn, file = here("course_files/preprocessed/P2_lesson02.rda"))
+```
 
 ::: {.callout-tip}
 #### Key Points

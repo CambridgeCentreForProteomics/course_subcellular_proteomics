@@ -35,7 +35,7 @@ library("ggplot2")
 library("patchwork")
 library("stringr")
 
-load(here("course_files/preprocessed/lesson03.rda"), verbose = TRUE)
+load(here("course_files/preprocessed/P1_lesson03.rda"), verbose = TRUE)
 ```
 
 Missing values are a common feature of proteomics data. How many there are can
@@ -634,7 +634,7 @@ sharply enriched profiles of singly localised proteins.
 #| label: save-data
 #| include: false
 
-save(qf, file = here("course_files/preprocessed/lesson04.rda"))
+save(qf, file = here("course_files/preprocessed/P1_lesson04.rda"))
 ```
 
 ::: {.callout-tip}
