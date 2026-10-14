@@ -17,6 +17,8 @@ editor_options:
   function relates to the scale of the data
 - Know how to concatenate replicates into a single dataset with
   `joinAssays()` and keep only proteins found in all replicates
+- Summarise peptide support (the number of precursors per protein) and the
+  proportion of imputed values per protein, and add them to the joined data
 - Understand the benefits and limitations of concatenating datasets for
   downstream machine learning
 :::
@@ -322,12 +324,85 @@ qf <- filterNA(qf, i = "proteins_joined")
 qf
 ```
 
-We see out final protein level data contain `r nrow(qf[["proteins_joined"]])`
+We see our final protein level data contain `r nrow(qf[["proteins_joined"]])`
 proteins.
 
 ```{r, fig.height=5}
 plot(qf)
 ```
+
+### Keeping track of peptide support and missing values
+
+Before we move on, we record two pieces of information about the quality of
+each protein profile, so that we can use them later when interpreting our
+spatial maps:
+
+1. **Peptide support**: the number of precursors used to calculate each protein
+   profile. Proteins quantified from only one or two precursors tend to have
+   noisier profiles. `aggregateFeatures` recorded this in a `rowData` column
+   called `.n`.
+2. **Missing values**: how much of each profile was imputed. In the previous
+   lesson we recorded the number of missing values per precursor, before
+   imputation, in a `rowData` column called `nNA`. Proteins whose precursors
+   had many missing values rely more heavily on imputation and should be
+   interpreted with more caution.
+
+Neither of these makes it through to the joined set. `aggregateFeatures` does
+not carry `nNA` up to the protein level, and `joinAssays` only keeps `rowData`
+columns that are identical in every set, which `.n` is not.
+
+```{r}
+## .n is in the protein-level set of each replicate...
+rowData(qf[["proteins_R1"]])$.n |>
+  summary()
+
+## ...but not in the joined set
+".n" %in% colnames(rowData(qf[["proteins_joined"]]))
+```
+
+We have written a small function, `addProfileQC()`, that summarises these to
+the protein level for each replicate and adds them to the joined set. For
+each protein it calculates the proportion of its precursor values that were
+missing before imputation, and then adds the following columns to the joined
+set:
+
+* `n_rep1`, `n_rep2`, `n_rep3`: number of precursors in each replicate
+* `n_min`, `n_mean`: minimum and mean across replicates
+* `missing_rep1`, `missing_rep2`, `missing_rep3`: proportion of values missing
+  before imputation in each replicate
+* `missing_max`, `missing_mean`: maximum and mean across replicates
+
+We report the minimum peptide support and maximum missingness because a
+protein profile is only as good as its weakest replicate.
+
+```{r, file = here("materials/code/add_profile_qc.R")}
+#| code-fold: true
+#| code-summary: "Show the addProfileQC() function"
+```
+
+```{r, include=FALSE}
+source(here("materials/code/add_profile_qc.R"))
+```
+
+```{r}
+qf <- addProfileQC(qf,
+                   prec_sets = c(rep1 = "norm_precursors_R1",
+                                 rep2 = "norm_precursors_R2",
+                                 rep3 = "norm_precursors_R3"),
+                   prot_sets = c(rep1 = "proteins_R1",
+                                 rep2 = "proteins_R2",
+                                 rep3 = "proteins_R3"),
+                   joined_set = "proteins_joined")
+
+## Verify
+rowData(qf[["proteins_joined"]]) |>
+  as.data.frame() |>
+  dplyr::select(starts_with("n_"), starts_with("missing_")) |>
+  head()
+```
+
+These columns will be carried over into part 2 of the course, where we will
+use them to help interpret our spatial maps.
 
 ### Concatenation gives equal weight to all replicates
 
@@ -385,6 +460,10 @@ save(qf, file = here("course_files/preprocessed/P1_lesson05.rda"))
   profiles directly.
 - Whether you normalise before or after aggregation makes little practical
   difference, as long as the final protein profiles are normalised.
+- `aggregateFeatures()` and `joinAssays()` only keep `rowData` columns that
+  are the same for every feature being combined, so per-replicate quality
+  information, such as the number of precursors (`.n`) and the proportion of
+  missing values, must be summarised and added back to the joined set.
 - Concatenating replicates with `joinAssays()` gives each replicate equal
   weight in classification, so inconsistent proteins are classified with
   lower confidence rather than given conflicting labels.
@@ -392,4 +471,3 @@ save(qf, file = here("course_files/preprocessed/P1_lesson05.rda"))
   For differential localisation between conditions, however, the same
   gradient should be used across all replicates.
 :::
-

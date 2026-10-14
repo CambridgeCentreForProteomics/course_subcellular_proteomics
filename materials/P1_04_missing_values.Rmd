@@ -503,6 +503,8 @@ users should spend more time testing combinations of filtering and imputation fo
 label-free correlation profiling experiment data.
 :::
 
+
+
 ## Imputation
 
 As we have seen, the data still contain missing (NA) values. This is expected,
@@ -540,7 +542,48 @@ missing for biological reasons and another for values missing at random.
 MsCoreUtils::imputeMethods()
 ```
 
-We next show how to implement a mixed imputation approach using the
+
+### Recording missing values before imputation
+
+Once we impute, we can no longer tell which values were measured and which
+were filled in. Before imputing, we therefore record the number of missing
+values for each precursor in a new `rowData` column called `nNA`. This
+column is carried over to the imputed and normalised sets, and we will
+summarise it to the protein level after aggregation.
+
+```{r}
+## Recall we can use the nNA function to examine NA trends
+nNA(qf[[rep_id[1]]])
+```
+
+The number of NAs per precursor is found in the `nNArows` under the `nNA`
+column, let's append this to the data in the `qf` object, for each replicate.
+
+```{r}
+for (i in rep_id) {
+  ## Number of missing values per precursor
+  n_na <- nNA(qf[[i]])$nNArows$nNA
+  rowData(qf[[i]])$nNA <- n_na
+}
+```
+
+We can verify this new column has been created in the `qf` object.
+
+```{r}
+## Verify
+qf[["precursors_R1"]] |> 
+  rowData() |> 
+  as_tibble() |> 
+  pull(nNA) |> 
+  table()
+```
+
+The table shows how many precursors have 0, 1, 2, ... missing values across
+the fractions of the first replicate.
+
+### Mixed imputation
+
+In this next section of the course we show how to implement a mixed imputation approach using the
 `impute()` function in `QFeatures`. Mixed imputation is useful when the data
 contain a mixture of values missing at random (MAR) and missing not at
 random (MNAR). Deciding which missing values belong to each category is
@@ -562,16 +605,15 @@ precursor, to the `rowData` of each replicate.
 
 ```{r}
 for (i in rep_id) {
-  ## Number of missing values per precursor
-  n_na <- rowSums(is.na(assay(qf[[i]])))
-  rowData(qf[[i]])$nNA <- n_na
-
-  ## MAR if <= 2 missing values, otherwise MNAR
-  rowData(qf[[i]])$randna <- n_na <= 2
+  ## Define MAR if <= 2 missing values, otherwise MNAR
+  tf <- rowData(qf[[i]])$nNA <= 2
+  
+  ## Append this information to the dataset
+  rowData(qf[[i]])$randna <- tf
 }
 ```
 
-We can now see these columns in the `rowData` of each replicate.
+We can now see this column in the `rowData` of each replicate.
 
 ```{r}
 qf[["precursors_R1"]] |>
@@ -583,8 +625,9 @@ It is also useful to check how many precursors fall into each category.
 
 ```{r}
 for (i in rep_id) {
-  cat(i, "\n")
+  cat(i)
   print(table(ifelse(rowData(qf[[i]])$randna, "MAR", "MNAR")))
+  cat("\n")
 }
 ```
 

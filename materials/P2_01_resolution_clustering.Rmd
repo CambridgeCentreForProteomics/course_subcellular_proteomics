@@ -37,6 +37,8 @@ load(here("course_files/preprocessed/P1_lesson05.rda"), verbose = TRUE)
   reduction (PCA and t-SNE with `plot2D`) and heatmaps (`pheatmap`)
 * Recognise the signs of good and poor resolution, and understand the
   limitations of dimensionality reduction plots
+* Check that each replicate shows the same structure before relying on the
+  combined data
 * Use unsupervised clustering (`hclust` and `hdbscan`) to find groups of
   proteins with similar correlation profiles
 * Use GO cellular component enrichment (`enrichGO`) to identify which
@@ -51,9 +53,9 @@ profiles, we can use this data to generate spatial maps. Specifically,
 in part 2 of this course we will discuss how to determine the steady-state 
 localisation of proteins utilising classical or Bayesian supervised machine
 learning algorithms. To do so we will focus on the concatenated U-2 OS DIA-LOP
-dataset and show how to generate a static spatial map from this data. In reality, 
-we advise users to carry out classification on each individual replicate, as well
-as any concatenated maps.
+dataset and show how to generate a static spatial map from this data. We will
+also look at each replicate individually, to check that they show the same
+structure before we rely on the combined data.
 
 All protein correlation profiling methods, including LOP, PCP, DOMs and others, are based on the 
 fractionation patterns of different organelles across a biochemical gradient.
@@ -100,8 +102,28 @@ the `rowData` is equivalent to the `MSnSet` `fData`, and the `colData` is the `p
 of an `MSnSet`. Hence, the remainder of this workflow will use the `MSnbase` 
 `exprs`, `fData` and `pData` functions rather than the `QFeatures` `assay`,
 `rowData` and `colData` functions. The relationship between these `QFeatures` and
-`MSnSet` functions are summarised in Table \@ref(tab:qf-msnset-tab).
+`MSnSet` functions is summarised below.
 
+| `QFeatures` / `SummarizedExperiment` | `MSnSet` |
+|---|---|
+| `assay()` | `exprs()` |
+| `rowData()` | `fData()` |
+| `colData()` | `pData()` |
+
+
+The columns we added to the `rowData` of the joined set at the end of part 1
+are carried over into the `fData` of our `MSnSet`. These are the number of
+precursors per protein in each replicate (`n_rep1`, `n_rep2`, `n_rep3`) with
+their minimum and mean (`n_min`, `n_mean`), and the proportion of missing
+values per protein in each replicate (`missing_rep1`, `missing_rep2`,
+`missing_rep3`) with their maximum and mean (`missing_max`, `missing_mean`).
+
+```{r}
+## Quality columns carried over from the QFeatures object
+fData(msn) |>
+  dplyr::select(starts_with("n_"), starts_with("missing_")) |>
+  head()
+```
 
 #### Peptide-level subcellular spatial mapping
 
@@ -156,8 +178,8 @@ data.
 
 One way in which the initial assessment of resolution can be made is by using
 dimensionality reduction methods to summarise and visualise the dataset. Rather
-than looking directly at protein correlation profiles, here comprised of 24 
-dimensions (24 biochemical fractions), we simplify the data and visualise it in 
+than looking directly at protein correlation profiles, here comprised of
+`r ncol(msn)` dimensions (the fractions of all three replicates), we simplify the data and visualise it in 
 a two dimensional space. In this case, proteins which are localised to the same 
 subcellular niche should have similar correlation profiles and cluster 
 together within a two dimensional space. For a more in-depth discussion regarding 
@@ -176,7 +198,7 @@ any method which requires random number generation, we include a `set.seed`
 function to ensure reproducibility. Without setting a seed we would get a different
 t-SNE plot each time the code is executed.
 
-```{r, eval=FALSE}
+```{r, fig.width=10, fig.height=5}
 par(mfrow = c(1, 2))
 
 ## Visualise unlabelled data using PCA and t-SNE
@@ -216,6 +238,43 @@ of the overall variation. Only visualisation of the protein correlation
 profiles themselves can provide a true picture of the data.
 :::
 
+### Do the replicates agree?
+
+Before relying on the combined data, it is worth checking that each replicate
+shows the same overall structure. We coerce the normalised protein-level set of
+each replicate, before joining, into its own `MSnSet` and plot each one.
+
+```{r}
+## Normalised protein-level sets for each replicate, before joining
+rep_sets <- c(rep1 = "proteins_norm_R1",
+              rep2 = "proteins_norm_R2",
+              rep3 = "proteins_norm_R3")
+
+## One MSnSet per replicate
+msn_reps <- lapply(rep_sets, function(s) as(qf[[s]], "MSnSet"))
+```
+
+```{r, fig.width=15, fig.height=5}
+par(mfrow = c(1, 3))
+for (r in names(msn_reps)) {
+  plot2D(msn_reps[[r]], fcol = NULL, col = "black",
+         main = paste("PCA:", r))
+}
+```
+
+Each replicate has its own PCA, so the plots may be rotated or mirrored
+relative to each other. What matters is that the same clusters and overall
+shape appear in each replicate. If one replicate showed much less structure,
+this could indicate a problem with that fractionation and would be worth
+investigating before combining the data.
+
+In this course we classify proteins using the combined data rather than each
+replicate separately. As discussed in the aggregation lesson, combining the
+replicates increases resolution, since each protein is described by its
+profiles in all three replicates, and avoids having to reconcile three
+separate sets of predictions, for example by a majority vote. It also reduces
+the influence of any one replicate on the result.
+
 ### Visualisation using heatmaps
 
 In addition to dimensionality reduction, heatmaps are also a popular tool for
@@ -223,7 +282,7 @@ visualising patterns and relationships in large datasets. To gain a snapshot of
 proteins behaviour across different fractions and replicates we can use 
 the `pheatmap` function from the `pheatmap` package to generate a clustered
 heatmap of the normalised protein correlation profiles. The input to `pheatmap` is the matrix of correlation
-profiles stored in the `exprs` slot of the `MSnSet`. By default a hierachical
+profiles stored in the `exprs` slot of the `MSnSet`. By default a hierarchical
 clustering is performed on the correlation profiles and the heatmap is ordered
 according to this clustering.
 
@@ -252,17 +311,15 @@ show_rownames = FALSE)
 
 
 We can quickly see patterns of similarity emerging for proteins across
-fractions, and also across replicates, indicated by coloured blocks, as
-displayed in Figure \@ref(fig:heatmap-lopit). The colours reflect the normalised
+fractions, and also across replicates, indicated by coloured blocks. The colours reflect the normalised
 relative abundance for each protein in each fraction and replicate; blue
 indicating a low recorded normalised abundance and yellow, orange and red
 indicating a high normalised abundance value for a given protein. Protein (row)
 names are omitted for clarity. Blocks with different colours across columns are
-indicative of structured correlation profiles. For example, the top-most cluster
-is comprised of several hundred rows with a peak abundance in the second
-biochemical fraction. This pattern is unique to this cluster, providing
-confidence that these profiles will be resolved from others in the dataset and
-that this set of proteins could represent a subcellular niche. Depending on the
+indicative of structured correlation profiles. A block of proteins that all
+peak in the same fractions, with a pattern not shared by other blocks, gives
+us confidence that these profiles will be resolved from others in the dataset
+and that this set of proteins could represent a subcellular niche. Depending on the
 experimental design we expect to see a similar trend between replicates in where
 proteins peak in abundance across the same fractions.
 
@@ -281,7 +338,7 @@ unsupervised machine learning algorithms including classic methods such as
 hierarchical clustering and *k*-means, are available
 in [`pRoloc`](https://www.bioconductor.org/packages/release/bioc/html/pRoloc.html) 
 via the [`MLInterfaces`](https://www.bioconductor.org/packages/release/bioc/html/MLInterfaces.html) 
-package, as outlined in the vignette [Using pRoloc for spatial protemics data analysis](https://bioconductor.org/packages/3.20/bioc/vignettes/pRoloc/inst/doc/v01-pRoloc-tutorial.html#51_Unsupervised_ML).
+package, as outlined in the vignette [Using pRoloc for spatial proteomics data analysis](https://bioconductor.org/packages/3.20/bioc/vignettes/pRoloc/inst/doc/v01-pRoloc-tutorial.html#51_Unsupervised_ML).
 
 In the section above we carried out hierarchical clustering and visualisation 
 using the `pheatmap` function. This allowed us to cluster rows and see groups
@@ -318,7 +375,7 @@ cl <- cutree(hc, k)
 
 Now that we have a named vector containing all of our proteins with an associated
 hierarchical cluster number, we can regenerate our heatmap and annotate this
-information (Figure \@ref(fig:hierarchical-clustering), left). To do so, we generate 
+information. To do so, we generate 
 a `data.frame` with a column called `Cluster` containing the cluster number and
 make sure that the `rownames` match the `featureNames` of our `msn` object.
 We also define our own colours to match the default colours used by `plot2D` such
@@ -347,7 +404,7 @@ pheatmap(mat = exprs(msn),
 
 To plot these hierarchical clusters on a dimensionality reduction map, we first
 add the cluster information to the `fData` of our `MSnSet`. We can then use the
-`plot2D` function to generate PCA plots with the discovered clusters annotated (Figure \@ref(fig:hierarchical-clustering), right). 
+`plot2D` function to generate PCA plots with the discovered clusters annotated.
 As above, we pass our `msn` object and specify the dimensionality reduction 
 method to use. We also tell the function which column of our `fData` to be used
 for colouring the points - here we use the newly created `hc` column. 
@@ -383,7 +440,7 @@ later in this workflow), we recommend testing values between 10 and 20 for
 ```{r, fig.width=3, fig.height=3, eval=FALSE}
 ## Test a cluster size between 10 and 20 proteins per cluster
 min_N <- c(10:20)
-cluster_N <- vector(mode = "numeric", length = 10L)
+cluster_N <- vector(mode = "numeric", length = length(min_N))
 
 ## Run HDBSCAN -- this takes a few minutes to run
 for (i in seq_along(min_N)) {
@@ -430,7 +487,7 @@ msn |>
 ```
 
 As we can see, `hdbscan` has allocated the proteins to 1 of the
-6 clusters it has found in the data. This information is found in
+`r max(hdb_results$cluster)` clusters it has found in the data. This information is found in
 `hdb_results$cluster` and we have added it to our `MSnSet` and it is can be
 accessed via `fData(msn)$hdb_cluster_id`. If we check the column names
 of the `fData` we can verify the results have been stored in the `MSnSet`.
@@ -442,10 +499,10 @@ msn |>
 ```
 
 Notice that some proteins are allocated to cluster "0". The "0" category
-denotes proteins which did not fit into one of the 6 discovered clusters.
+denotes proteins which did not fit into any of the discovered clusters.
 
 We can use the `plot2D` function to generate PCA and t-SNE plots with the
-discovered clusters annotated (Figure \@ref(fig:plots-hdb)). As before, we pass our `msn` object and
+discovered clusters annotated. As before, we pass our `msn` object and
 specify the dimensionality reduction method we wish to use. We also tell the
 function which column of our `fData` to be used for colouring the points - here
 we use the newly created `hdb_cluster_id` column. Finally, we pass the argument
@@ -548,8 +605,8 @@ barplot(cluster_6_go, showCategory = 10) +
 
 
 The results of GO enrichment indicate that cluster 6 represents proteins
-associated with the mitochondria This provides an additional unbiased level of
-evidence that the mitochondria is sufficiently resolved in our dataset to
+associated with the mitochondria. This provides an additional unbiased level of
+evidence that the mitochondrion is sufficiently resolved in our dataset to
 be included as a compartment in the downstream analyses.
 
 To simplify the investigation of all discovered clusters, the code below can be 
@@ -591,7 +648,7 @@ for (i in 1:n) {
 ```
 
 
-You will notice that in the above code we did not pass thresholds the p-value
+You will notice that in the above code we did not pass thresholds for the p-value
 cutoff i.e., `pvalueCutoff` and `qvalueCutoff` as we did in the first example.
 When no thresholds are passed all GO CC terms found per cluster are recovered
 whether they are significant or not. This can be useful if you wish to examine
@@ -697,6 +754,8 @@ save(msn, file = here("course_files/preprocessed/P2_lesson01.rda"))
   shape and clusters indicate good resolution, whereas a single central mass of
   proteins suggests a processing error (e.g. log transformation) or a failed
   fractionation.
+* Plotting each replicate separately checks that they show the same
+  structure before relying on the combined data.
 * Dimensionality reduction is a simplified view of the data. PCA shows only a
   few components, and distances in t-SNE and UMAP cannot be interpreted
   directly. Always set a seed for methods that use random numbers.

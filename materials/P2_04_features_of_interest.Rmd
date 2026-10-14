@@ -1,8 +1,8 @@
 ---
 title: Visualisation and exploration
 bibliography: ../course_refs.bib
-editor_options:
-  chunk_output_type: console
+editor_options: 
+  chunk_output_type: inline
 ---
 
 ::: {.objectives}
@@ -12,14 +12,16 @@ editor_options:
   compare different dimensionality reduction methods (`plot2Dmethods`).
 * Pre-compute PCA, t-SNE, UMAP and LDA coordinates (`plot = FALSE`) and reuse
   them (`method = "none"`) for efficient, reproducible figures.
-* Find proteins of interest, such as members of a protein complex, with
-  `pRolocVis`, and highlight them on spatial maps (`highlightOnPlot`).
-* Add your own annotations, such as complexes, pathways or compartments left
-  out of training, as new `fData` columns and plot them.
-* Show the confidence of organellar predictions on a spatial map by scaling
-  points by their probability.
-* Check classification results critically by plotting both maps and profiles
-  of classified proteins, and refine markers again where needed.
+* Summarise the characteristic profile of each compartment with
+  `mrkConsProfiles`, `mrkHClust` and `plotConsProfiles`.
+* Overlay peptide support and missing values on spatial maps, both for the
+  combined data and for each replicate, and relate them to classification
+  results.
+* Find members of protein complexes by gene name, highlight them on spatial
+  maps (`highlightOnPlot`), and add them as new `fData` annotations
+  (`addMarkers`).
+* Compare the profiles of proteins of interest with those of their
+  compartment (`plotDist`).
 :::
 
 
@@ -31,21 +33,30 @@ library("here")
 library("tidyr")
 library("dplyr")
 library("ggplot2")
+library("QFeatures")
 library("pRoloc")
 library("pRolocGUI")
 library("magrittr")
 
-## msn with the SVM and TAGM-MAP results, saved at the end of the protein
-## localisation prediction lesson
+## msn with the SVM results, saved at the end of the protein localisation
+## prediction lesson
 load(here("course_files/preprocessed/P2_lesson03.rda"), verbose = TRUE)
+
+## qf, the QFeatures object from part 1, for the per-replicate data
+load(here("course_files/preprocessed/P1_lesson05.rda"), verbose = TRUE)
 ```
 
 ## Introduction
 
-In the previous lesson we classified the proteins in our U-2 OS data using an
-SVM and TAGM-MAP, and generated our first spatial maps. Our `msn` object now
-contains the curated markers (`markers`) and the thresholded predictions of
-both classifiers (`svm.pred` and `tagm.map.allocation.pred`).
+In the previous lesson we classified the proteins in our U-2 OS data and
+generated our first spatial maps. Our `msn` object now contains the curated
+markers (`markers`), the thresholded SVM predictions (`svm.pred`), and the
+quality columns we added to the joined set at the end of part 1 with
+`addProfileQC()`: the number of precursors per protein in each replicate
+(`n_rep1`, `n_rep2`, `n_rep3`) with their minimum (`n_min`), and the
+proportion of values missing before imputation in each replicate
+(`missing_rep1`, `missing_rep2`, `missing_rep3`) with their maximum
+(`missing_max`).
 
 ```{r}
 ## Columns we will use in this lesson
@@ -53,20 +64,20 @@ msn |>
   fvarLabels()
 ```
 
-In this lesson we look at how to get the most out of these results through
-visualisation: making spatial maps efficiently with different dimensionality
-reduction methods, overlaying proteins and annotations of interest, showing the
-confidence of predictions, and checking the results critically.
+In this lesson we focus on visualisation: making spatial maps efficiently with
+different dimensionality reduction methods, summarising compartment profiles,
+showing peptide support and missing values, and overlaying protein complexes and other
+annotations of interest.
 
 
 ## Spatial maps with different dimensionality reduction methods
 
-Regardless of the algorithm used, the result of classification is a list of
-proteins and their predicted subcellular localisations. These can be
-visualised as a "subcellular spatial map" using `plot2D`, by passing the
-column containing the thresholded predictions to `fcol`. In the previous
-lesson we used PCA, the default. However, `plot2D` supports several other
-methods, listed in `plot2Dmethods` (see `?plot2D` for details).
+The result of classification is a list of proteins and their predicted
+subcellular localisations. These can be visualised as a "subcellular spatial
+map" using `plot2D`, by passing the column containing the predictions to
+`fcol`. In the previous lessons we mostly used PCA, the default. However,
+`plot2D` supports several other methods, listed in `plot2Dmethods` (see
+`?plot2D` for details).
 
 ```{r}
 plot2Dmethods
@@ -129,8 +140,7 @@ head(pcas)
 We can now pass these coordinates back to `plot2D` with `method = "none"`,
 which tells `plot2D` not to compute anything. Because a matrix of coordinates
 does not contain the feature data, we also pass our `MSnSet` to `methargs` so
-that `plot2D` knows where to find the `fcol` annotation. Here we visualise the
-SVM results with all four methods.
+that `plot2D` knows where to find the `fcol` annotation.
 
 ```{r, fig.width=10, fig.height=10}
 par(mfrow = c(2, 2))
@@ -150,123 +160,419 @@ differently. Compartments that overlap in the PCA plot may be clearly separated
 in the t-SNE or UMAP plots, and vice versa. Remember that distances between
 clusters in t-SNE and UMAP plots cannot be interpreted directly.
 
-::: {.callout-exercise}
-#### Challenge: Comparing classifiers across methods
-{{< level 1 >}}
 
-Using the pre-computed coordinates, plot the TAGM-MAP results
-(`fcol = "tagm.map.allocation.pred"`) next to the SVM results for one of the
-non-linear methods (UMAP or t-SNE). Do the differences between the two
-classifiers that we saw on the PCA plot in the previous lesson also appear
-here?
+## Compartment fingerprints with `plotConsProfiles`
+
+Spatial maps show where proteins lie relative to each other, but they hide the
+profiles themselves. A compact way to summarise the profiles of a whole class
+is to calculate its consensus profile, the average profile of the proteins in
+that class, and display all of these together as a heatmap. Each row is a
+compartment, each column a fraction, and the colour shows the consensus
+profile. This gives a "fingerprint" of each compartment across the
+fractionation gradient.
+
+This takes three steps in `pRoloc`:
+
+1. `mrkConsProfiles` calculates the consensus profile of each class and
+   returns a matrix with one row per class and one column per fraction.
+2. `mrkHClust` clusters the classes by their consensus profiles. We use the
+   resulting dendrogram to order the rows of the heatmap, so that compartments
+   with similar profiles are next to each other.
+3. `plotConsProfiles` plots the matrix as a heatmap, in the given order.
+
+```{r}
+## 1. Consensus profile of each marker class
+fmat <- mrkConsProfiles(msn, fcol = "markers")
+dim(fmat)
+
+## 2. Order the classes by hierarchical clustering of their profiles
+hc <- mrkHClust(msn, fcol = "markers", plot = FALSE)
+mm <- getMarkerClasses(msn, fcol = "markers")
+ord <- levels(factor(mm))[order.dendrogram(hc)]
+ord
+```
+
+```{r, fig.width=10, fig.height=5}
+## 3. Plot the consensus profiles of the markers
+plotConsProfiles(fmat, order = ord)
+```
+
+Each compartment has a distinct fingerprint, with its abundance peaking in
+different fractions, and the pattern is repeated in each of the three
+replicates. Compartments next to each other in this plot have similar
+fingerprints and are harder to separate, which is consistent with what we saw
+with `QSep` in the data annotation lesson.
+
+We can make the same plot for the SVM predictions by passing `fcol =
+"svm.pred"` to `mrkConsProfiles`. Proteins left as `"unknown"` are not
+included. We reuse the order from the markers so that the two plots can be
+compared row by row. If the classification is sensible, the newly classified
+proteins should keep the fingerprint of their compartment.
+
+```{r, fig.width=10, fig.height=5}
+## Consensus profiles of the SVM predictions, in the same order as the markers
+fmat_svm <- mrkConsProfiles(msn, fcol = "svm.pred")
+plotConsProfiles(fmat_svm, order = ord)
+```
+
+The fingerprints of the predictions are usually a little less sharp than those
+of the markers, because the classified proteins include proteins that lie
+further from the centre of each compartment. A compartment whose fingerprint
+changes markedly would be worth investigating further.
+
+
+## Peptide support and missing values
+
+All the maps we have made so far treat every protein equally. However, some
+proteins are quantified from many precursors, whereas others rely on only one
+or two. Similarly, some profiles are complete, whereas others were partly
+filled in by imputation. Proteins with little peptide support or many missing
+values tend to have noisier profiles, which can place them between clusters on
+a map or prevent them from being classified confidently. Overlaying this
+information on our maps helps us to interpret them.
+
+### Peptide support across the combined data
+
+At the end of part 1 we added the number of precursors supporting
+each protein in each replicate (`n_rep1`, `n_rep2`, `n_rep3`), together with
+their minimum (`n_min`). We use the minimum because a protein is only as well
+supported as its weakest replicate: a protein with 12, 10 and 1 precursors
+has a reasonable mean, but its profile in the third replicate rests on a
+single precursor.
+
+```{r}
+## Summary of the minimum number of precursors per protein
+msn |>
+  fData() |>
+  pull(n_min) |>
+  summary()
+```
+
+We can show peptide support on a spatial map by scaling the size of each point.
+The `plot2D` function accepts a vector of point sizes through its `cex`
+argument. We use a log scale, so that the few proteins with very many
+precursors do not dominate the plot.
+
+```{r, fig.width=8, fig.height=7}
+## Point size based on the (log) minimum number of precursors
+ptsze <- 0.3 + log2(fData(msn)$n_min) / 3
+
+plot2D(pcas, method = "none", methargs = list(msn),
+       fcol = "svm.pred", cex = ptsze,
+       main = "PCA: SVM predictions, sized by peptide support")
+addLegend(msn, fcol = "svm.pred", where = "topright", cex = .6)
+```
+
+Large points are well supported proteins, and small points are proteins
+supported by few precursors in at least one replicate. Look at where the small
+points lie: are they spread evenly across the map, or concentrated in
+particular regions, such as between clusters?
+
+### Missing values across the combined data
+
+We can do the same for missing values. The `missing_max` column gives, for
+each protein, the largest proportion of values that were missing before
+imputation in any one replicate. Again, a profile is only as reliable as its
+weakest replicate.
+
+```{r}
+## Summary of the maximum proportion of missing values per protein
+msn |>
+  fData() |>
+  pull(missing_max) |>
+  summary()
+```
+
+This time we make points smaller as the proportion of missing values
+increases, so that large points are still the most reliable proteins.
+
+```{r, fig.width=8, fig.height=7}
+## Point size decreases with the proportion of missing values
+ptsze_na <- 1.5 * (1 - fData(msn)$missing_max)
+
+plot2D(pcas, method = "none", methargs = list(msn),
+       fcol = "svm.pred", cex = ptsze_na,
+       main = "PCA: SVM predictions, sized by completeness")
+addLegend(msn, fcol = "svm.pred", where = "topright", cex = .6)
+```
+
+### Comparing compartments
+
+We can now ask directly whether peptide support and missing values differ
+between compartments, and in particular whether the proteins left as
+`"unknown"` tend to be less reliable. We put both columns in long format and
+plot them side by side.
+
+```{r, fig.width=12, fig.height=5}
+## Colours for each compartment, with unknown in grey
+pred_cols <- c(setNames(getStockcol()[seq_along(getMarkerClasses(msn))],
+                        getMarkerClasses(msn)),
+               unknown = getUnknowncol())
+
+## Peptide support and missing values per predicted compartment
+msn |>
+  fData() |>
+  as_tibble() |>
+  dplyr::select(svm.pred, n_min, missing_max) |>
+  pivot_longer(-svm.pred, names_to = "measure", values_to = "value") |>
+  mutate(measure = recode(measure,
+                          n_min = "Minimum number of precursors",
+                          missing_max = "Maximum proportion missing")) |>
+  ggplot(aes(x = svm.pred, y = value, fill = svm.pred)) +
+  geom_boxplot(alpha = 0.7, outlier.size = 0.8) +
+  facet_wrap(~ measure, scales = "free_y") +
+  scale_fill_manual(values = pred_cols) +
+  labs(x = "SVM prediction", y = NULL) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none")
+```
+
+The two measures are related: proteins with few precursors often have more
+missing values, because there are fewer precursors to fill in the gaps. Look
+at whether any compartment, or the `"unknown"` proteins, stand out on either
+measure.
+
+### Peptide support and missing values in each replicate
+
+The minimum and maximum hide which replicate is responsible for a poorly
+supported or incomplete profile. To see this, we return to the data of each
+replicate in our `QFeatures` object, before the replicates were joined, as we
+did in the lesson on assessing resolution. We coerce the normalised
+protein-level set of each replicate to an `MSnSet`, and add the `.n` and
+`prop_missing` columns that `addProfileQC()` stored in the protein-level sets
+in part 1.
+
+```{r}
+## Normalised protein-level sets for each replicate, before joining
+rep_sets <- c(rep1 = "proteins_norm_R1",
+              rep2 = "proteins_norm_R2",
+              rep3 = "proteins_norm_R3")
+
+## Sets output by aggregateFeatures, which contain .n and prop_missing
+agg_sets <- c(rep1 = "proteins_R1",
+              rep2 = "proteins_R2",
+              rep3 = "proteins_R3")
+
+## One MSnSet per replicate, with its own peptide support and missing values
+msn_reps <- lapply(names(rep_sets), function(r) {
+  x <- as(qf[[rep_sets[r]]], "MSnSet")
+  rd <- rowData(qf[[agg_sets[r]]])
+  idx <- match(featureNames(x), rownames(rd))
+  fData(x)$n <- rd$.n[idx]
+  fData(x)$prop_missing <- rd$prop_missing[idx]
+  x
+})
+names(msn_reps) <- names(rep_sets)
+
+## Number of precursors and proportion missing per protein in each replicate
+sapply(msn_reps, function(x) summary(fData(x)$n))
+sapply(msn_reps, function(x) summary(fData(x)$prop_missing))
+```
+
+Our classification was carried out on the combined data. To colour the
+replicate maps, we copy the SVM predictions across by matching protein
+accessions. Proteins that were not part of the combined data (for example,
+because they were missing from another replicate) are labelled `"unknown"`.
+
+```{r}
+## Copy the SVM predictions from the combined data to each replicate
+for (r in names(msn_reps)) {
+  ids <- featureNames(msn_reps[[r]])
+  pred <- fData(msn)[ids, "svm.pred"]
+  pred[is.na(pred)] <- "unknown"
+  fData(msn_reps[[r]])$svm.pred <- pred
+}
+```
+
+We can now plot each replicate, with points sized by that replicate's peptide
+support. To size the points by completeness instead, replace the `cex`
+argument with `1.5 * (1 - fData(msn_reps[[r]])$prop_missing)`.
+
+```{r, fig.width=15, fig.height=5}
+par(mfrow = c(1, 3))
+for (r in names(msn_reps)) {
+  plot2D(msn_reps[[r]], fcol = "svm.pred",
+         cex = 0.3 + log2(fData(msn_reps[[r]])$n) / 3,
+         main = paste("PCA:", r))
+}
+```
+
+Each replicate has its own PCA, so the plots may be rotated or mirrored
+relative to each other. What matters is that the same structure appears in
+each. Plotting replicates separately in this way is also a useful check that
+the replicates agree, and that no single replicate has noticeably lower peptide
+support, more missing values or poorer resolution than the others.
+
+::: {.callout-exercise}
+#### Challenge: Which proteins are least reliable?
+{{< level 2 >}}
+
+1. How many proteins are supported by only one precursor in at least one
+   replicate (`n_min == 1`)?
+2. What proportion of these are classified to a compartment by the SVM, and
+   what proportion remain `"unknown"`? How does this compare with all
+   proteins?
+3. Highlight these proteins on the t-SNE map using `highlightOnPlot`. Where do
+   they lie?
+4. Repeat steps 1 and 2 for proteins with more than half of their values
+   missing in at least one replicate (`missing_max > 0.5`). How much do the
+   two groups of proteins overlap?
 
 ::: {.callout-answer collapse=true}
 
+```{r}
+## 1. Proteins with a single precursor in at least one replicate
+low_support <- featureNames(msn)[fData(msn)$n_min == 1]
+length(low_support)
+```
+
+```{r}
+## 2. Proportion classified vs unknown, for these proteins and for all proteins
+prop.table(table(fData(msn)[low_support, "svm.pred"] == "unknown"))
+prop.table(table(fData(msn)$svm.pred == "unknown"))
+```
+
+The first table gives the proportion of low-support proteins that are
+classified (`FALSE`) or remain unknown (`TRUE`); the second gives the same for
+all proteins.
+
+```{r, fig.width=7, fig.height=7}
+## 3. Highlight on the t-SNE map
+plot2D(tsne, method = "none", methargs = list(msn),
+       fcol = "svm.pred", main = "t-SNE: single-precursor proteins")
+highlightOnPlot(tsne, foi = low_support, col = "black", pch = 1, cex = .8)
+```
+
+```{r}
+## 4. Proteins with more than half of their values missing in a replicate
+high_missing <- featureNames(msn)[fData(msn)$missing_max > 0.5]
+length(high_missing)
+
+## Proportion classified vs unknown
+prop.table(table(fData(msn)[high_missing, "svm.pred"] == "unknown"))
+
+## Overlap with the low-support proteins
+length(intersect(low_support, high_missing))
+```
+
+The 0.5 cut-off is arbitrary. Try other values and see how the numbers
+change.
+
+:::
+:::
+
+
+## Overlaying protein complexes
+
+Users may wish to add further information to their maps, for example protein
+complexes, pathways of interest, or compartments that were not used as
+training data because they lacked resolution or had too few marker proteins.
+Protein complexes are a particularly nice example, because their members are
+expected to be found together, and related complexes can reveal how finely
+our data resolves the cell.
+
+### Finding complex members by gene name
+
+To find the members of a complex, it is convenient to search the feature data
+by gene name. Our data contains a column of gene names from DIA-NN (here
+`Genes`; check `fvarLabels(msn)` for the name in your data). Where several
+genes map to the same protein group, they are separated by a semicolon, so we
+write a small helper function that splits these and searches each gene name
+against a pattern.
+
+```{r}
+## Return the proteins whose gene name(s) match a regular expression
+find_genes <- function(object, pattern, gcol = "Genes") {
+  genes <- strsplit(as.character(fData(object)[[gcol]]), ";")
+  hit <- vapply(genes, function(g) any(grepl(pattern, g)), logical(1))
+  featureNames(object)[hit]
+}
+```
+
+The `pattern` is a regular expression. For example, `"^ATP6V1"` matches all
+gene names starting with `ATP6V1`, and `"^(TCP1|CCT[2-8][AB]?)$"` matches
+`TCP1` and `CCT2` to `CCT8` (including `CCT6A` and `CCT6B`) exactly. You can
+also use the `pRolocVis` app (`pRolocVis(msn, fcol = "svm.pred")`) to search
+the feature data interactively.
+
+### A well-behaved complex: the TRiC chaperonin
+
+The TRiC (or CCT) chaperonin is a large cytosolic complex of eight different
+subunits that helps newly made proteins to fold. We expect its subunits to be
+found together, making it a good first example.
+
+```{r}
+## Members of the TRiC chaperonin
+tric <- find_genes(msn, "^(TCP1|CCT[2-8][AB]?)$")
+fData(msn)[tric, c("Genes", "svm.pred")]
+```
+
+We can highlight these proteins on any map using `highlightOnPlot`. We first
+draw the map with `plot2D`, and then pass the same coordinates and our
+proteins of interest (`foi`, features of interest) to `highlightOnPlot`.
+
 ```{r, fig.width=12, fig.height=6}
 par(mfrow = c(1, 2))
-plot2D(umap, method = "none", methargs = list(msn),
-       fcol = "svm.pred", main = "UMAP: SVM")
-plot2D(umap, method = "none", methargs = list(msn),
-       fcol = "tagm.map.allocation.pred", main = "UMAP: TAGM-MAP")
-addLegend(msn, fcol = "tagm.map.allocation.pred",
-          where = "topright", cex = .6)
+plot2D(pcas, method = "none", methargs = list(msn),
+       fcol = "svm.pred", main = "PCA: TRiC chaperonin")
+highlightOnPlot(pcas, foi = tric, col = "black", bg = "yellow",
+                pch = 21, cex = 2, lwd = 1.5)
+
+plot2D(tsne, method = "none", methargs = list(msn),
+       fcol = "svm.pred", main = "t-SNE: TRiC chaperonin")
+highlightOnPlot(tsne, foi = tric, col = "black", bg = "yellow",
+                pch = 21, cex = 2, lwd = 1.5)
 ```
 
-As on the PCA plot, TAGM-MAP classifies more proteins than the SVM, and the
-additional proteins lie mostly at the edges of clusters and in the regions
-between them.
+The map shows *where* the complex lies. To see *why*, we can compare the
+profiles of its members with those of the cytosolic markers using `plotDist`.
+The `markers` argument tells `plotDist` which proteins to highlight, here the
+TRiC subunits in black, while the cytosolic markers are plotted in grey.
 
-:::
-:::
+```{r, fig.width=10, fig.height=4}
+## Cytosol markers
+cyto_markers <- featureNames(msn)[fData(msn)$markers == "Cytosol"]
 
-
-## Overlaying features of interest
-
-Users may wish to add additional information to their maps, for example small
-protein complexes, pathways of interest, or compartments that were not used as
-training data because they lacked resolution or had too few marker proteins.
-If the aim of the experiment is to produce as comprehensive a map as possible
-for the community, it is important to add these other layers of information
-where they are available.
-
-### Finding proteins of interest with `pRolocVis`
-
-The `pRolocVis` function from the `pRolocGUI` package provides a searchable
-version of our feature data alongside an interactive spatial map.
-
-```{r, eval=FALSE}
-## Open pRolocGUI with the SVM results
-pRolocVis(msn, fcol = "svm.pred")
+## TRiC subunits (black) on top of the cytosol markers (grey)
+plotDist(msn[c(cyto_markers, tric), ],
+         markers = tric, type = "l",
+         mcol = "black", pcol = "grey",
+         las = 2)
+title("TRiC subunits (black) and cytosol markers (grey)")
 ```
 
-In the "Table Selection" tab, we can choose which columns of the feature data
-to display, for example a column of gene names or protein descriptions and the
-`svm.pred` column. Use `fvarLabels(msn)` to see which columns are available
-in your data. We can then search the table in the "Spatial Map" tab, for
-example by gene name, to find the proteins of interest and see where they lie
-on the map. Note that searching relies on the information contained in the
-feature data: if a column of gene names or descriptions is not available, it
-can be added from databases such as UniProt.
+### Related complexes in different places: the adaptor complexes
 
-Here, we look at two protein complexes: (1) the WASH complex, which activates
-the Arp2/3 complex and is involved in actin polymerisation at endosomes, and
-(2) the RNA exosome complex, which degrades RNA in the nucleus and cytoplasm.
-Having identified the UniProt accessions of the members of each complex, we
-store them as character vectors.
+The adaptor protein (AP) complexes select cargo for vesicle transport. They
+are closely related, but act in different places: AP-2 at the plasma membrane,
+AP-1 at the Golgi and endosomes, and AP-3 at endosomes. Can our data
+distinguish them?
 
 ```{r}
-## UniProt accessions of members of each complex
-wash <- c("Q12768", "Q2M389", "Q641Q2", "Q9NQA3", "Q9Y3C0", "Q9Y4E1")
+## Members of the AP-1, AP-2 and AP-3 complexes
+ap1 <- find_genes(msn, "^AP1[BGMS]")
+ap2 <- find_genes(msn, "^AP2[ABMS]")
+ap3 <- find_genes(msn, "^AP3[BDMS]")
 
-exosome <- c("Q06265", "Q13868", "Q15024", "Q5RKV6", "Q96B26",
-             "Q9NPD3", "Q9NQT4", "Q9NQT5", "Q9Y2L1", "Q9Y3B2")
+lengths(list(AP1 = ap1, AP2 = ap2, AP3 = ap3))
 ```
-
-Not every protein in a complex will necessarily be quantified in our
-experiment, so we first check which ones are present in our data.
-
-```{r}
-## Keep only the proteins quantified in our data
-wash <- intersect(wash, featureNames(msn))
-exosome <- intersect(exosome, featureNames(msn))
-
-length(wash)
-length(exosome)
-```
-
-### Highlighting proteins on a map with `highlightOnPlot`
-
-The `highlightOnPlot` function adds points for selected proteins on top of an
-existing spatial map. We first draw the map with `plot2D`, and then pass the
-same coordinates (here `pcas`) and our proteins of interest (`foi`, features
-of interest) to `highlightOnPlot`, along with arguments controlling the
-appearance of the points.
 
 ```{r, fig.width=8, fig.height=7}
-## Spatial map of the SVM results
 plot2D(pcas, method = "none", methargs = list(msn),
-       fcol = "svm.pred", main = "PCA: WASH and exosome complexes")
-
-## Highlight the complexes
-highlightOnPlot(pcas, foi = wash, col = "black", bg = "grey",
-                pch = 24, cex = 2, lwd = 1.5)
-highlightOnPlot(pcas, foi = exosome, col = "red", bg = "white",
+       fcol = "svm.pred", main = "PCA: adaptor protein complexes")
+highlightOnPlot(pcas, foi = ap1, col = "black", bg = "yellow",
+                pch = 21, cex = 2, lwd = 1.5)
+highlightOnPlot(pcas, foi = ap2, col = "black", bg = "red",
                 pch = 22, cex = 2, lwd = 1.5)
-
-## Legend for the compartments
-addLegend(msn, fcol = "svm.pred", where = "topright", cex = .6)
-
-## Legend for the complexes
-legend("topleft", legend = c("WASH", "Exosome"),
-       col = c("black", "red"), pt.bg = c("grey", "white"),
-       pch = c(24, 22), bty = "n", cex = .8)
+highlightOnPlot(pcas, foi = ap3, col = "black", bg = "blue",
+                pch = 24, cex = 2, lwd = 1.5)
+legend("topleft", legend = c("AP-1", "AP-2", "AP-3"),
+       pt.bg = c("yellow", "red", "blue"), pch = c(21, 22, 24),
+       col = "black", bty = "n", cex = .8)
 ```
 
-Because the coordinates are pre-computed, we can highlight the same proteins
-on any of the other maps simply by replacing `pcas` with `umap`, `tsne` or
-`lda`.
-
-### Adding annotations as a new `fData` column
+### Adding complexes as a new `fData` column
 
 Alternatively, we can store our annotations in a new column of the feature
 data, just as we did for markers. This keeps the annotation with the data and
@@ -275,23 +581,34 @@ create a named vector, with the annotation as values and the protein
 accessions as names, and add it with `addMarkers`. All proteins not in the
 vector are labelled `"unknown"`.
 
-```{r}
-## Named vector of complex annotations
-complexes <- c(setNames(rep("WASH complex", length(wash)), wash),
-               setNames(rep("Exosome complex", length(exosome)), exosome))
+As an example, we look at the vacuolar ATPase (V-ATPase), the proton pump that
+acidifies lysosomes and endosomes. It has two parts: V0, which sits in the
+membrane, and V1, which assembles onto V0 from the cytosol and can come off
+again. Do the two parts sit in the same place on our map?
 
-## Add as a new fData column called "complexes"
-msn <- addMarkers(msn, markers = complexes, mcol = "complexes")
+```{r}
+## V-ATPase V1 and V0 subunits
+v1 <- find_genes(msn, "^ATP6V1")
+v0 <- find_genes(msn, "^ATP6V0")
+
+## Named vector of annotations
+vatpase <- c(setNames(rep("V-ATPase V1", length(v1)), v1),
+             setNames(rep("V-ATPase V0", length(v0)), v0))
+
+## Add as a new fData column called "vatpase"
+msn <- addMarkers(msn, markers = vatpase, mcol = "vatpase")
 ```
 
-We can now pass this column to `fcol` to plot a map in which only our
-proteins of interest are coloured.
+We can now pass this column to `fcol` to plot a map in which only the
+V-ATPase subunits are coloured.
 
-```{r, fig.width=7, fig.height=7}
-## Plot map with proteins coloured by complex
+```{r, fig.width=12, fig.height=6}
+par(mfrow = c(1, 2))
 plot2D(pcas, method = "none", methargs = list(msn),
-       fcol = "complexes", main = "PCA: protein complexes")
-addLegend(msn, fcol = "complexes", where = "topleft", cex = .8)
+       fcol = "vatpase", cex = 1.5, main = "PCA: V-ATPase")
+addLegend(msn, fcol = "vatpase", where = "topleft", cex = .8)
+plot2D(tsne, method = "none", methargs = list(msn),
+       fcol = "vatpase", cex = 1.5, main = "t-SNE: V-ATPase")
 ```
 
 The same approach can be used for any annotation, for example proteins from a
@@ -299,220 +616,71 @@ pathway of interest, proteins identified in another experiment, or a
 compartment that was not included in the training data.
 
 ::: {.callout-exercise}
-#### Challenge: Where do your favourite proteins localise?
+#### Challenge: Map a complex of your choice
 {{< level 2 >}}
 
-Choose a small set of proteins you are interested in, for example the members
-of another protein complex or a few proteins from your own research. You can
-find their UniProt accessions using `pRolocVis` or the UniProt website.
+Choose a protein complex you are interested in. Some suggestions:
 
-1. Check which of them are present in `msn`.
-2. Highlight them on the t-SNE or UMAP map of the SVM results using
-   `highlightOnPlot`.
-3. Look up their predicted localisation in the `svm.pred` and
-   `tagm.map.allocation.pred` columns. Do the two classifiers agree? Does the
-   result match what you would expect from the literature?
+* COPII vesicle coat: `SEC23A`, `SEC23B`, `SEC24A`–`SEC24D`, `SEC13`, `SEC31A`
+* COPI vesicle coat: `COPA`, `COPB1`, `COPB2`, `COPG1`, `COPE`, `COPZ1`, `ARCN1`
+* Retromer: `VPS26A`, `VPS29`, `VPS35`
+* Ragulator: `LAMTOR1`–`LAMTOR5`
+* TOM complex (mitochondrial outer membrane): `TOMM20`, `TOMM22`, `TOMM40`,
+  `TOMM70`
+* Nuclear pore complex: genes starting with `NUP`
+
+1. Use `find_genes` to find the members of your complex in `msn`.
+2. Look up their SVM predictions. Are they all predicted to the same
+   compartment?
+3. Highlight them on two different maps.
+4. Plot their profiles with `plotDist`, together with the markers of the
+   compartment they are predicted to.
 
 ::: {.callout-answer collapse=true}
 
-Here we use three subunits of the proteasome as an example. Replace the
-accessions with your own proteins of interest.
+Here we use retromer as an example.
 
 ```{r}
-## Example proteins of interest
-my_proteins <- c("P25786", "P25787", "P28066")
+## 1. Find the members
+retromer <- find_genes(msn, "^(VPS26A|VPS29|VPS35)$")
 
-## 1. Which are present in the data?
-my_proteins <- intersect(my_proteins, featureNames(msn))
-my_proteins
+## 2. SVM predictions
+fData(msn)[retromer, c("Genes", "svm.pred")]
 ```
 
-```{r, fig.width=7, fig.height=7}
-## 2. Highlight them on the t-SNE map
-plot2D(tsne, method = "none", methargs = list(msn),
-       fcol = "svm.pred", main = "t-SNE: my proteins")
-highlightOnPlot(tsne, foi = my_proteins, col = "black", bg = "yellow",
+```{r, fig.width=12, fig.height=6}
+## 3. Highlight on two maps
+par(mfrow = c(1, 2))
+plot2D(pcas, method = "none", methargs = list(msn),
+       fcol = "svm.pred", main = "PCA: retromer")
+highlightOnPlot(pcas, foi = retromer, col = "black", bg = "yellow",
+                pch = 21, cex = 2, lwd = 1.5)
+plot2D(umap, method = "none", methargs = list(msn),
+       fcol = "svm.pred", main = "UMAP: retromer")
+highlightOnPlot(umap, foi = retromer, col = "black", bg = "yellow",
                 pch = 21, cex = 2, lwd = 1.5)
 ```
 
-```{r}
-## 3. Predicted localisations from both classifiers
-fData(msn)[my_proteins, c("markers", "svm.pred", "tagm.map.allocation.pred")]
-```
-
-If a protein of interest is itself a marker, its prediction simply reflects
-its marker annotation.
-
-:::
-:::
-
-
-## Showing the confidence of predictions
-
-A spatial map coloured by predicted compartment shows *where* proteins are
-assigned, but not *how confident* we are in each assignment. One way to show
-this is to scale the size of each point by its score or probability, so that
-confident predictions appear as large points and uncertain ones as small
-points. The `plot2D` function accepts a vector of point sizes through its
-`cex` argument.
-
-Here we scale the points of the TAGM-MAP map by the `overall_prob` column we
-created in the previous lesson (the localisation probability multiplied by one
-minus the outlier probability). We use the full TAGM-MAP allocation
-(`tagm.map.allocation`), before thresholding, so that every protein is
-coloured by its most probable compartment.
-
-```{r, fig.width=8, fig.height=7}
-## Point size based on the overall TAGM-MAP probability
-ptsze <- exp(fData(msn)$overall_prob) - 1
-
-plot2D(pcas, method = "none", methargs = list(msn),
-       fcol = "tagm.map.allocation", cex = ptsze,
-       main = "PCA: TAGM-MAP allocations, sized by probability")
-addLegend(msn, fcol = "tagm.map.allocation", where = "topright", cex = .6)
-```
-
-Proteins near the centre of a cluster appear as large points, whereas proteins
-with a low probability, or a high probability of being an outlier, shrink
-towards nothing. Notice, however, how few points are small. As we saw in the
-previous lesson, the TAGM-MAP probabilities are very close to 0 or 1 for most
-proteins, so even proteins lying between compartments often appear with full
-size.
-
-::: {.callout-exercise}
-#### Challenge: Confidence of the SVM predictions
-{{< level 1 >}}
-
-Make the same plot for the SVM, using the `svm` column for colour and the
-`svm.scores` column for point size. How does the picture compare with the
-TAGM-MAP plot?
-
-::: {.callout-answer collapse=true}
-
-```{r, fig.width=8, fig.height=7}
-## Point size based on the SVM score
-ptsze_svm <- exp(fData(msn)$svm.scores) - 1
-
-plot2D(pcas, method = "none", methargs = list(msn),
-       fcol = "svm", cex = ptsze_svm,
-       main = "PCA: SVM classifications, sized by score")
-addLegend(msn, fcol = "svm", where = "topright", cex = .6)
-```
-
-Because the SVM scores are spread more evenly between 0 and 1, the point sizes
-vary much more. Proteins at the edges of clusters and between compartments
-appear as small points, giving a more graded picture of confidence than the
-TAGM-MAP probabilities.
-
-:::
-:::
-
-
-## Verifying the results of protein localisation classification
-
-As discussed in the data annotation lesson, the curation of markers and their
-use for classification is an iterative process. Having completed
-classification, we should check whether the results look realistic and
-whether each compartment is accurately represented. In particular, we should
-plot (1) maps and (2) profiles of the classified proteins, using more than one
-dimensionality reduction method.
-
-As an example, we return to the difference we saw between the two classifiers
-in the previous lesson: TAGM-MAP assigned many more proteins to the ER than the
-SVM. Do the profiles of these additional proteins look like those of the ER
-markers? To answer this, we extract the proteins classified as ER by TAGM-MAP
-but left as `"unknown"` by the SVM.
-
-```{r}
-## Proteins assigned to the ER by TAGM-MAP but not by the SVM
-er_extra <- msn |>
-  fData() |>
-  filter(markers == "unknown",
-         tagm.map.allocation.pred == "ER",
-         svm.pred == "unknown") |>
-  rownames()
-
-length(er_extra)
-
-## ER marker proteins
-er_markers <- featureNames(msn)[fData(msn)$markers == "ER"]
-```
-
-We can now plot the profiles of these proteins together with the ER markers
-using `plotDist`. The `markers` argument tells `plotDist` which proteins to
-highlight, here the ER markers in orange, while the additional proteins are
-plotted in grey.
-
 ```{r, fig.width=10, fig.height=4}
-## Profiles of the additional ER proteins (grey) and the ER markers (orange)
-plotDist(msn[c(er_extra, er_markers), ],
-         markers = er_markers, type = "l",
-         mcol = "darkorange", pcol = "grey",
+## 4. Profiles with the markers of the compartment they are predicted to
+## Most common prediction, ignoring "unknown"
+pred <- fData(msn)[retromer, "svm.pred"]
+cl <- names(which.max(table(pred[pred != "unknown"])))
+cl
+
+## Markers of that compartment
+cl_markers <- featureNames(msn)[fData(msn)$markers == cl]
+
+plotDist(msn[union(cl_markers, retromer), ],
+         markers = retromer, type = "l",
+         mcol = "black", pcol = "grey",
          las = 2)
-title("ER markers (orange) and additional TAGM-MAP ER proteins (grey)")
+title(paste("Retromer (black) and", cl, "markers (grey)"))
 ```
 
-We can also highlight these proteins on the maps.
-
-```{r, fig.width=12, fig.height=6}
-par(mfrow = c(1, 2))
-plot2D(pcas, method = "none", methargs = list(msn),
-       fcol = "svm.pred", main = "PCA")
-highlightOnPlot(pcas, foi = er_extra, col = "black", pch = 1, cex = .8)
-
-plot2D(tsne, method = "none", methargs = list(msn),
-       fcol = "svm.pred", main = "t-SNE")
-highlightOnPlot(tsne, foi = er_extra, col = "black", pch = 1, cex = .8)
-```
-
-If the additional proteins have profiles similar to those of the ER markers
-and lie close to the ER cluster in several maps, they may well be genuine ER
-proteins that the SVM was too conservative to assign. If, instead, their
-profiles differ and they lie between clusters, they are more likely to be
-proteins with mixed or uncertain localisation that TAGM-MAP has assigned with
-overconfidence.
-
-Checks such as these may reveal problems with the classification that lead us
-back to the markers. For example, a compartment that absorbs many proteins
-from between clusters may have markers that are too spread out, or a
-compartment that is consistently under-represented may need more markers. As
-discussed in the data annotation lesson, any changes should be made with care
-and recorded, and should keep the markers representative of the data and the
-literature.
-
-::: {.callout-exercise}
-#### Challenge: Checking another compartment
-{{< level 2 >}}
-
-Repeat the check above for chromatin, the other compartment where TAGM-MAP
-assigned many more proteins than the SVM. Do the additional proteins look like
-the chromatin markers?
-
-::: {.callout-answer collapse=true}
-
-```{r, fig.width=10, fig.height=4}
-## Proteins assigned to chromatin by TAGM-MAP but not by the SVM
-chrom_extra <- msn |>
-  fData() |>
-  filter(markers == "unknown",
-         tagm.map.allocation.pred == "Chromatin",
-         svm.pred == "unknown") |>
-  rownames()
-
-## Chromatin markers
-chrom_markers <- featureNames(msn)[fData(msn)$markers == "Chromatin"]
-
-## Plot profiles
-plotDist(msn[c(chrom_extra, chrom_markers), ],
-         markers = chrom_markers, type = "l",
-         mcol = "red", pcol = "grey",
-         las = 2)
-title("Chromatin markers (red) and additional TAGM-MAP proteins (grey)")
-```
-
-Compare the shape of the grey profiles with those of the markers, in each
-replicate. Then highlight `chrom_extra` on the PCA and t-SNE maps, as above,
-to see where these proteins lie relative to the chromatin cluster.
+If the members of the complex are mostly `"unknown"`, the most common
+prediction will be `"unknown"` and there will be no markers to compare with.
+In that case, choose the compartment by looking at the map instead.
 
 :::
 :::
@@ -528,13 +696,16 @@ to see where these proteins lie relative to the chromatin cluster.
 * Pre-computing coordinates with `plot = FALSE`, using a seed for stochastic
   methods, and reusing them with `method = "none"` makes figures faster and
   reproducible.
-* Proteins of interest can be found with `pRolocVis` and highlighted on any
-  map with `highlightOnPlot`. Annotations such as complexes, pathways or
-  compartments left out of training can be stored as new `fData` columns with
-  `addMarkers` and plotted like markers.
-* Scaling points by their score or probability shows the confidence of
-  predictions on a map, and makes differences between classifiers visible.
-* Classification results should always be checked critically by looking at
-  both maps and protein profiles. These checks may lead back to the markers,
-  as marker curation and classification are an iterative process.
+* `mrkConsProfiles` calculates the consensus profile, or fingerprint, of each
+  compartment, and `plotConsProfiles` displays them as a heatmap, ordered by
+  similarity using `mrkHClust`.
+* Peptide support and missing values can be shown on spatial maps by scaling
+  point size. Proteins supported by few precursors, or with many values
+  imputed, tend to have noisier profiles, so these measures help to interpret
+  their position on the map and their classification. Plotting replicates
+  separately shows which replicate is responsible.
+* Members of protein complexes can be found by gene name, highlighted on any
+  map with `highlightOnPlot`, and stored as new `fData` columns with
+  `addMarkers`. Comparing their profiles with those of their compartment
+  using `plotDist` shows why they lie where they do.
 :::
