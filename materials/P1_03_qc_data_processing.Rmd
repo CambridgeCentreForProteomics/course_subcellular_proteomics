@@ -31,7 +31,7 @@ library("stringr")
 load(here("course_files/preprocessed/P1_lesson02.rda"))
 ```
 
-## Filtering (Part I): Sample specific quality control (FDR control)
+## Filtering (Part I): Sample specific quality control
 
 Now that we have our precursor-level data stored in a `QFeatures` object, the
 next step is to carry out data cleaning --- filtering to retain only
@@ -87,7 +87,7 @@ object.
 qf <- qf |>
   filterFeatures(~ Q.Value < 0.01) |>        # Run-level precursor Q-value
   filterFeatures(~ PG.Q.Value < 0.01)  |>    # Run-level protein group Q-value
-  filterFeatures(~ Lib.Q.Value <= 0.01)  |>  # Library-level precursor Q-value
+  filterFeatures(~ Lib.Q.Value < 0.01)  |>  # Library-level precursor Q-value
   filterFeatures(~ Lib.PG.Q.Value < 0.01)    # Library level protein group (PG) Q-value
 
 
@@ -150,7 +150,7 @@ plot(qf)
 When we have many fractions (runs) the QF object can get quite large (over 10GB), quite
 quickly. Therefore, now that we have obtained a single precursor level dataset, we
 create a new QF object with only the combined dataset. This isn't strictly necessary for
-this dataset, but it may be if you have a very large experiment. It also helps
+every dataset, but it may be if you have a very large experiment. It also helps
 to keep the object tidy and focused on the combined set for downstream analysis.
 
 In the code chunk below we create a new QF object with only the final joined
@@ -438,6 +438,14 @@ are some precursors for which this column contains multiple accessions separated
 by a `;`. Since the output does not contain a column to specifically tell us how
 many proteins a peptide is mapped to, we take advantage of the `;` and remove
 all rows (precursors) with a `;` in the `Protein.Ids` column.
+
+Check precursors present in the data before,
+
+```{r}
+qf
+```
+
+Now filter and check number of precursors after,
 
 ```{r}
 qf <- qf |>

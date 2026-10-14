@@ -13,7 +13,7 @@ bibliography: course_refs.bib
 
 :::
 
-## Introduction to subcellular proteomics
+## Subcellular proteomics
 
 The field of subcellular spatial proteomics is centered on the determination of
 protein localisation within the cell. Importantly, protein localisation is
@@ -63,6 +63,11 @@ In this workflow we use R packages from Bioconductor, namely, the
 for upstream data processing and the [`pRoloc`](https://bioconductor.org/packages/release/bioc/html/pRoloc.html) for downstream 
 machine learning. 
 
+```{r fig-summarized-experiment, echo = FALSE, fig.cap = "Main R Bioconductor packages used in this workflow.", fig.align = "center", out.width = "90%"}
+knitr::include_graphics("figs/packages_flow.png", error = FALSE)
+```
+
+
 :::{.callout-note}
 ## MSnSets versus QFeatures data structures
 In our first [F1000 workflow for spatial proteomics](https://f1000research.com/articles/5-2926) 
@@ -78,7 +83,7 @@ it is possible to store the peptide spectrum matches (PSMs), peptides and protei
 in one single data container. 
 :::
 
-## The use-case: Subcellular mapping of U-2 OS cells using DIA-LOP
+## The use-case: Subcellular mapping of U-2 OS cells
 
 As a use-case, we will analyse a label-free DIA subcellular proteomics dataset
 from a partially differentiated human osteosarcoma (OS) cell line (U-2 OS cells)

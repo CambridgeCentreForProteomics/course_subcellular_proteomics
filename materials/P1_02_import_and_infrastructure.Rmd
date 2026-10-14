@@ -318,6 +318,16 @@ plotting the protein correlation profiles.
 
 Let's change it now.
 
+**Before - **
+
+```{r}
+df |>
+  dplyr::pull(Run) |>
+  unique()
+```
+
+Now tidying up the naming of the samples,
+
 ```{r}
 df <- df |>
   mutate(
@@ -330,10 +340,12 @@ df <- df |>
 ```
 
 Let's look at the new run names we have created in the new column called
-`runCol`. Note: the naming of this column as `runCol` is a consious choice, as
+`runCol`. Note: the naming of this column as `runCol` is a conscious choice, as
 previously mentioned. When we convert the data in the next section to a
 `QFeatures` object we use this column to match out metadata and the experimental
 data.
+
+**After -**
 
 ```{r}
 df |>
@@ -341,20 +353,6 @@ df |>
   unique()
 ```
 
-
-## Setting some initial parameters for this workflow
-
-During the course of the workflow and in your own analysis, there will be
-some basic information you will repeatedly use. For example, the number of samples,
-replicates and conditions. We define these here for use throughout the workflow.
-
-```{r}
-## Total number of samples
-N <- 30
-
-## Number of replicates
-R <- 1:3
-```
 
 ## Converting the data into a QFeatures object
 
@@ -375,7 +373,7 @@ sure to check the column names for the version you are using. As mentioned befor
 these columns represent different types of quantitation rather than quantitation
 across different samples.
 
-**Using `Precursor.Quantity` for quantitation**
+**Using Precursor.Quantity for quantitation**
 Since our analysis started from the precursor level, we will use precursor-level
 quantitation and aggregate upwards to protein-level. Whilst DIA-NN provides the
 `Precursor.Normalised` column containing quantitative data pre-normalised using
@@ -521,11 +519,9 @@ run (here a biochemical fraction from one replicate).
 
 {{< level 2 >}}
 
-1. Find a function to determine how many precursors are quantified in each sample.
-   Use it to plot a histogram of precursor counts across samples.
-
-2. Create a bar plot showing the number of precursors identified in each sample,
-coloured by replicate. Based on your plot:
+Find a function to determine how many precursors are quantified in each sample.
+Use it to create a bar plot showing the number of precursors identified in each
+sample, coloured by replicate. Based on your plot:
 
 - Which group tends to have the most precursors identified?
 - Is there any sample that looks like an outlier?
@@ -535,18 +531,8 @@ coloured by replicate. Based on your plot:
 counts.</details>
 
 ::::: {.callout-answer collapse="true"}
-**Task 1**
 
-```{r}
-#| label: access-metadata-slots
-#| fig-height: 4
-#| fig-width: 4
-
-n <- nrows(qf)
-hist(n, xlab = "Precursors", main = "Precursor counts per sample")
-```
-
-**Task 2**
+One (of many different) answers
 
 ```{r}
 #| label: create-subset
