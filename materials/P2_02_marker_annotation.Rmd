@@ -279,7 +279,7 @@ outlined in the code chunk below. The `getMarkerClasses` function can be used
 to return a vector of all subcellular marker compartments in a given `MSnSet`.
 
 
-```{r, eval = FALSE}
+```{r, fig.width=10, fig.align=10}
 ## Define marker compartments
 marker_organelles <- getMarkerClasses(msn, fcol = "markers_initial")
 
@@ -384,7 +384,7 @@ function within the `pRoloc` package can be used to generate a boxplot of the
 QSep scores for each included compartment. The `norm` argument takes a logical
 input to indicate whether to use normalised or raw QSep scores.
 
-```{r, eval=TRUE, fig.width=12, fig.align=5}
+```{r, eval=TRUE, fig.width=14, fig.align=6}
 par(mfrow = c(1, 2))
 
 ## Plot a boxplot of raw QSep scores
@@ -471,9 +471,8 @@ pRolocVis(object = msn,
 knitr::include_graphics("figs/pRolocVis_screenshot.png", error = FALSE)
 ```
 
-Using this interactive visualisation tool (Figure \@ref(fig:pRolocvis-picture))
-enables us to easily identify which proteins the outlier points and profiles
-correspond to.
+Using this interactive visualisation tool enables us to easily identify which
+proteins the outlier points and profiles correspond to.
 
 ```{r pRolocvis-outlier, out.width = '100%', echo = FALSE, fig.cap = 'Example steps for identifying outlier with pRolocVis.'}
 knitr::include_graphics("figs/curation_example.png", error = FALSE)

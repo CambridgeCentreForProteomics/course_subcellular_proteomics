@@ -316,7 +316,7 @@ confirm the parameters that will be used for classification.
 getParams(object = svm_params)
 ```
 
-### Protein localisation classification using an SVM
+### Protein localisation prediction with SVMs
 
 Now that we are happy with our parameters, we can apply the SVM model to our
 data using the `svmClassification` function. Rather than typing the values of

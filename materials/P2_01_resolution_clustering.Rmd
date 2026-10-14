@@ -76,7 +76,7 @@ classifier. The output of this algorithm will be a predicted subcellular
 localisation for each of our proteins. Finally, we show how to visualise the
 predicted protein localisations to generate a spatial map of the cell.
 
-## Extract protein-level data into MSnset infrastructure for use in `pRoloc`
+## Conversion to `MSnSet`
 
 This section of the workflow requires specialised functions for data visualisation
 and machine learning. Such functions exist within the [`pRoloc` package](https://www.bioconductor.org/packages/release/bioc/html/pRoloc.html) [@pRoloc2014].
@@ -95,21 +95,29 @@ msn <- as(object = qf[["proteins_joined"]], Class = "MSnSet")
 msn
 ```
 
-As a reminder for readers, the structure of an `MSnSet` object is very similar to
-that of a `SummarizedExperiment`, or `QFeatures` experimental set. The `assay` 
-slot of a `SummarizedExperiment` is equivalent to that of the `MSnSet` `exprs` slot,
-the `rowData` is equivalent to the `MSnSet` `fData`, and the `colData` is the `pData`
-of an `MSnSet`. Hence, the remainder of this workflow will use the `MSnbase` 
-`exprs`, `fData` and `pData` functions rather than the `QFeatures` `assay`,
-`rowData` and `colData` functions. The relationship between these `QFeatures` and
-`MSnSet` functions is summarised below.
+As a reminder for readers, the structure of an `MSnSet` object is very similar
+to that of a `SummarizedExperiment`, or `QFeatures` experimental set. The
+relationship between these `QFeatures` and `MSnSet` functions is summarised
+below.
 
-| `QFeatures` / `SummarizedExperiment` | `MSnSet` |
-|---|---|
-| `assay()` | `exprs()` |
-| `rowData()` | `fData()` |
-| `colData()` | `pData()` |
+```{r qf-msnset-tab, echo = FALSE, cache = TRUE}
+df <- data.frame("Description" = c("Extract quantitative data", 
+                                 "Extract feature data",
+                                 "Extract experiment data", 
+                                 "The quantitative column names",
+                                 "Column names of feature data",
+                                 "Row names of the dataset"),
+                 "MSnbase function" = c("exprs", "fData", "pData", "sampleNames", 
+                             "fvarLabels", "featureNames"),
+                 "QFeatures function" = c("assay", "rowData", "colData", "colnames", 
+                               "rowDataNames", "rownames"))
+kableExtra::kable(df, caption = "Equivalent accessors/slot names between MSnbase and QFeatures",
+                  col.names = gsub("[.]", " ", names(df))) %>%
+  kableExtra::kable_styling(latex_options = "HOLD_position", font_size = 14,
+                           bootstrap_options = "hover" )
+```
 
+<br />
 
 The columns we added to the `rowData` of the joined set at the end of part 1
 are carried over into the `fData` of our `MSnSet`. These are the number of
@@ -119,7 +127,7 @@ values per protein in each replicate (`missing_rep1`, `missing_rep2`,
 `missing_rep3`) with their maximum and mean (`missing_max`, `missing_mean`).
 
 ```{r}
-## Quality columns carried over from the QFeatures object
+## QC columns carried over from the QFeatures object
 fData(msn) |>
   dplyr::select(starts_with("n_"), starts_with("missing_")) |>
   head()
@@ -509,7 +517,7 @@ we use the newly created `hdb_cluster_id` column. Finally, we pass the argument
 `unknown = "0"` so that the large cluster of uncertain proteins remains 
 unlabelled. 
 
-```{r, eval = TRUE}
+```{r, eval = TRUE, fig.width=10, fig.height=5}
 par(mfrow = c(1, 2))
 
 ## Visualise HDBSCAN unsupervised clustering using PCA
