@@ -304,7 +304,9 @@ We can use `joinAssays` to concatenate the fractions across replicates to
 improve the discrimination between organelle signatures.
 
 ```{r concatenate_replicates}
-agg_names <- c("proteins_norm_R1", "proteins_norm_R2", "proteins_norm_R3")
+agg_names <- c("proteins_norm_R1", 
+               "proteins_norm_R2", 
+               "proteins_norm_R3")
 
 qf <- joinAssays(qf, 
                  i = agg_names, 
@@ -330,6 +332,37 @@ proteins.
 ```{r, fig.height=5}
 plot(qf)
 ```
+
+### Concatenation gives equal weight to all replicates
+
+By concatenating the datasets we give each biological replicate an equal weight 
+for the downstream machine learning classification. This means that any variability
+between experiments will be accounted for. For example, if a
+protein has an abundance distribution profile similar to that of nuclear protein
+markers in one of the three replicates, but is more similar to cytoplasmic markers
+in the remaining two replicates, this will be reflected by the fact that the 
+protein will either be classified with a lower confidence or not classified at
+all. If each replicate was analysed separately, the protein may receive conflicting
+classifications in each replicate which would require a user-defined resolution.
+
+Another potential advantage of concatenating datasets is the inclusion of data
+derived from different gradient variations [@Barylyuk2020; @Trotter2010]. Although
+many subcellular compartments are well resolved using a single gradient, some 
+compartments remain more challenging to resolve due to their similarities or
+connections with other compartments. For example, compartments within the endomembrane
+system can generate similar fractionation profiles. Where no single gradient will
+provide optimal separation of all organelles of interest, it is possible to design
+different gradients which provide optimal separation different organelles. These
+data can then be concatenated to generated a combined dataset with greater final
+resolution of all desired compartments. 
+
+Overall, data concatenation has been shown to have benefits for downstream machine
+learning in many cases. Ultimately, however, the decision to concatenate replicates 
+will depend on the goal of the experiment and type of data analysis required to
+answer the experimental question. In particular, where the experimental aim is to
+identify differential localisation between conditions it is recommended to repeat
+the same biochemical gradient across all three replicates to avoid complicating
+downstream analysis.
 
 ### Keeping track of peptide support and missing values
 
@@ -404,36 +437,7 @@ rowData(qf[["proteins_joined"]]) |>
 These columns will be carried over into part 2 of the course, where we will
 use them to help interpret our spatial maps.
 
-### Concatenation gives equal weight to all replicates
 
-By concatenating the datasets we give each biological replicate an equal weight 
-for the downstream machine learning classification. This means that any variability
-between experiments will be accounted for. For example, if a
-protein has an abundance distribution profile similar to that of nuclear protein
-markers in one of the three replicates, but is more similar to cytoplasmic markers
-in the remaining two replicates, this will be reflected by the fact that the 
-protein will either be classified with a lower confidence or not classified at
-all. If each replicate was analysed separately, the protein may receive conflicting
-classifications in each replicate which would require a user-defined resolution.
-
-Another potential advantage of concatenating datasets is the inclusion of data
-derived from different gradient variations [@Barylyuk2020; @Trotter2010]. Although
-many subcellular compartments are well resolved using a single gradient, some 
-compartments remain more challenging to resolve due to their similarities or
-connections with other compartments. For example, compartments within the endomembrane
-system can generate similar fractionation profiles. Where no single gradient will
-provide optimal separation of all organelles of interest, it is possible to design
-different gradients which provide optimal separation different organelles. These
-data can then be concatenated to generated a combined dataset with greater final
-resolution of all desired compartments. 
-
-Overall, data concatenation has been shown to have benefits for downstream machine
-learning in many cases. Ultimately, however, the decision to concatenate replicates 
-will depend on the goal of the experiment and type of data analysis required to
-answer the experimental question. In particular, where the experimental aim is to
-identify differential localisation between conditions it is recommended to repeat
-the same biochemical gradient across all three replicates to avoid complicating
-downstream analysis.
 
 ```{r}
 #| label: create-protein-dataset
