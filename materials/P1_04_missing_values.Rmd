@@ -43,7 +43,7 @@ vary substantially depending on the experimental design and the acquisition
 method used. Before filtering, it's important to understand how many values
 are missing and how they are distributed across samples and proteins.
 
-## Missing data (Part I) - Sample level
+## Missing values (Part I): fractions
 
 When processing correlation profiling data, handling missing values is a crucial
 first step to ensure reliable downstream analysis. Missing values can arise for
@@ -398,7 +398,7 @@ plot(qf)
 ```
 
 
-## Missing values (Part II) - Row-wise (precursor peptide) level
+## Missing values (Part II): precursors
 
 Once column-wise missingness has been assessed, we apply row-wise filtering to
 remove peptides absent in a high proportion of fractions. Frequently missing
