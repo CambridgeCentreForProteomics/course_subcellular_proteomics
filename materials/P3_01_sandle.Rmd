@@ -739,39 +739,6 @@ conclusions.
 :::
 :::
 
-:::{.callout-exercise}
-#### Challenge 4: Do the markers move?
-{{< level 2 >}}
-
-The markers are assumed not to move, which is why the marker-based test gives
-them a DL probability of 0. The marker-free test, however, does not use the
-markers, so it tests them like any other protein. What proportion of the
-markers of each compartment have an FDR below 0.1? What does this tell you
-about why it is useful to require both tests?
-
-::: {.callout-answer collapse=true}
-
-```{r}
-results %>%
-  mutate(markers = fData(basal)[protein, "markers"]) %>%
-  filter(markers != "unknown") %>%
-  group_by(markers) %>%
-  summarise(n = n(), prop_fdr_below_0.1 = round(mean(fdr < 0.1), 2))
-```
-
-A substantial proportion of the markers of some compartments are flagged by
-the marker-free test. Since markers should, by definition, stay where they
-are, this suggests that the profile of a whole compartment can shift slightly
-between the two conditions, for example because of small differences in
-fractionation between the basal and insulin experiments. The marker-free test
-detects these consistent shifts, even though they do not reflect proteins
-changing location. The marker-based test is protected against this, because
-it models each compartment separately in each condition and asks whether a
-protein changes compartment. This is one reason why @Crook2026 recommend
-requiring both tests: each removes a different type of false positive.
-
-:::
-:::
 
 ## Visualising the candidates
 
