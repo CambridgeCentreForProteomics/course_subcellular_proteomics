@@ -3,21 +3,20 @@ title: Data annotation
 bibliography: ../course_refs.bib
 ---
 
-::: {.objectives}
+::: {.callout-tip}
 #### Learning objectives
-
-* Define a subcellular marker, and explain why markers must be curated for the
+- Define a subcellular marker, and explain why markers must be curated for the
   specific cell type and conditions being studied
-* Describe the iterative process of marker curation: select resolved
+- Describe the iterative process of marker curation: select resolved
   compartments, source an initial list, evaluate, refine and annotate
-* Retrieve published marker sets with `pRolocmarkers()` and add published or
+- Retrieve published marker sets with `pRolocmarkers()` and add published or
   user-defined markers to an `MSnSet` with `addMarkers()`
-* Evaluate markers visually using PCA and t-SNE across several principal
+- Evaluate markers visually using PCA and t-SNE across several principal
   components with `plot2D()`, marker profile plots and interactive
   visualisation using the `pRolocGUI` package
-* Quantify the separation of subcellular compartments with `QSep()` method, and
+- Quantify the separation of subcellular compartments with `QSep()` method, and
   interpret raw and normalised QSep scores
-* Refine a marker list by removing outlying markers and combining or removing
+- Refine a marker list by removing outlying markers and combining or removing
   poorly resolved compartments, without over-curating the data
 :::
 

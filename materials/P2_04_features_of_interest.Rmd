@@ -5,22 +5,21 @@ editor_options:
   chunk_output_type: inline
 ---
 
-::: {.objectives}
+::: {.callout-tip}
 #### Learning objectives
-
-* Build subcellular spatial maps of classification results with `plot2D`, and
+- Build subcellular spatial maps of classification results with `plot2D`, and
   compare different dimensionality reduction methods (`plot2Dmethods`).
-* Pre-compute PCA, t-SNE, UMAP and LDA coordinates (`plot = FALSE`) and reuse
+- Pre-compute PCA, t-SNE, UMAP and LDA coordinates (`plot = FALSE`) and reuse
   them (`method = "none"`) for efficient, reproducible figures.
-* Summarise the characteristic profile of each compartment with
+- Summarise the characteristic profile of each compartment with
   `mrkConsProfiles`, `mrkHClust` and `plotConsProfiles`.
-* Overlay peptide support and missing values on spatial maps, both for the
+- Overlay peptide support and missing values on spatial maps, both for the
   combined data and for each replicate, and relate them to classification
   results.
-* Find members of protein complexes by gene name, highlight them on spatial
+- Find members of protein complexes by gene name, highlight them on spatial
   maps (`highlightOnPlot`), and add them as new `fData` annotations
   (`addMarkers`).
-* Compare the profiles of proteins of interest with those of their
+- Compare the profiles of proteins of interest with those of their
   compartment (`plotDist`).
 :::
 

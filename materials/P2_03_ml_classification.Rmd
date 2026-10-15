@@ -1,29 +1,26 @@
 ---
 title: Protein localisation prediction
 bibliography: ../course_refs.bib
-editor_options:
-  chunk_output_type: console
 ---
 
-::: {.objectives}
+::: {.callout-tip}
 #### Learning objectives
-
-* Explain how supervised classifiers predict localisation by comparing unknown
+- Explain how supervised classifiers predict localisation by comparing unknown
   proteins' correlation profiles with marker profiles, and why proteins can
   only be assigned to compartments present in the training data.
-* Optimise SVM parameters (`sigma`, `cost`) by cross-validation
+- Optimise SVM parameters (`sigma`, `cost`) by cross-validation
   (`svmOptimisation`), using class weights to handle unequal class sizes, and
   assess performance using F1 scores (`getF1Scores`, `levelPlot`,
   `getParams`).
-* Classify proteins with an SVM (`svmClassification`) and set
+- Classify proteins with an SVM (`svmClassification`) and set
   organelle-specific score thresholds (`orgQuants`, `getPredictions`).
-* Train and apply the Bayesian TAGM-MAP model (`tagmMapTrain`,
+- Train and apply the Bayesian TAGM-MAP model (`tagmMapTrain`,
   `tagmMapPredict`), check its convergence, and threshold predictions on the
   combined localisation and outlier probabilities.
-* Visualise classification results as spatial maps (`plot2D`), and compare the
+- Visualise classification results as spatial maps (`plot2D`), and compare the
   predictions of different classifiers using spatial maps, score distributions
   and cross-tabulation.
-* Explain why TAGM-MAP probabilities can be overconfident, and describe
+- Explain why TAGM-MAP probabilities can be overconfident, and describe
   strategies for choosing confident predictions.
 :::
 

@@ -26,22 +26,21 @@ library("clusterProfiler")
 load(here("course_files/preprocessed/P1_lesson05.rda"), verbose = TRUE)
 ```
 
-::: {.objectives}
+::: {.callout-tip}
 #### Learning objectives
-
-* Convert protein-level data from a `QFeatures` object into an `MSnSet` so
+- Convert protein-level data from a `QFeatures` object into an `MSnSet` so
   that it can be used with `pRoloc`
-* Explain why the resolution of the data should be assessed before defining
+- Explain why the resolution of the data should be assessed before defining
   markers or running a classifier
-* Visualise unlabelled protein correlation profiles using dimensionality
+- Visualise unlabelled protein correlation profiles using dimensionality
   reduction (PCA and t-SNE with `plot2D`) and heatmaps (`pheatmap`)
-* Recognise the signs of good and poor resolution, and understand the
+- Recognise the signs of good and poor resolution, and understand the
   limitations of dimensionality reduction plots
-* Check that each replicate shows the same structure before relying on the
+- Check that each replicate shows the same structure before relying on the
   combined data
-* Use unsupervised clustering (`hclust` and `hdbscan`) to find groups of
+- Use unsupervised clustering (`hclust` and `hdbscan`) to find groups of
   proteins with similar correlation profiles
-* Use GO cellular component enrichment (`enrichGO`) to identify which
+- Use GO cellular component enrichment (`enrichGO`) to identify which
   subcellular compartments the clusters represent, and use this to decide which
   compartments to include as classes for machine learning
 :::
