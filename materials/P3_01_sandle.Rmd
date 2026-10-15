@@ -110,10 +110,13 @@ and to handle more complex experimental designs.
 | Priors to set | Yes | No |
 | Convergence checks | Yes | No |
 | Needs markers | Yes | Marker-based test yes, marker-free test no |
-| Paired / multi-condition designs | Pairwise comparisons only | Supported |
+| Paired / multi-condition designs | Supported (two conditions) | Supported (two or more conditions) |
 | Output | DL probability + localisation predictions | DL probability + p-value / FDR |
 
-SANDLE combines two complementary tests:
+
+<br/>
+
+#### SANDLE combines two complementary tests:
 
 1. **Marker-based test.** Using the markers, SANDLE models each subcellular
    niche in each replicate with a robust multivariate *t*-distribution. The
@@ -169,10 +172,11 @@ localisation, and lets us compare our results with the original study.
 
 ## SANDLE setup
 
-SANDLE has not yet been released as an R package. For this course, all the
-functions you need are in one script, `sandle_functions.R`, which we load with
-`source()`. You will also need the `MSnbase` and `pRoloc` packages from
-Bioconductor, which we used in previous lessons.
+SANDLE has not yet been released as an R package (but will shortly become part
+of the `bandle` package). For this course, all the functions you need are in one
+script, `sandle_functions.R`, which we load with `source()`. You will also need
+the `MSnbase` and `pRoloc` packages from Bioconductor, which we used in previous
+lessons.
 
 ```{r}
 source("code/sandle_functions.R")
@@ -199,14 +203,13 @@ In the previous lessons we started from PSM-level output, processed it in a
 protein-level sets into `MSnSet`s with `as(..., "MSnSet")`, so that we could
 use `pRoloc`.
 
-In practice, you will often be given data that has *already* been processed
-to protein level: a table exported from Proteome Discoverer or MaxQuant, the
-output of a collaborator's pipeline, or a supplementary table from a paper.
-This is the case for the adipocyte data. There is no PSM-level data to
-process, so we don't need `QFeatures`. Instead, we can read the table straight
-into an `MSnSet` with the `readMSnSet2()` function from `MSnbase`. The end
-result is the same kind of object we created by coercion, and everything we
-learnt about `pRoloc` applies to it.
+In practice, you may have been given data that has *already* been processed to
+protein level: a table exported from Proteome Discoverer or MaxQuant, the output
+of a collaborator's pipeline, or a supplementary table from a paper. This data
+here was taken directly from supporting material of the  @Conway2026 paper. We
+can read the table straight into an `MSnSet` with the `readMSnSet2()` function
+from `MSnbase`. The end result is the same kind of object we created by coercion
+at the start of part II, and everything we learnt about `pRoloc` applies to it.
 
 :::{.callout-note}
 #### Reminder: the three parts of an `MSnSet`
@@ -337,9 +340,15 @@ first two principal components of each replicate, coloured by marker.
 #| fig-width: 10
 #| fig-height: 10
 par(mfrow = c(3, 3), mar = c(4, 4, 2, 1))
-for (i in 1:3) plot2D(control[[i]], fcol = "markers", main = paste("Basal, rep", i))
-for (i in 1:3) plot2D(treated[[i]], fcol = "markers", main = paste("Insulin, rep", i))
-addLegend(control[[1]], fcol = "markers", where = "other", ncol = 2)
+
+for (i in 1:3) plot2D(control[[i]], fcol = "markers",
+                      main = paste("Basal, rep", i))
+
+for (i in 1:3) plot2D(treated[[i]], fcol = "markers",
+                      main = paste("Insulin, rep", i))
+
+addLegend(control[[1]], fcol = "markers", where = "other",
+          ncol = 2, cex = 1.5)
 ```
 
 We see clear, separated clusters for most organelles and a similar overall
@@ -358,7 +367,7 @@ both conditions? Which niches are least well separated?
 
 ::: {.callout-answer collapse=true}
 
-```{r}
+```{r, fig.width=10, fig.height=5}
 qs_basal   <- QSep(control[[1]], fcol = "markers")
 qs_insulin <- QSep(treated[[1]], fcol = "markers")
 
@@ -367,14 +376,25 @@ plot(qs_basal, main = "Basal, rep 1")
 plot(qs_insulin, main = "Insulin, rep 1")
 ```
 
-The resolution is similar in both conditions. This is reassuring: if one
-condition were much less well resolved, we would expect more apparent
-"movement" simply because proteins are assigned less confidently.
+Overall resolution is similar in both conditions, which suggests the
+fractionations are of comparable quality. This matters because if one condition
+were much less well resolved, we might see more apparent ‘movement’ simply
+because proteins are assigned less confidently. However, resolution can also
+change for biological reasons. If treatment alters the size or density of an
+organelle, its sedimentation profile, and its separation from neighbouring
+compartments, will change. It is therefore worth comparing resolution per
+organelle as well as overall. If resolution for a specific organelle differs
+between conditions, this may reflect either technical variation (e.g. gradient
+quality) or a real change in that organelle. Comparing replicates within each
+condition and checking whether that organelle’s marker profiles shift between
+conditions can help distinguish these. Where resolution is reduced, protein
+assignments in that region are less certain, so apparent movements involving
+that organelle or its neighbours should be interpreted with caution.
 
 :::
 :::
 
-## Step 1: Where are the proteins? Published localisations
+## Step 1: Where are the proteins localised?
 
 The localisation of each protein in each condition, as published in the
 original study [@Conway2026], is already in the feature data of our
@@ -389,9 +409,10 @@ table(fData(basal)$final.localisation)
 table(fData(insulin)$final.localisation)
 ```
 
-Let's look at the spatial maps of both conditions side by side. As in Part 2,
-we use the combined data from all three replicates, so we plot the full
-`basal` and `insulin` objects rather than the per-replicate lists.
+Let's look at the spatial maps of both conditions side by side. As in Part II of
+the subcellular mapping section, we use the combined data from all three
+replicates, so we plot the full `basal` and `insulin` objects rather than the
+per-replicate lists.
 
 ```{r}
 #| fig-width: 12
@@ -418,11 +439,11 @@ a classifier is. We therefore take localisations from a dedicated
 classification, and use SANDLE for differential localisation.
 :::
 
-## Step 2: Which proteins move? Differential localisation with SANDLE
+## Step 2: Which proteins move?
 
 We now run the two SANDLE tests on the per-replicate data. Neither test uses
-the localisations: they give each protein a score for whether it moves,
-which we will combine with the localisations in Step 3.
+the final localisations: they give each protein a score for whether it moves,
+which we will combine with the predicted localisations in Step 3 below.
 
 ### Marker-based SANDLE
 
@@ -517,12 +538,24 @@ thresholds we will use: DL probability > 0.9 and FDR < 0.1. Proteins in the
 top-right corner are supported by **both** tests. Point size shows the effect
 size (`RSS_diff`).
 
-We also highlight in red some proteins that were reported to move after
-insulin stimulation in the original study [@Conway2026].
+We also highlight in red some proteins that were reported as high-confidence
+movers after insulin stimulation in the original study [@Conway2026]. These
+include the glucose transporters GLUT1 (Slc2a1) and GLUT4 (Slc2a4), the
+insulin-responsive aminopeptidase IRAP (Lnpep), which travels with GLUT4,
+TXNIP, which regulates glucose transporter trafficking, the Akt substrate
+ZNRF2, and the uncharacterised protein C3orf18.
 
 ```{r}
-known_movers <- c("P14142", "Q8C129", "P40336", "P81122", "Q05512",
-                  "Q9JLN9", "Q8CFH6", "P61460", "Q8C0M0", "A2A9C3")
+known_movers <- c("P17809",  # GLUT1 (Slc2a1)
+                  "P14142",  # GLUT4 (Slc2a4)
+                  "Q8C129",  # IRAP (Lnpep)
+                  "Q8BG60",  # TXNIP
+                  "Q71FD5",  # ZNRF2
+                  "Q8BGK9",  # C3orf18
+                  "Q9WTP2",  # SPRY4
+                  "Q05512",  # Mark2
+                  "Q9JLN9",  # Mtor
+                  "Q80TM9")  # NISCH
 ```
 
 ```{r}
@@ -570,6 +603,10 @@ results %>%
   filter(protein %in% known_movers) %>%
   dplyr::select(protein, dl_prob, fdr, loc_basal, loc_insulin)
 ```
+
+Most of these proteins are supported by both SANDLE tests, so SANDLE and
+BANDLE agree on them. All of them have a low FDR, but GLUT4 and IRAP have a
+lower DL probability. We look at why in the profile plots below.
 
 :::{.callout-exercise}
 #### Challenge 2: Choosing thresholds
@@ -755,8 +792,8 @@ A convincing mover shows a consistent change in profile shape across all
 three replicates, with little overlap between the two conditions.
 
 Now let's look at two of the known movers. GLUT4 (P14142) is the classic
-insulin-responsive protein, and Q8C129 is one of the strongest signals in this
-dataset.
+insulin-responsive protein, and IRAP (Q8C129) travels with GLUT4 in the same
+storage vesicles.
 
 ```{r}
 #| fig-width: 8
@@ -765,9 +802,13 @@ plot_protein_profiles(control, treated, proteins = c("P14142", "Q8C129"),
                       labels = c("basal", "insulin"))
 ```
 
-Compare where each of these sits on the DL probability versus FDR plot above.
-A protein can give a clear signal in one test and be borderline in the other,
-which is why it helps to look at both.
+Both profiles change clearly and consistently, which is why both proteins
+have a very low FDR. Their DL probabilities are lower because GLUT4 and IRAP
+are stored in specialised vesicles that are not represented by any of the
+marker niches, and both are `"unknown"` in both conditions. Their profiles
+change, but not in a way that clearly moves them from one marker niche to
+another. This is a good example of a protein giving a clear signal in one
+test and a weaker one in the other, and of why it helps to look at both.
 
 We can also look at the strongest candidates, by effect size, from each type
 of movement.

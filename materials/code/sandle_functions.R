@@ -56,9 +56,15 @@ split_by_replicate <- function(object, rep_col = "Replicate") {
 ## -----------------------------------------------------------------------------
 
 ## robust multivariate t fit for one niche (marker profiles in rows)
+## This follows the original SANDLE code (fit_robust_mvt in mainFunctions.R)
+## step by step. The only change is the final regularisation: the original
+## adds a 1e-16 "nugget" to the covariance; we add a small ridge scaled to the
+## average variance (see below).
 .fit_robust_mvt <- function(x, lambda = 0.01, ridge = 1e-3) {
-  mcd <- try(covMcd(x), silent = TRUE)
-  if (inherits(mcd, "try-error") || anyNA(mcd$center) || anyNA(mcd$cov)) {
+  ## robust location and scale with the minimum covariance determinant
+  mcd <- suppressWarnings(try(covMcd(x), silent = TRUE))
+  mcd_failed <- inherits(mcd, "try-error")
+  if (mcd_failed || anyNA(mcd$center) || anyNA(mcd$cov)) {
     loc <- colMeans(x); S <- cov(x)
   } else {
     loc <- mcd$center;  S <- mcd$cov
@@ -66,17 +72,25 @@ split_by_replicate <- function(object, rep_col = "Replicate") {
   ## fix any zero/negative variances
   bad <- which(diag(S) <= 0)
   for (j in bad) S[j, j] <- var(x[, j])
-  ## Profiles sum to 1 in each replicate, so every niche covariance matrix
-  ## is singular. A small ridge, scaled to the average variance, makes it
-  ## invertible and keeps the niche probabilities stable between replicates,
-  ## while still using all fractions.
-  S <- S + ridge * mean(diag(S)) * diag(ncol(x))
-  ## fall back to graphical-lasso covariance if S is not positive definite
+  
+  ## graphical lasso estimate, used if the robust estimate is not valid
+  xc <- scale(x, center = TRUE, scale = FALSE)
+  gl <- glasso(cov(xc), rho = lambda, penalize.diagonal = FALSE)
   ev <- eigen(S, only.values = TRUE)$values
-  if (any(is.na(ev)) || any(ev < 0)) {
-    S <- glasso(cov(scale(x, scale = FALSE)), rho = lambda,
-                penalize.diagonal = FALSE)$w
+  if (any(is.na(ev)) || any(ev < 0)) S <- gl$w
+  if (any(eigen(gl$w, only.values = TRUE)$values < 0)) {
+    S <- glasso(cov(xc), rho = lambda)$w
+  } else if (any(eigen(S, only.values = TRUE)$values < 0) || mcd_failed) {
+    S <- glasso(S, rho = lambda, penalize.diagonal = FALSE)$w
   }
+  
+  ## Profiles sum to 1 in each replicate, so a niche covariance matrix can be
+  ## (close to) singular. The original code adds a 1e-16 nugget; we add a
+  ## small ridge, scaled to the average variance, which keeps the niche
+  ## probabilities more stable between replicates. Set ridge = 0 to use the
+  ## original nugget.
+  S <- S + if (ridge > 0) ridge * mean(diag(S)) * diag(ncol(x)) else 1e-16 * diag(ncol(x))
+  
   ## estimate degrees of freedom by maximum likelihood
   nll <- function(df) -sum(dmvt(x, delta = loc, sigma = S, df = df, log = TRUE))
   df  <- suppressWarnings(optim(par = ncol(x) + 2, fn = nll, method = "CG")$par)

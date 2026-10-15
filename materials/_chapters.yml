@@ -1,19 +1,19 @@
 book:
   chapters:
-    - part: "Data processing"
+    - part: "Part I: Data processing"
       chapters:
         - materials/P1_01_intro.Rmd
         - materials/P1_02_import_and_infrastructure.Rmd
         - materials/P1_03_qc_data_processing.Rmd
         - materials/P1_04_missing_values.Rmd
         - materials/P1_05_normalisation_aggregation.Rmd
-    - part: "Static localisation"
+    - part: "Part II: Subcellular mapping"
       chapters: 
         - materials/P2_01_resolution_clustering.Rmd
         - materials/P2_02_marker_annotation.Rmd
         - materials/P2_03_ml_classification.Rmd
         - materials/P2_04_features_of_interest.Rmd
-    - part: "Differential localisation"
+    - part: "Part III: Differential localisation"
       chapters: 
         - materials/P3_01_sandle.Rmd
     - part: "Glossary"
