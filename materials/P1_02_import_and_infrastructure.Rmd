@@ -22,12 +22,29 @@ library("here")
 ```
 
 
-The first part of this workflow will demonstrate how to import quantitative MS
-data into R using the `QFeatures` infrastructure. We will then discuss the key 
-data cleaning and quality control steps required to ensure that only high quality 
-data is retained. Finally, the quantitative data will be transformed into 
-correlation profiles which hold the spatial information required for
-protein localisation prediction, as covered in part 2 of the workflow.
+In this course material we provide a start-to-finish workflow for the analysis
+of subcellular spatial proteomics data derived from an MS-based correlation
+profiling experiment. Depending on the experimental goal (e.g., generation of
+subcellular spatial maps versus discovery of differentially localised proteins)
+and level of data available (e.g., precursor, PSM, peptide or protein), users
+may only need to follow part of the workflow. For simplicity, we have divided
+the workflow into three parts:
+
+1. Data processing and generation of protein correlation profiles using `QFeatures`
+2. Protein localisation prediction for static maps using `pRoloc`
+3. Differential localisation prediction for dynamic experiments using `bandle`
+
+```{r workflow-picture, out.width = '90%', echo = FALSE, fig.cap = 'A schematic summary of the presented workflow. The input and output of each part of the workflow are outlined and visualised. Users may only need to complete a portion of this workflow depending upon their initial data input and experimental question(s).'}
+knitr::include_graphics("figs/workflow_outline.png", error = FALSE)
+```
+
+
+We begin with demonstrating how to import quantitative MS data into R using the
+`QFeatures` infrastructure. We will then discuss the key data cleaning and
+quality control steps required to ensure that only high quality data is
+retained. Finally, the quantitative data will be transformed into correlation
+profiles which hold the spatial information required for protein localisation
+prediction, as covered in part II of the workflow.
 
 ## The data structure
 

@@ -564,6 +564,35 @@ known_movers <- c("P17809",  # GLUT1 (Slc2a1)
 plot_dl_results(results, prob_cut = 0.9, fdr_cut = 0.1, highlight = known_movers)
 ```
 
+::: {.callout-note}
+#### Recap: what each measure tells us
+
+| Measure | Column | Question it answers | Comes from |
+|---|---|---|---|
+| **DL probability** | `dl_prob` | How confident are we that the protein changes compartment? | Marker-based test |
+| **FDR** | `fdr` | Is the change in profile bigger than replicate-to-replicate noise? | Marker-free test |
+| **Effect size** | `RSS_diff` | How large is the change in profile? | Marker-free test |
+| **Localisation** | `loc_basal`, `loc_insulin` | Where is the protein in each condition? | Published classification (Step 1) |
+
+* A high **DL probability** means the protein's niche probabilities differ
+  between conditions, so it has probably changed compartment. It says nothing
+  about how large the change in profile is.
+* A low **FDR** means the profile change is consistent across replicates and
+  unlikely to be noise. A very small but reproducible change can still have a
+  low FDR.
+* A large **effect size** means a large share of the protein has shifted to
+  different fractions. On its own it says nothing about noise, so a large but
+  inconsistent change can have a large effect size and a high FDR. We use it
+  to rank candidates and to prioritise them for follow-up.
+* The **localisations** tell us where a protein moves from and to. They do
+  not tell us whether it moves: that is what the DL probability and FDR are
+  for.
+
+A convincing mover typically has a high DL probability, a low FDR and a
+reasonably large effect size. In a differential expression analysis, the FDR
+and effect size play the same roles as the adjusted p-value and fold change.
+:::
+
 How many candidates do we get with each criterion?
 
 ```{r}
