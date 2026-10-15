@@ -88,7 +88,7 @@ split_by_replicate <- function(object, rep_col = "Replicate") {
   names(fits) <- classes
   weights <- as.numeric(table(mk[mk != "unknown"])[classes])
   weights <- weights / sum(weights)
-
+  
   ## posterior niche probabilities (log-sum-exp for numerical stability)
   loglik <- sapply(seq_along(fits), function(k)
     dmvt(X, delta = fits[[k]]$location, sigma = fits[[k]]$covariance,
@@ -103,31 +103,38 @@ split_by_replicate <- function(object, rep_col = "Replicate") {
 #'
 #' @param control,treated lists of MSnSets (one per replicate)
 #' @param fcol            feature-data column holding the markers
-#' @return data.frame: protein, dl_prob, is_marker, niche_control, niche_treated
+#' @return data.frame: protein, dl_prob, is_marker, niche_control, niche_treated,
+#'         prob_control, prob_treated
 #'         (plus the per-replicate fits as attribute "fits", for QC plots)
 sandle_markers <- function(control, treated, fcol = "markers") {
   objects <- c(control, treated)
   cond    <- rep(1:2, c(length(control), length(treated)))
-
+  
   res  <- lapply(objects, .sandle_one, fcol = fcol)
   prot <- .common_proteins(objects)
-
+  
   ## average niche probabilities over the replicates of each condition
   pbar <- lapply(1:2, function(c)
     Reduce(`+`, lapply(res[cond == c], function(r) r$probs[prot, ])) / sum(cond == c))
-
+  
   ## P(niche differs) = 1 - sum_k P(niche k | ctrl) * P(niche k | trt)
   ## (exact value of the Monte-Carlo estimate in the original SANDLE code)
   dl <- 1 - rowSums(pbar[[1]] * pbar[[2]])
-
+  
   markers <- unique(unlist(lapply(objects, function(o)
     featureNames(o)[fData(o)[, fcol] != "unknown"])))
-
+  
+  ## Note: the mixture only contains the marker niches, so the most probable
+  ## niche is always one of them. prob_control / prob_treated give the
+  ## (replicate-averaged) probability of that niche, which can be thresholded
+  ## to label uncertain assignments as "unknown".
   out <- data.frame(protein       = prot,
                     dl_prob       = unname(dl),
                     is_marker     = prot %in% markers,
-                    niche_control = colnames(pbar[[1]])[max.col(pbar[[1]])],
-                    niche_treated = colnames(pbar[[2]])[max.col(pbar[[2]])])
+                    niche_control = colnames(pbar[[1]])[max.col(pbar[[1]], ties.method = "first")],
+                    niche_treated = colnames(pbar[[2]])[max.col(pbar[[2]], ties.method = "first")],
+                    prob_control  = unname(apply(pbar[[1]], 1, max)),
+                    prob_treated  = unname(apply(pbar[[2]], 1, max)))
   out$dl_prob[out$is_marker] <- 0   # markers are assumed not to move
   attr(out, "fits") <- lapply(res, `[[`, "fits")
   out
@@ -149,13 +156,13 @@ sandle_markers <- function(control, treated, fcol = "markers") {
 sandle_marker_free <- function(control, treated) {
   stopifnot(length(control) == length(treated))
   prot <- .common_proteins(c(control, treated))
-
+  
   ## array of differences: proteins x fractions x pairs
   D <- simplify2array(lapply(seq_along(control), function(i)
     exprs(control[[i]])[prot, ] - exprs(treated[[i]])[prot, ]))
   n <- dim(D)[3]          # number of pairs
   d <- dim(D)[2]          # number of fractions
-
+  
   ## vectorised version of anova(lm(diff ~ fraction), lm(diff ~ 0)) per protein
   RSS0  <- apply(D^2, 1, sum)                             # diff ~ 0
   M     <- apply(D, c(1, 2), mean)                        # fraction means
@@ -163,7 +170,7 @@ sandle_marker_free <- function(control, treated) {
   df1   <- d; df2 <- n * d - d
   Fstat <- ((RSS0 - RSS1) / df1) / (RSS1 / df2)
   p     <- pf(Fstat, df1, df2, lower.tail = FALSE)
-
+  
   data.frame(protein       = prot,
              p_value       = p,
              fdr           = p.adjust(p, method = "BH"),
