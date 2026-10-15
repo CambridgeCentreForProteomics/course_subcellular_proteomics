@@ -56,7 +56,7 @@ split_by_replicate <- function(object, rep_col = "Replicate") {
 ## -----------------------------------------------------------------------------
 
 ## robust multivariate t fit for one niche (marker profiles in rows)
-.fit_robust_mvt <- function(x, lambda = 0.01) {
+.fit_robust_mvt <- function(x, lambda = 0.01, ridge = 1e-3) {
   mcd <- try(covMcd(x), silent = TRUE)
   if (inherits(mcd, "try-error") || anyNA(mcd$center) || anyNA(mcd$cov)) {
     loc <- colMeans(x); S <- cov(x)
@@ -66,13 +66,17 @@ split_by_replicate <- function(object, rep_col = "Replicate") {
   ## fix any zero/negative variances
   bad <- which(diag(S) <= 0)
   for (j in bad) S[j, j] <- var(x[, j])
+  ## Profiles sum to 1 in each replicate, so every niche covariance matrix
+  ## is singular. A small ridge, scaled to the average variance, makes it
+  ## invertible and keeps the niche probabilities stable between replicates,
+  ## while still using all fractions.
+  S <- S + ridge * mean(diag(S)) * diag(ncol(x))
   ## fall back to graphical-lasso covariance if S is not positive definite
   ev <- eigen(S, only.values = TRUE)$values
   if (any(is.na(ev)) || any(ev < 0)) {
     S <- glasso(cov(scale(x, scale = FALSE)), rho = lambda,
                 penalize.diagonal = FALSE)$w
   }
-  S <- S + 1e-16 * diag(ncol(x))
   ## estimate degrees of freedom by maximum likelihood
   nll <- function(df) -sum(dmvt(x, delta = loc, sigma = S, df = df, log = TRUE))
   df  <- suppressWarnings(optim(par = ncol(x) + 2, fn = nll, method = "CG")$par)
@@ -80,11 +84,12 @@ split_by_replicate <- function(object, rep_col = "Replicate") {
 }
 
 ## fit all niches in one replicate and return protein x niche probabilities
-.sandle_one <- function(object, fcol) {
+.sandle_one <- function(object, fcol, ridge) {
   X       <- exprs(object)
   classes <- .marker_classes(object, fcol)
   mk      <- as.character(fData(object)[, fcol])
-  fits    <- lapply(classes, function(k) .fit_robust_mvt(X[mk == k, , drop = FALSE]))
+  fits    <- lapply(classes, function(k)
+    .fit_robust_mvt(X[mk == k, , drop = FALSE], ridge = ridge))
   names(fits) <- classes
   weights <- as.numeric(table(mk[mk != "unknown"])[classes])
   weights <- weights / sum(weights)
@@ -103,14 +108,16 @@ split_by_replicate <- function(object, rep_col = "Replicate") {
 #'
 #' @param control,treated lists of MSnSets (one per replicate)
 #' @param fcol            feature-data column holding the markers
+#' @param ridge           covariance regularisation, as a fraction of the mean
+#'                        variance of each niche (default 1e-3)
 #' @return data.frame: protein, dl_prob, is_marker, niche_control, niche_treated,
 #'         prob_control, prob_treated
 #'         (plus the per-replicate fits as attribute "fits", for QC plots)
-sandle_markers <- function(control, treated, fcol = "markers") {
+sandle_markers <- function(control, treated, fcol = "markers", ridge = 1e-3) {
   objects <- c(control, treated)
   cond    <- rep(1:2, c(length(control), length(treated)))
   
-  res  <- lapply(objects, .sandle_one, fcol = fcol)
+  res  <- lapply(objects, .sandle_one, fcol = fcol, ridge = ridge)
   prot <- .common_proteins(objects)
   
   ## average niche probabilities over the replicates of each condition

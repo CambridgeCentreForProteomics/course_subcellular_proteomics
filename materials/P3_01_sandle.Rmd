@@ -13,13 +13,16 @@ editor_options:
   studied with dynamic (multi-condition) correlation profiling experiments
 * Know the difference between the **BANDLE** and **SANDLE** approaches to
   differential localisation, and when you might choose each
+* Separate the two questions of a dynamic experiment: **where** each protein
+  is in each condition, and **whether** it moves
+* Use published localisations from the original study to describe where
+  proteins are in each condition
 * Run the **marker-based** and **marker-free** SANDLE tests on a replicated
-  two-condition LOPIT experiment
-* Combine and threshold the results to produce a ranked list of candidate
-  differentially localised proteins
-* Describe where candidates move, including movements to and from proteins
-  with no confident niche assignment (`"unknown"`)
-* Visualise candidate movers using protein profiles, PCA spatial maps and
+  two-condition LOPIT experiment, and combine and threshold the results to
+  produce a ranked list of candidate differentially localised proteins
+* Combine the SANDLE results with the localisations to describe where
+  candidates move, including to and from `"unknown"`
+* Visualise candidate movers using protein profiles, spatial maps and
   alluvial plots, and critically assess the evidence for movement
 :::
 
@@ -143,6 +146,26 @@ both tests to pass gives a short, conservative list with few false positives
 gives a longer list for exploration. The right choice depends on your biological
 question and on what you plan to do with the candidates next.
 
+### Our approach: localisation and movement as two separate steps
+
+A dynamic experiment asks two different questions about each protein:
+
+1. **Where is it?** In which compartment does the protein reside in each
+   condition?
+2. **Does it move?** Is there evidence that its localisation differs between
+   the conditions?
+
+We answer these separately. For the first, we use the localisations
+published in the original study of this dataset [@Conway2026], which are
+provided with the data. For the second, we use the two SANDLE tests. We then
+combine the two: for each protein that SANDLE flags as a candidate mover, we
+look up where it is localised in each condition.
+
+You could equally produce the localisations yourself with a classifier, such
+as the SVM we used in Part 2, applied to each condition in turn. Using the
+published localisations lets us focus this lesson on differential
+localisation, and lets us compare our results with the original study.
+
 
 ## SANDLE setup
 
@@ -211,9 +234,11 @@ getEcols(f = "data/adipocytes2025_basal.csv", split = ",")
 ```
 
 The first column, `Accession`, holds the UniProt accessions. Columns 2 to 31
-hold the quantitation: 10 TMT channels (the fractions) for each of the three
-replicates, named by tag, condition and replicate. All the remaining columns
-are information about each protein, including the `markers` column.
+hold the quantitation: 10 fractions for each of the three replicates, named by
+fraction, condition and replicate (for example `F1_Basal_rep1`). The
+remaining columns are information about each protein, including the gene
+name, the `markers` column and the localisation of each protein in the
+original study, which we will use later.
 
 ### Read the data into an `MSnSet`
 
@@ -224,22 +249,17 @@ are information about each protein, including the `markers` column.
 * `fnames`: which column holds the protein names. Here this is `"Accession"`.
   These become the row names (`featureNames()`) of the `MSnSet`.
 
-All other columns go into the feature data. Any further arguments are passed
-on to `read.csv()`. We set `check.names = FALSE` so that R keeps the column
-names exactly as they are in the file. Without it, R would add an "X" to the
-start of names that begin with a number, such as `26_Basal_rep1`.
+All other columns go into the feature data.
 
 
 ```{r}
 basal   <- readMSnSet2("data/adipocytes2025_basal.csv",
                        ecol = 2:31,
-                       fnames = "Accession",
-                       check.names = FALSE)
+                       fnames = "Accession")
 
 insulin <- readMSnSet2("data/adipocytes2025_insulin.csv",
                        ecol = 2:31,
-                       fnames = "Accession",
-                       check.names = FALSE)
+                       fnames = "Accession")
 ```
 
 Let's check that everything went where we expected:
@@ -354,7 +374,57 @@ condition were much less well resolved, we would expect more apparent
 :::
 :::
 
-## Marker-based SANDLE
+## Step 1: Where are the proteins? Published localisations
+
+The localisation of each protein in each condition, as published in the
+original study [@Conway2026], is already in the feature data of our
+`MSnSet`s, in a column called `final.localisation`. These
+localisations were predicted with BANDLE and then thresholded on the
+allocation and outlier probabilities, so that only confident assignments were
+kept. All other proteins are labelled `"unknown"`, in the same way as after
+thresholding the SVM predictions in Part 2.
+
+```{r}
+table(fData(basal)$final.localisation)
+table(fData(insulin)$final.localisation)
+```
+
+Let's look at the spatial maps of both conditions side by side. As in Part 2,
+we use the combined data from all three replicates, so we plot the full
+`basal` and `insulin` objects rather than the per-replicate lists.
+
+```{r}
+#| fig-width: 12
+#| fig-height: 6
+par(mfrow = c(1, 2))
+plot2D(basal, fcol = "final.localisation", main = "Basal")
+plot2D(insulin, fcol = "final.localisation", main = "Insulin")
+addLegend(basal, fcol = "final.localisation", where = "bottomleft", cex = 0.6)
+```
+
+A large proportion of proteins are `"unknown"`. This is expected: many
+proteins reside in more than one location, or in compartments not
+represented by the markers.
+
+::: {.callout-note}
+#### Why not take the localisations from SANDLE?
+The marker-based SANDLE test also calculates the probability that each
+protein belongs to each niche, and `sandle_markers()` reports the most
+probable niche in each condition. However, these probabilities are a step
+towards the DL probability, not a classification. There is no outlier or
+`"unknown"` class, so every protein is assigned to one of the marker niches
+however poorly it fits, and the model is not tuned or thresholded in the way
+a classifier is. We therefore take localisations from a dedicated
+classification, and use SANDLE for differential localisation.
+:::
+
+## Step 2: Which proteins move? Differential localisation with SANDLE
+
+We now run the two SANDLE tests on the per-replicate data. Neither test uses
+the localisations: they give each protein a score for whether it moves,
+which we will combine with the localisations in Step 3.
+
+### Marker-based SANDLE
 
 The marker-based test is a single function call. `sandle_markers()` fits a
 robust *t*-distribution to every niche in every replicate, computes the niche
@@ -370,17 +440,14 @@ marker_res <- sandle_markers(control, treated, fcol = "markers")
 head(marker_res)
 ```
 
-The output is a `data.frame` with one row per protein:
+The output is a `data.frame` with one row per protein. The columns we use are:
 
 * `dl_prob`: the differential localisation probability
 * `is_marker`: whether the protein is a marker. Markers are given a DL
   probability of 0 because they are assumed not to move
-* `niche_control` and `niche_treated`: the most probable niche in each
-  condition, averaged over replicates. These tell us *where from* and *where
-  to*
-* `prob_control` and `prob_treated`: the probability of that most probable
-  niche. We will use these later to decide whether a niche assignment is
-  confident
+
+The remaining columns give the most probable niche in each condition and its
+probability. As explained above, we do not use these as localisations.
 
 As a quality control step, we look at the fitted profile (mean ± 1 standard
 deviation) of each niche in one replicate. Each organelle should have a
@@ -412,7 +479,7 @@ conditions gets a non-zero DL probability even if it does not move, because
 two uncertain niche draws can differ by chance.
 :::
 
-## Marker-free SANDLE
+### Marker-free SANDLE
 
 The marker-free test is also a single call. It needs no markers and no model
 fitting, so it takes well under a second.
@@ -431,12 +498,16 @@ For each protein we get:
 * `RSS_diff`: the difference in residual sum of squares between the two
   models, an **effect size** describing how much the profile changes
 
-## Combining the two tests
+### Combining the two tests
 
-We now join the two result tables by protein.
+We now join the two result tables by protein, and add the localisation of
+each protein in each condition from Step 1.
 
 ```{r}
-results <- combine_results(marker_res, free_res)
+results <- combine_results(marker_res, free_res) %>%
+  mutate(loc_basal   = fData(basal)[protein, "final.localisation"],
+         loc_insulin = fData(insulin)[protein, "final.localisation"])
+
 head(results)
 ```
 
@@ -478,7 +549,8 @@ change in profile only counts if it changes which niches the protein is
 likely to belong to. How you combine them is up to you. Here we take the
 conservative option and require both, which gives a short list to start
 exploring. For comparison, @Crook2026 required a DL probability of at least
-0.8 and an FDR below 0.05 for this dataset. Challenge 2 looks at what happens with other choices.
+0.8 and an FDR below 0.05 for this dataset. Challenge 2 looks at what happens
+with other choices.
 
 Our candidate list, ordered by effect size:
 
@@ -486,7 +558,7 @@ Our candidate list, ordered by effect size:
 hits <- results %>%
   filter(dl_prob > 0.9, fdr < 0.1) %>%
   arrange(desc(RSS_diff)) %>%
-  dplyr::select(protein, dl_prob, fdr, niche_control, niche_treated)
+  dplyr::select(protein, dl_prob, fdr, loc_basal, loc_insulin)
 
 head(hits, 10)
 ```
@@ -496,7 +568,7 @@ And how do the previously reported movers score?
 ```{r}
 results %>%
   filter(protein %in% known_movers) %>%
-  dplyr::select(protein, dl_prob, fdr, niche_control, niche_treated)
+  dplyr::select(protein, dl_prob, fdr, loc_basal, loc_insulin)
 ```
 
 :::{.callout-exercise}
@@ -529,84 +601,29 @@ list for exploration and enrichment analysis.
 :::
 :::
 
-## Where do the proteins move?
+## Step 3: Where do the movers go?
 
-Because the marker-based test tells us the most probable niche in each
-condition, we can summarise the movements of our candidates as a table of
-*from* and *to* niches, similar to the `plotTable()` output of BANDLE.
+We now bring the two steps together. For each candidate mover we look up its
+localisation in each condition, and summarise the movements as a table of
+*from* and *to* compartments, similar to the `plotTable()` output of BANDLE.
 
 ```{r}
 hits %>%
-  dplyr::count(niche_control, niche_treated, sort = TRUE)
+  dplyr::count(loc_basal, loc_insulin, sort = TRUE)
 ```
 
-### Allowing for "unknown"
-
-Notice that every protein in this table moves from one organelle to another.
-There are no movements to or from `"unknown"`. This is not because no such
-proteins exist, but because of how the niches are assigned. The marker-based
-model is a mixture of the marker niches only: the niche probabilities of
-every protein add up to 1 across the organelles, so the most probable niche is
-*always* an organelle, even for a protein that sits between clusters and fits
-none of them well. This is the same situation we met with the SVM in the
-static lessons, where every protein was first assigned to a compartment and we
-then applied a threshold to decide which assignments to trust.
-
-We can do the same here. Note that this is not part of the SANDLE method
-itself, which assigns each protein to its most probable niche
-[@Crook2026]. It is an extra step we add to help describe the results.
-`sandle_markers()` also returned the probability of
-the most probable niche in each condition (`prob_control` and
-`prob_treated`). Let's look at how these are distributed before choosing a
-cutoff.
-
-```{r}
-#| fig-width: 8
-#| fig-height: 3.5
-results %>%
-  dplyr::select(protein, prob_control, prob_treated) %>%
-  tidyr::pivot_longer(-protein, names_to = "condition", values_to = "prob") %>%
-  ggplot(aes(x = prob)) +
-  geom_histogram(bins = 50, fill = "steelblue", colour = "white") +
-  facet_wrap(~ condition) +
-  labs(x = "Probability of the most probable niche",
-       y = "Number of proteins") +
-  theme_bw()
-```
-
-Most proteins are assigned confidently, but a tail of proteins have no niche
-with a high probability. We label a niche assignment as `"unknown"` when its
-probability is below a cutoff. As with every threshold in this lesson, the
-cutoff is a choice. Here we use 0.8.
-
-```{r}
-niche_cut <- 0.8
-
-results <- results %>%
-  mutate(loc_control = ifelse(prob_control >= niche_cut, niche_control, "unknown"),
-         loc_treated = ifelse(prob_treated >= niche_cut, niche_treated, "unknown"))
-```
-
-This does not change the DL probability or the FDR of any protein, only how we
-describe where a protein moves from and to.
-
-:::{.callout-note}
-#### Can a protein move to "unknown" and still have a high DL probability?
-Yes. Consider a protein confidently assigned to the plasma membrane in the
-basal condition, whose probability is split between the Golgi, endosomes and
-lysosomes after insulin. Because almost none of its insulin probability is on
-the plasma membrane, the DL probability is close to 1: the protein has very
-probably left the plasma membrane. But no single destination is probable
-enough to name, so it is best described as moving from the plasma membrane to
-`"unknown"`. Without a cutoff, it would simply be reported as moving to
-whichever niche happened to have the highest probability.
-:::
+You will probably find that many candidates are `"unknown"` in one or both
+conditions. This is not a problem with the analysis. A protein that moves is,
+almost by definition, often a protein that does not sit neatly within one
+compartment: it may be distributed between several, be in transit, or be in a
+compartment that is not represented by the markers. @Conway2026 found the same
+in this dataset, where most high-confidence movers were "undefined" in at
+least one condition.
 
 ### Types of movement
 
-Proteins can change their profile in several ways, and the two tests respond
-to them differently. To see this, we take all proteins that pass *either*
-test and classify each by what happens to its niche assignment.
+To see this more clearly, we take all proteins that pass *either* test and
+classify each by what happens to its localisation.
 
 ```{r}
 candidates <- results %>%
@@ -616,122 +633,105 @@ candidates <- results %>%
                      dl_prob > 0.9             ~ "marker-based only",
                      TRUE                      ~ "marker-free only"),
     move = case_when(
-      loc_control == "unknown" & loc_treated == "unknown" ~ "unknown -> unknown",
-      loc_control == "unknown"                            ~ "unknown -> niche",
-      loc_treated == "unknown"                            ~ "niche -> unknown",
-      loc_control == loc_treated                          ~ "same niche",
-      TRUE                                                ~ "niche -> niche"))
+      loc_basal == "unknown" & loc_insulin == "unknown" ~ "unknown -> unknown",
+      loc_basal == "unknown"                            ~ "unknown -> compartment",
+      loc_insulin == "unknown"                          ~ "compartment -> unknown",
+      loc_basal == loc_insulin                          ~ "same compartment",
+      TRUE                                              ~ "compartment -> compartment"))
 
 table(candidates$move, candidates$test)
 ```
 
 Each type of movement tells us something different:
 
-* **niche → niche**: the protein is confidently assigned to one organelle in
-  each condition, and they differ. These are the clearest candidates.
-* **niche → unknown** and **unknown → niche**: the protein leaves, or arrives
-  at, a confidently assigned organelle, but its other location is uncertain.
-  It may move to a compartment that is not represented in the markers, become
-  distributed across several compartments, or sit between clusters.
+* **compartment → compartment**: the protein is confidently classified to one
+  compartment in each condition, and they differ. These are the clearest
+  candidates.
+* **compartment → unknown** and **unknown → compartment**: the protein
+  leaves, or arrives at, a confidently classified compartment, but its other
+  location is uncertain. It may move to a compartment that is not represented
+  in the markers, become distributed across several compartments, or sit
+  between clusters.
 * **unknown → unknown**: the profile changes, but the protein cannot be
-  confidently assigned in either condition. These are proteins that sit
-  between organelles or in more than one location.
-* **same niche**: the profile changes significantly, but the protein is
-  assigned to the same organelle in both conditions. These are mostly found by
-  the marker-free test alone. They may reflect partial relocation, where only
-  a fraction of the protein moves, a shift within a compartment, or a change
-  that the markers cannot resolve. @Crook2026 interpret proteins with strong
-  marker-free support but a low DL probability in the same way, as "more
-  complex or heterogeneous spatial reorganisation rather than simple
-  compartmental shifts".
+  confidently classified in either condition. These are often proteins that
+  sit between compartments or in more than one location.
+* **same compartment**: the profile changes, but the protein is classified to
+  the same compartment in both conditions. These may reflect partial
+  relocation, where only a fraction of the protein moves, a shift within a
+  compartment, or a change that the markers cannot resolve. @Crook2026
+  interpret proteins with strong marker-free support but a low DL probability
+  in the same way, as "more complex or heterogeneous spatial reorganisation
+  rather than simple compartmental shifts".
 
-Note that the marker-based test can flag movements of any of these types,
-since the DL probability reflects any change in niche probabilities, not only
-a change of the most probable niche. Our conservative list contained no
-`"unknown"` simply because, until now, every protein was given its most
-probable niche, however uncertain. The other types are often the
-most biologically interesting, for example a protein recruited from the
-cytosol to a membrane, but they need careful checking of the profiles.
-
-We can now redo the *from*/*to* table for all candidates, with `"unknown"`
-included.
+We can now make the *from*/*to* table for all candidates.
 
 ```{r}
 candidates %>%
-  dplyr::count(loc_control, loc_treated, sort = TRUE)
+  dplyr::count(loc_basal, loc_insulin, sort = TRUE)
 ```
 
 :::{.callout-exercise}
 #### Challenge 3: Proteins leaving the plasma membrane
 {{< level 2 >}}
 
-Using `results`, find all proteins that pass both thresholds and are
-assigned to the plasma membrane in the basal condition. Where are they
-assigned after insulin stimulation? Look back at the PCA plots and the
-marker profiles: how well separated are the plasma membrane and the niches
-they move to?
+Using `candidates`, find all proteins that are classified to the plasma
+membrane in the basal condition. Where are they classified after insulin
+stimulation? Which of the two SANDLE tests supports each of them?
 
 ::: {.callout-answer collapse=true}
 
 ```{r}
-pm_leavers <- results %>%
-  filter(dl_prob > 0.9, fdr < 0.1,
-         niche_control == "Plasma membrane") %>%
-  dplyr::select(protein, dl_prob, fdr, niche_control, niche_treated)
+pm_leavers <- candidates %>%
+  filter(loc_basal == "Plasma membrane") %>%
+  dplyr::select(protein, dl_prob, fdr, test, loc_basal, loc_insulin)
 
 pm_leavers
 
-pm_leavers %>% count(niche_treated)
+pm_leavers %>% dplyr::count(loc_insulin, test)
 ```
 
-Most of these candidates move from the plasma membrane niche to the Golgi
-niche. In this dataset the plasma membrane and Golgi markers are close
-together on the PCA plots and have similar profiles, so niche assignments
-between them are less certain than between more distinct niches (you can
-confirm this with `QSep()`, where the Golgi is the plasma membrane's closest
-neighbour). This is a good example of why the niche labels should be
-interpreted together with the data and the literature: the change in profile is
-real (the marker-free test is significant), but "Golgi" may best be read as
-"an intracellular membrane compartment near the Golgi". A niche label can only
-be as specific as the markers that define it.
+Proteins classified to the plasma membrane in both conditions are not
+necessarily false positives. Their profile has changed, but not by enough to
+move them out of the plasma membrane cluster, which could reflect a partial
+change, for example a fraction of the protein being internalised. Proteins
+that become `"unknown"` after insulin have moved away from the plasma
+membrane cluster without being confidently classified elsewhere. Look at
+their profiles with `plot_protein_profiles()` (below) before drawing
+conclusions.
 
 :::
 :::
 
 :::{.callout-exercise}
-#### Challenge 4: How much does the niche cutoff matter?
-{{< level 1 >}}
+#### Challenge 4: Do the markers move?
+{{< level 2 >}}
 
-Repeat the classification of movement types with a looser (`niche_cut <- 0.5`)
-and a stricter (`niche_cut <- 0.95`) cutoff. How does the number of movements
-involving `"unknown"` change? Does the cutoff change which proteins are
-candidates?
+The markers are assumed not to move, which is why the marker-based test gives
+them a DL probability of 0. The marker-free test, however, does not use the
+markers, so it tests them like any other protein. What proportion of the
+markers of each compartment have an FDR below 0.1? What does this tell you
+about why it is useful to require both tests?
 
 ::: {.callout-answer collapse=true}
 
 ```{r}
-move_types <- function(res, cut) {
-  res %>%
-    filter(dl_prob > 0.9 | fdr < 0.1) %>%
-    mutate(loc_control = ifelse(prob_control >= cut, niche_control, "unknown"),
-           loc_treated = ifelse(prob_treated >= cut, niche_treated, "unknown"),
-           move = case_when(
-             loc_control == "unknown" & loc_treated == "unknown" ~ "unknown -> unknown",
-             loc_control == "unknown"                            ~ "unknown -> niche",
-             loc_treated == "unknown"                            ~ "niche -> unknown",
-             loc_control == loc_treated                          ~ "same niche",
-             TRUE                                                ~ "niche -> niche")) %>%
-    dplyr::count(move)
-}
-
-move_types(results, 0.5)
-move_types(results, 0.95)
+results %>%
+  mutate(markers = fData(basal)[protein, "markers"]) %>%
+  filter(markers != "unknown") %>%
+  group_by(markers) %>%
+  summarise(n = n(), prop_fdr_below_0.1 = round(mean(fdr < 0.1), 2))
 ```
 
-A stricter cutoff labels more assignments as `"unknown"`, so more movements
-involve `"unknown"` and fewer are niche → niche. The cutoff does not change
-which proteins are candidates, because the candidates are chosen on the DL
-probability and FDR only. It only changes how we describe their movement.
+A substantial proportion of the markers of some compartments are flagged by
+the marker-free test. Since markers should, by definition, stay where they
+are, this suggests that the profile of a whole compartment can shift slightly
+between the two conditions, for example because of small differences in
+fractionation between the basal and insulin experiments. The marker-free test
+detects these consistent shifts, even though they do not reflect proteins
+changing location. The marker-based test is protected against this, because
+it models each compartment separately in each condition and asks whether a
+protein changes compartment. This is one reason why @Crook2026 recommend
+requiring both tests: each removes a different type of false positive.
 
 :::
 :::
@@ -769,34 +769,33 @@ Compare where each of these sits on the DL probability versus FDR plot above.
 A protein can give a clear signal in one test and be borderline in the other,
 which is why it helps to look at both.
 
-We can also look at candidates that involve `"unknown"`. Here we plot the
-strongest movers, by effect size, from each of the types that involve
-`"unknown"`.
+We can also look at the strongest candidates, by effect size, from each type
+of movement.
 
 ```{r}
 #| fig-width: 10
-#| fig-height: 7
-unknown_movers <- candidates %>%
-  filter(grepl("unknown", move)) %>%
+#| fig-height: 9
+top_by_type <- candidates %>%
   group_by(move) %>%
-  slice_max(RSS_diff, n = 3) %>%
+  slice_max(RSS_diff, n = 2) %>%
   ungroup()
 
-unknown_movers %>%
-  dplyr::select(protein, move, loc_control, loc_treated, dl_prob, fdr)
+top_by_type %>%
+  dplyr::select(protein, move, loc_basal, loc_insulin, dl_prob, fdr)
 
-plot_protein_profiles(control, treated, proteins = unknown_movers$protein,
+plot_protein_profiles(control, treated, proteins = top_by_type$protein,
                       labels = c("basal", "insulin"))
 ```
 
 ### Movers on the spatial map
 
-Finally, let's put a few movers back onto the PCA plots: the top four
-candidates from both methods plus GLUT4 and Q8C129. We write one small function
-that draws the PCA plot of a replicate and adds the movers on top. `plot2D()`
-returns the PCA coordinates of every protein, which we use to place the
-points. The `col` and `pch` arguments can be a single value (all movers look
-the same) or one value per mover.
+Next, let's put a few movers back onto the spatial maps. We plot the PCA of
+the combined data for each condition, coloured by localisation, and
+add the movers on top. We use the top four candidates from both methods plus
+GLUT4 and Q8C129. We write one small function for this. `plot2D()` returns
+the PCA coordinates of every protein, which we use to place the points. The
+`col` and `pch` arguments can be a single value (all movers look the same) or
+one value per mover.
 
 ```{r}
 movers <- c(hits$protein[1:4], "P14142", "Q8C129")
@@ -804,7 +803,7 @@ movers <- c(hits$protein[1:4], "P14142", "Q8C129")
 show_movers <- function(object, main, col = "yellow", pch = 21, labels = FALSE) {
   col <- setNames(rep(col, length.out = length(movers)), movers)
   pch <- setNames(rep(pch, length.out = length(movers)), movers)
-  pca <- plot2D(object, fcol = "markers", main = main)  # returns PCA coordinates
+  pca <- plot2D(object, fcol = "final.localisation", main = main)  # returns PCA coordinates
   m <- movers[movers %in% rownames(pca)]
   points(pca[m, 1], pca[m, 2], pch = pch[m], bg = col[m], col = "black",
          cex = 2, lwd = 1.5)
@@ -812,29 +811,28 @@ show_movers <- function(object, main, col = "yellow", pch = 21, labels = FALSE) 
 }
 ```
 
-First, all movers in yellow, labelled with their accession. The basal
-replicates are on the top row and the insulin replicates on the bottom row.
+First, all movers in yellow, labelled with their accession.
 
 ```{r}
-#| fig-width: 10
-#| fig-height: 7
-par(mfrow = c(2, 3), mar = c(4, 4, 2, 1))
-for (i in 1:3) show_movers(control[[i]], paste("Basal, rep", i), labels = TRUE)
-for (i in 1:3) show_movers(treated[[i]], paste("Insulin, rep", i), labels = TRUE)
+#| fig-width: 12
+#| fig-height: 6
+par(mfrow = c(1, 2))
+show_movers(basal, "Basal", labels = TRUE)
+show_movers(insulin, "Insulin", labels = TRUE)
 ```
 
 It is easier to follow individual proteins if each has its own colour and
 symbol.
 
 ```{r}
-#| fig-width: 10
-#| fig-height: 7
+#| fig-width: 12
+#| fig-height: 6
 mover_col <- c("black", "red", "blue", "darkorange", "green3", "magenta")
 mover_pch <- c(21, 22, 23, 24, 25, 21)
 
-par(mfrow = c(2, 3), mar = c(4, 4, 2, 1))
-for (i in 1:3) show_movers(control[[i]], paste("Basal, rep", i), mover_col, mover_pch)
-for (i in 1:3) show_movers(treated[[i]], paste("Insulin, rep", i), mover_col, mover_pch)
+par(mfrow = c(1, 2))
+show_movers(basal, "Basal", mover_col, mover_pch)
+show_movers(insulin, "Insulin", mover_col, mover_pch)
 ```
 
 ```{r}
@@ -846,38 +844,40 @@ legend("center", legend = movers, pch = mover_pch, pt.bg = mover_col,
        col = "black", pt.cex = 1.6, ncol = 3, bty = "n")
 ```
 
-A mover should sit closer to a different organelle cluster after insulin
-stimulation, and it should do so consistently across all three replicates.
-A protein that moves to `"unknown"` will instead often move into the space
-between clusters.
+The PCA of each condition is computed separately, so the two maps may be
+rotated or mirrored relative to each other. A mover should sit in, or closer
+to, a different cluster after insulin stimulation. A protein that moves to
+`"unknown"` will often move into the space between clusters.
 
 :::{.callout-exercise}
 #### Challenge 5: Follow your own proteins
 {{< level 2 >}}
 
-Choose three proteins from Challenge 3, or from the movements involving
-`"unknown"` above. Plot their profiles with `plot_protein_profiles()` and show
-them on the PCA plots using `show_movers()`. Remember that `show_movers()` uses
-the `movers` object, so you will need to redefine it first.
+Choose three proteins from Challenge 3, or from the different types of
+movement above. Plot their profiles with `plot_protein_profiles()` and show
+them on the spatial maps using `show_movers()`. Remember that `show_movers()`
+uses the `movers` object, so you will need to redefine it first.
 
 ::: {.callout-answer collapse=true}
 
 ```{r}
-## Here we take the top protein of each movement type involving "unknown"
-movers <- unknown_movers %>%
+#| fig-width: 12
+#| fig-height: 6
+## Here we take the top protein of three movement types
+movers <- top_by_type %>%
   group_by(move) %>%
   slice_max(RSS_diff, n = 1) %>%
+  ungroup() %>%
+  slice_head(n = 3) %>%
   pull(protein)
 movers
 
 plot_protein_profiles(control, treated, proteins = movers,
                       labels = c("basal", "insulin"))
 
-par(mfrow = c(2, 3), mar = c(4, 4, 2, 1))
-for (i in 1:3) show_movers(control[[i]], paste("Basal, rep", i),
-                           col = c("black", "brown", "yellow"), pch = 21:23)
-for (i in 1:3) show_movers(treated[[i]], paste("Insulin, rep", i),
-                           col = c("black", "brown", "yellow"), pch = 21:23)
+par(mfrow = c(1, 2))
+show_movers(basal, "Basal", col = c("black", "brown", "yellow"), pch = 21:23)
+show_movers(insulin, "Insulin", col = c("black", "brown", "yellow"), pch = 21:23)
 ```
 
 :::
@@ -898,31 +898,22 @@ library("bandle")
 
 The `plotTranslocations` function takes a list of two `MSnSet`s, one per
 condition, and a feature data column giving the localisation of each protein
-in each condition. We subset replicate 1 of each condition to our candidates
-(here all proteins passing either test), and add the niche assignments,
-including `"unknown"`, as a new feature data column called `sandle.pred`.
+in each condition. Our `basal` and `insulin` objects already contain the
+localisations in their `final.localisation` column, so we simply subset them to our
+candidates (here all proteins passing either test).
 
 ```{r}
 ## Extract candidates from both conditions
-msnset_cands <- list(control[[1]][candidates$protein, ],
-                     treated[[1]][candidates$protein, ])
-
-## Add the niche assignments in each condition
-fData(msnset_cands[[1]])$sandle.pred <- candidates$loc_control
-fData(msnset_cands[[2]])$sandle.pred <- candidates$loc_treated
+msnset_cands <- list(basal[candidates$protein, ],
+                     insulin[candidates$protein, ])
 
 ## Check the number of proteins in each object
 lapply(msnset_cands, nrow)
 ```
 
-If we examine this new object `msnset_cands` we see it is a `list` containing
-replicate 1 of the basal data and replicate 1 of the insulin data
-respectively, subsetted for just the `r nrow(candidates)` proteins which are
-differential localisation candidates.
-
 Next, we set a colour scheme for the subcellular classes, with `"unknown"` in
 grey, and pass `msnset_cands` to `plotTranslocations`, specifying the `fcol`
-containing our niche assignments. The default plot generated by
+containing the localisations. The default plot generated by
 `plotTranslocations` is an alluvial plot, which uses code from the
 `ggalluvial` R package.
 
@@ -930,13 +921,13 @@ containing our niche assignments. The default plot generated by
 #| fig-width: 8
 #| fig-height: 8
 ## Set the colours of the plot to match the organelles
-mrkCl <- getMarkerClasses(control[[1]], fcol = "markers")
+mrkCl <- getMarkerClasses(basal, fcol = "markers")
 cols <- c(getStockcol()[seq(mrkCl)], "grey")
 names(cols) <- c(mrkCl, "unknown")
 
 ## Plot the flow of proteins
 alluvial <- plotTranslocations(params = msnset_cands,
-                               fcol = "sandle.pred",
+                               fcol = "final.localisation",
                                col = cols)
 alluvial + ggtitle("Differential localisation: basal to insulin")
 ```
@@ -948,15 +939,15 @@ The same information can be shown as a chord diagram by setting
 #| fig-width: 7
 #| fig-height: 7
 plotTranslocations(params = msnset_cands,
-                   fcol = "sandle.pred",
+                   fcol = "final.localisation",
                    col = cols,
                    type = "chord")
 ```
 
-Proteins that stay in the same niche are included in these plots, as flows
-from a niche to itself. To show only proteins whose niche assignment changes,
-subset `candidates` with `filter(loc_control != loc_treated)` before building
-`msnset_cands`.
+Proteins that stay in the same compartment, including those that are
+`"unknown"` in both conditions, appear as flows from a compartment to itself.
+To focus on proteins whose localisation changes, subset `candidates` with
+`filter(loc_basal != loc_insulin)` before building `msnset_cands`.
 
 
 ## Interpreting the results
@@ -970,26 +961,31 @@ biochemical follow-up), rather than as validation in themselves.
 
 Some things to keep in mind:
 
+* **Localisation and movement are separate questions.** A classification
+  tells us where a protein is in each condition; SANDLE tells us whether it
+  moves. A protein can move without changing its localisation, and a change
+  in localisation near a threshold is not, on its own, evidence of
+  movement.
 * **Markers are assumed not to move.** If a marker protein does relocate, the
-  marker-based test cannot detect it, and it may distort the niche model. The
-  marker-free test does not have this limitation.
-* **Niche assignments are always to a marker niche.** The marker-based model
-  only knows about the niches defined by the markers, so the most probable
-  niche is always one of them. Thresholding the niche probability lets us
-  describe uncertain assignments as `"unknown"`, and reveals movements to and
-  from compartments that are not well represented by the markers.
-* **Results depend on data quality.** Poorly resolved niches lead to uncertain
-  assignments, which in turn inflate DL probabilities. Always check
+  marker-based test cannot detect it, and it may distort both the
+  classification and the niche model. The marker-free test does not have this
+  limitation, but it also flags consistent shifts of whole compartments
+  between conditions, as we saw in Challenge 4.
+* **Many movers are `"unknown"`.** Proteins that move often do not sit neatly
+  within one compartment. Movements to and from `"unknown"` are real results,
+  not failures, but they need careful checking of the profiles.
+* **Results depend on data quality.** Poorly resolved compartments lead to
+  uncertain assignments, which in turn inflate DL probabilities. Always check
   resolution first.
 * **The marker-based test has a random component.** The robust fitting step
   uses random subsampling, particularly for niches with few markers. Set a
   seed for reproducibility, and treat proteins close to a threshold with
   caution.
-* **Thresholds are your choice.** Requiring both a high DL probability and a
-  low FDR gives a short list supported by two kinds of evidence. Using either
-  test, or looser thresholds, gives a longer list for exploration, including
-  movements to and from `"unknown"` and changes within a niche. Choose based
-  on your question and how you will follow up the candidates.
+* **Thresholds are your choice.** This applies to the localisations, the DL
+  probability and the FDR. Requiring both a high DL probability and a low FDR
+  gives a short list supported by two kinds of evidence. Using either test, or
+  looser thresholds, gives a longer list for exploration. Choose based on your
+  question and how you will follow up the candidates.
 
 ::: {.callout-tip}
 #### Key Points
@@ -997,16 +993,18 @@ Some things to keep in mind:
 * A protein is **differentially localised** if it changes subcellular niche
   between conditions, seen as a change in the *shape* of its profile across
   fractions.
+* We answer two separate questions: **where** each protein is in each
+  condition, from a classification such as the published localisations or
+  an SVM, and **whether** it moves, using SANDLE.
 * **SANDLE** detects differential localisation in seconds, with no priors,
   MCMC or HPC, making it a fast and robust alternative to BANDLE.
 * The **marker-based** test models each niche with a robust *t*-distribution
-  and gives a **DL probability**, together with the most likely niche in each
-  condition.
-* The **marker-free** test compares profiles between conditions and gives
-  a **p-value and FDR** without needing any markers.
-* The most likely niche is always one of the marker niches. Thresholding its
-  probability labels uncertain assignments as `"unknown"`, revealing
-  movements to and from `"unknown"` as well as between organelles.
+  and gives a **DL probability**. The **marker-free** test compares profiles
+  between conditions and gives a **p-value and FDR** without needing any
+  markers.
+* Combining the SANDLE scores with the localisations shows where the
+  movers go. Many move to or from `"unknown"`, reflecting proteins that sit
+  between compartments or in more than one location.
 * How to threshold, and on which test, is up to you: stringent for a short
   list, looser for exploration. Candidates should always be checked by
   plotting profiles and spatial maps, and followed up experimentally.
