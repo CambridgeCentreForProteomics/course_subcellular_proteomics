@@ -61,33 +61,39 @@ retention of informative features.
 ### Overall presence of missing values
 
 It is important to assess the frequency and distribution of missing values
-in any dataset before deciding how to handle them. We start by examining the
-DIA-NN output to determine how missing values are represented, checking for both
-zeros and NA entries. Recall that the quantitative data and, therefore, missing
-values are stored in the `assay` of our `SummarizedExperiment`.
+in any dataset before deciding how to handle them. Recall that the quantitative
+data and, therefore, missing values are stored in the `assay` slot of our
+`SummarizedExperiment`.
+
+The way that proteomic software encode missing values varies, so it is good practice
+to check for 0, NA and NaN values within the data. Therefore, we start by examining 
+the DIA-NN output to determine how missing values are represented.
 
 ```{r}
 ## Does the data contain any zeros?
 qf[["precursors_filtered"]] |>
   assay() |>
   longForm() |>
-  filter(is.na = TRUE) |>
+  filter(value == 0) |>
   nrow()
 ```
 
-The data does not contain any zeros. If the data did contain zeros we
-would encode them as NA. We can use the `zeroIsNA` function to do this. Some
-proteomic softwares encode NAs as 0's by default. In order for proper evaluation
-of missing data it is necessary to return the 0 back to NA.
+The data does not contain any zeros. 
+
+If the data did contain zeros we would need to convert them to NA, because this is
+how `QFeatures` expects missing data to be denoted. To do so, we would use the
+`zeroIsNA` function.  
 
 ```{r}
 qf <- zeroIsNA(qf, i = "precursors_filtered")
 ```
 
-Does the data contain missing values, i.e. values encoded as NAs or NaN?
+In this case, since we had no zero values, the code above should have made no
+changes to our data. Let's see if we have missing values encoded as either NAs or
+NaNs.
 
 ```{r}
-## Does the data contain NAs
+## Does the data contain NAs?
 qf[["precursors_filtered"]] |>
   assay() |>
   longForm() |>
@@ -116,6 +122,10 @@ to explore from the `QFeatures` infrastructure.
 ```{r}
 nNA(qf, i = "precursors_filtered")
 ```
+
+This function outputs information about missing values at three levels: (1) the
+overall dataset (`$nNA`), (2) per row i.e., per precursor (`$nNArows`), and (3)
+per column i.e., per sample/fraction (`$nNAcols`).
 
 We see that we have `r nNA(qf, i = "precursors_filtered")$nNA$nNA` missing
 values, which represent 
@@ -417,13 +427,88 @@ appear partially missing rather than truly absent. Strict row-wise filtering may
 therefore bias the dataset towards highly abundant or broadly distributed
 proteins.
 
-In this specific example, we choose to allow up to 7 out of 9 missing values
-(i.e., require presence in at least two fractions) to retain sharply enriched
-profiles. However, the appropriate threshold depends on the specific dataset.
+The appropriate missing value threshold depends on the specific dataset.
 Users are encouraged to explore different levels of allowable missingness and
 assess their impact on downstream analyses. Ultimately, the number of missing
 values permitted per replicate should be considered relative to the total number
-of fractions in the experiment.
+of fractions in the experiment. Let's do some exploration.
+
+
+::: {.callout-exercise}
+#### Challenge: Exploring the effects of missing value thresholds
+
+{{< level 3 >}}
+
+For replicate 1, create a plot to visualise the number of unique precursors, peptides 
+and proteins that would remain in the data if we allowed a maximum of 0, 1, 2, 3, 
+4, 5, 6, 7, 8 or 9 missing values.
+
+<details><summary>Hint</summary>Use columns in the `QFeatures` `rowData` to 
+count unique precursors, `Stripped.Sequence`, and `Protein.Group`, like we
+did above.</details>
+
+::::: {.callout-answer collapse="true"}
+
+One (of many different) answers. We first extract the data we need.
+
+```{r}
+#| label: missing-vals
+## Extract missing data per row
+na_rows <- nNA(qf, i = "precursors_R1")$nNArows |>
+  as_tibble()
+
+## Extract rowData
+rd <- rowData(qf[["precursors_R1"]]) |>
+  as_tibble()
+
+## Merge
+cbind(rd, na_rows)
+
+## Define thresholds to test
+thresholds <- seq(0, 9, 1)
+
+## Count precursors, peptides and proteins with each threshold
+counts <- tibble()
+for (t in thresholds) {
+  
+  keep <- na_rows$nNA <= t
+  
+  counts_t <- tibble(Threshold = t, 
+                     Precursors = sum(keep),
+                     Peptides = n_distinct(rd$Modified.Sequence[keep]),
+                     Proteins = n_distinct(rd$Protein.Group[keep]))
+  
+  counts <- rbind(counts, counts_t)
+}
+
+```
+
+Now we can generate the plot.
+
+```{r}
+## Plot
+counts |>
+  pivot_longer(-Threshold, names_to = "level", values_to = "n") |>
+  mutate(level = factor(level, levels = c("Precursors", "Peptides", "Proteins"))) |>
+  ggplot(aes(x = Threshold, y = n, fill = level)) +
+  geom_col() +
+  geom_text(aes(label = n), vjust = -0.3, size = 2) +
+  facet_wrap(~level, scales = "free_y") +
+  scale_x_continuous(breaks = seq(0, 9, 1)) +
+  theme_bw() +
+  theme(legend.position = "none")
+```
+
+:::::
+:::
+
+
+In this specific example, we choose to allow up to 7 out of 9 missing values
+(i.e., require presence in at least two fractions) to retain sharply enriched
+profiles. To remove rows, here precursors, that do not meet our missing value 
+threshold, we apply the `filterNA` function within the `QFeatures` infrastructure
+and pass the maximum number of missing values that we consider acceptable to the
+`pNA` argument. We apply this to each of our indiviudal replicates. 
 
 
 ```{r missing_data_filtered_2}
@@ -583,9 +668,9 @@ the fractions of the first replicate.
 
 ### Mixed imputation
 
-In this next section of the course we show how to implement a mixed imputation approach using the
-`impute()` function in `QFeatures`. Mixed imputation is useful when the data
-contain a mixture of values missing at random (MAR) and missing not at
+In this next section of the course we show how to implement a mixed imputation 
+approach using the `impute()` function in `QFeatures`. Mixed imputation is useful
+when the data contain a mixture of values missing at random (MAR) and missing not at
 random (MNAR). Deciding which missing values belong to each category is
 extremely challenging. As an example, it seems reasonable to assume that
 proteins with narrow abundance distributions across the gradient will have
