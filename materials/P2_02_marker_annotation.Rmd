@@ -31,6 +31,7 @@ library("ggplot2")
 library("patchwork")
 library("stringr")
 library("pRoloc")
+library("pRolocGUI")
 library("magrittr")
 
 

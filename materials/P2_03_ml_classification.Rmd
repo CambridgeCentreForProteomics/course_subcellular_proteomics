@@ -5,15 +5,15 @@ bibliography: ../course_refs.bib
 
 ::: {.callout-tip}
 #### Learning objectives
-- Explain how supervised classifiers predict localisation by comparing unknown
-  proteins' correlation profiles with marker profiles, and why proteins can
-  only be assigned to compartments present in the training data.
+- Explain how supervised classifiers predict localisation by comparing the correlation
+profiles of unknown proteins to those of markers, and why proteins can only be 
+assigned to compartments present in the training data.
 - Optimise SVM parameters (`sigma`, `cost`) by cross-validation
   (`svmOptimisation`), using class weights to handle unequal class sizes, and
   assess performance using F1 scores (`getF1Scores`, `levelPlot`,
   `getParams`).
 - Classify proteins with an SVM (`svmClassification`) and set
-  organelle-specific score thresholds (`orgQuants`, `getPredictions`).
+  compartment-specific score thresholds (`orgQuants`, `getPredictions`).
 - Train and apply the Bayesian TAGM-MAP model (`tagmMapTrain`,
   `tagmMapPredict`), check its convergence, and threshold predictions on the
   combined localisation and outlier probabilities.
@@ -48,7 +48,8 @@ load(here("course_files/preprocessed/P2_lesson02.rda"), verbose = TRUE)
 In the previous lesson we curated a set of markers that are reliable and
 representative of the structure of our U-2 OS data, and stored them in the
 `markers` column of our `msn` object. We can now use these markers to predict
-the localisation of the remaining proteins using supervised machine learning.
+the localisation of the remaining proteins (currently annotated as "unknown") 
+using supervised machine learning.
 Whilst unsupervised methods such as hierarchical clustering and HDBSCAN are
 able to discover tight clusters of proteins with similar behaviours, these
 algorithms tend to struggle when it comes to identifying compartment borders.
@@ -62,10 +63,11 @@ biological question of interest.
 The `pRoloc` package provides a wide range of machine learning methods for
 predicting protein localisation, described in its dedicated vignette
 ["Machine learning techniques available in pRoloc"](https://bioconductor.org/packages/release/bioc/html/pRoloc.html).
-We have also published two workflows showing how to apply these methods to
+We have also published three workflows showing how to apply these methods to
 correlation profiling data: one using classical machine learning
-[@Breckels2018] and one using Bayesian machine learning [@Crook2019]. In this
-course we focus on two complementary approaches. We start with a Support Vector
+[@Breckels2018], one using Bayesian machine learning [@Crook2019], and one
+covering both [@Hutchings2025]. In this course we focus on two complementary 
+approaches. We start with a Support Vector
 Machine (SVM), a widely used classical classifier, and then move on to a
 Bayesian approach based on t-augmented Gaussian mixture (TAGM) models. Rather
 than giving only a single best guess, TAGM also estimates how confident we can
@@ -449,6 +451,7 @@ number of proteins classified to each subcellular compartment as well as the
 `r sum(fData(msn)$svm.pred == "unknown")` proteins which remain `"unknown"`.
 
 ```{r}
+## Check fData for new svm.pred column
 fvarLabels(msn)
 ```
 
@@ -745,12 +748,12 @@ regions between clusters. Let's look at this in more detail.
 
 ```{r}
 ## Number of proteins per compartment for each classifier
-data.frame(SVM = table(fData(msn)$svm.pred),
-           TAGM_MAP = table(fData(msn)$tagm.map.allocation.pred)) |>
-  dplyr::select(compartment = SVM.Var1,
-                SVM = SVM.Freq,
-                TAGM_MAP = TAGM_MAP.Freq)
+table(compartment = c(fData(msn)$svm.pred, fData(msn)$tagm.map.allocation.pred),
+      classifier  = rep(c("SVM", "TAGM_MAP"), each = nrow(fData(msn)))) |>
+  as.data.frame.matrix()
+
 ```
+
 
 TAGM-MAP leaves fewer proteins as `"unknown"`
 (`r sum(fData(msn)$tagm.map.allocation.pred == "unknown")` compared with
@@ -802,9 +805,8 @@ several reasons why TAGM-MAP tends to be overconfident:
 * **TAGM-MAP finds a single best set of parameters.** It estimates the centre
   and spread of each compartment once, and treats these estimates as exact.
   It ignores any uncertainty in them, which makes the resulting probabilities
-  more extreme than they should be. TAGM-MCMC (not covered here, see
-  @Crook2019) averages over this uncertainty and generally produces more
-  informative probabilities.
+  more extreme than they should be. TAGM-MCMC (not covered here, see @Crook2019) 
+  averages over this uncertainty and generally produces more informative probabilities.
 * **Many dimensions sharpen small differences.** Our data has `r ncol(msn)`
   quantitative channels (three concatenated replicates). With this many
   dimensions, a small difference in how well a protein fits two compartments
@@ -848,7 +850,7 @@ agree_prop
 ## Summaries used in the text below
 n_both <- sum(both)
 n_tagm_only <- sum(fData(msn_preds)$svm.pred == "unknown" &
-                     fData(msn_preds)$tagm.map.allocation.pred != "unknown")
+                   fData(msn_preds)$tagm.map.allocation.pred != "unknown")
 ```
 
 Of the `r n_both` proteins classified by both methods,
@@ -872,7 +874,7 @@ several ways to address this:
   which they agree
 * use TAGM-MCMC, which accounts for uncertainty in the model parameters and
   generally produces more informative probabilities, at a greater
-  computational cost (see @Crook2019)
+  computational cost [see @Crook2019]
 
 As with marker curation, the choice depends on the data and the question.
 Whichever approach is used, predictions should always be checked against the
@@ -940,13 +942,13 @@ msn_q <- getPredictions(object = msn,
 
 ```{r}
 ## Compare the number of proteins per compartment
-data.frame(SVM = table(fData(msn)$svm.pred),
-           TAGM_fixed = table(fData(msn)$tagm.map.allocation.pred),
-           TAGM_quantile = table(fData(msn_q)$tagm.map.allocation.pred)) |>
-  dplyr::select(compartment = SVM.Var1,
-                SVM = SVM.Freq,
-                TAGM_fixed = TAGM_fixed.Freq,
-                TAGM_quantile = TAGM_quantile.Freq)
+table(compartment = c(fData(msn)$svm.pred, 
+                      fData(msn)$tagm.map.allocation.pred, 
+                      fData(msn_q)$tagm.map.allocation.pred),
+      classifier  = rep(c("SVM", "TAGM-MAP fixed", "TAGM-MAP quantile"),
+                        each = nrow(fData(msn)))) |>
+  as.data.frame.matrix()
+
 ```
 
 ```{r, fig.width=12, fig.height=6}
