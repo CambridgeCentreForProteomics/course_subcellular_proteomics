@@ -36,6 +36,7 @@ library("QFeatures")
 library("pRoloc")
 library("pRolocGUI")
 library("magrittr")
+library("umap")
 
 ## msn with the SVM results, saved at the end of the protein localisation
 ## prediction lesson
@@ -172,9 +173,9 @@ fractionation gradient.
 
 This takes three steps in `pRoloc`:
 
-1. `mrkConsProfiles` calculates the consensus profile of each class and
-   returns a matrix with one row per class and one column per fraction.
-2. `mrkHClust` clusters the classes by their consensus profiles. We use the
+1. `mrkConsProfiles` calculates the consensus profile of each compartment and
+   returns a matrix with one row per compartment and one column per fraction.
+2. `mrkHClust` clusters the compartments by their consensus profiles. We use the
    resulting dendrogram to order the rows of the heatmap, so that compartments
    with similar profiles are next to each other.
 3. `plotConsProfiles` plots the matrix as a heatmap, in the given order.
@@ -222,8 +223,8 @@ changes markedly would be worth investigating further.
 
 ## Peptide support and missing values
 
-All the maps we have made so far treat every protein equally. However, some
-proteins are quantified from many precursors, whereas others rely on only one
+All of the maps we have made so far treat each protein equally. However, some
+proteins are quantified from many precursors, whilst others rely on only one
 or two. Similarly, some profiles are complete, whereas others were partly
 filled in by imputation. Proteins with little peptide support or many missing
 values tend to have noisier profiles, which can place them between clusters on
@@ -295,6 +296,7 @@ plot2D(pcas, method = "none", methargs = list(msn),
 addLegend(msn, fcol = "svm.pred", where = "topright", cex = .6)
 ```
 
+
 ### Comparing compartments
 
 We can now ask directly whether peptide support and missing values differ
@@ -330,7 +332,7 @@ msn |>
 The two measures are related: proteins with few precursors often have more
 missing values, because there are fewer precursors to fill in the gaps. Look
 at whether any compartment, or the `"unknown"` proteins, stand out on either
-measure.
+measure. Do you think this is biological or technical?
 
 ### Peptide support and missing values in each replicate
 

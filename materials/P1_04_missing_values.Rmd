@@ -451,7 +451,7 @@ did above.</details>
 
 One (of many different) answers. We first extract the data we need.
 
-```{r}
+```{r, results="hide", message = FALSE, warning = FALSE}
 #| label: missing-vals
 ## Extract missing data per row
 na_rows <- nNA(qf, i = "precursors_R1")$nNArows |>
