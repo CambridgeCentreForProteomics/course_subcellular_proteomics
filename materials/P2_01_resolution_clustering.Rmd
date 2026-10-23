@@ -126,10 +126,9 @@ values per protein in each replicate (`missing_rep1`, `missing_rep2`,
 `missing_rep3`) with their maximum and mean (`missing_max`, `missing_mean`).
 
 ```{r}
-## QC columns carried over from the QFeatures object
+## Columns carried over from the QFeatures object
 fData(msn) |>
-  dplyr::select(starts_with("n_"), starts_with("missing_")) |>
-  head()
+  names()
 ```
 
 #### Peptide-level subcellular spatial mapping
@@ -306,9 +305,9 @@ correlation profiles will be grouped together.
 ```{r}
 ## Plot heatmap of protein correlation profiles - row clustering only
 pheatmap(mat = exprs(msn),
-cluster_rows = TRUE,
-cluster_cols = FALSE,
-show_rownames = FALSE)
+        cluster_rows = TRUE,
+        cluster_cols = FALSE,
+        show_rownames = FALSE)
 ```
 
 
@@ -335,13 +334,15 @@ proteins peak in abundance across the same fractions.
 
 ### Hierarchical clustering with `hclust`
 
-Unsupervised learning via clustering analysis can be used to gain 
+Although visualisation tools can help us see structure and indicate that some
+subcellular compartments have been resolved, the plots we have looked at so far
+cannot tell us *which* compartments are resolved. Unsupervised learning via clustering analysis can be used to gain 
 insight into which subcellular niches we have the ability to resolve in our
 data. At a basic level, clustering methods simply seek to find structure in an
 unlabelled dataset via grouping data points whose members are similar in some way.
 This step is particularly useful for those studying the spatial proteome of
 non-model organisms or aiming to discover new subcellular structures. Several
-unsupervised machine learning algorithms including classic methods such as
+unsupervised machine learning algorithms such as
 hierarchical clustering and *k*-means, are available
 in [`pRoloc`](https://www.bioconductor.org/packages/release/bioc/html/pRoloc.html) 
 via the [`MLInterfaces`](https://www.bioconductor.org/packages/release/bioc/html/MLInterfaces.html) 
@@ -502,7 +503,7 @@ of the `fData` we can verify the results have been stored in the `MSnSet`.
 ```{r}
 ## Check columns in fData
 msn |> 
-  fvarLabels()
+  fvarLabels()  # does the same as names() for fData
 ```
 
 Notice that some proteins are allocated to cluster "0". The "0" category
@@ -612,9 +613,9 @@ barplot(cluster_6_go, showCategory = 10) +
 
 
 The results of GO enrichment indicate that cluster 6 represents proteins
-associated with the mitochondria. This provides an additional unbiased level of
+associated with the mitochondrion. This provides an additional unbiased level of
 evidence that the mitochondrion is sufficiently resolved in our dataset to
-be included as a compartment in the downstream analyses.
+be included as a compartment in the downstream analyses. 
 
 To simplify the investigation of all discovered clusters, the code below can be 
 used to generate a `list` of the enriched CC GO terms for each cluster.
@@ -645,36 +646,15 @@ for (i in 1:n) {
   
   ## Step (2) - run enrichGO
   go_result[[i]] <- enrichGO(gene = protein_id,
-                        universe = background_proteins,
-                        OrgDb = org.Hs.eg.db,
-                        keyType = "UNIPROT",
-                        ont = "CC",
-                        pAdjustMethod = "BH",
-                        readable = TRUE)
+                             universe = background_proteins,
+                             OrgDb = org.Hs.eg.db,
+                             keyType = "UNIPROT",
+                             ont = "CC",
+                             pAdjustMethod = "BH",
+                             readable = TRUE,
+                             pvalueCutoff = 0.01,
+                             qvalueCutoff = 0.01)
 }
-```
-
-
-You will notice that in the above code we did not pass thresholds for the p-value
-cutoff i.e., `pvalueCutoff` and `qvalueCutoff` as we did in the first example.
-When no thresholds are passed all GO CC terms found per cluster are recovered
-whether they are significant or not. This can be useful if you wish to examine
-different thresholds.
-
-We can filter these results manually using `filter`, for example, at a given
-p- and q-value.
-
-```{r, eval=TRUE}
-## Filter results manually by p- and q-value.
-enriched_terms <- vector("list", n)
-for (i in 1:n) {
-  enriched_terms[[i]] <- go_result[[i]] |>
-    slot("result") |> 
-    filter(p.adjust < 0.01 & qvalue < 0.01) |> 
-    pull(Description)
-}
-
-names(enriched_terms) <- paste0("Cluster", 1:n)
 ```
 
 To get an overview of the enrichment results, we plot a selection of
@@ -686,20 +666,30 @@ than one cluster, so the plot shows both what each cluster is enriched for and
 where clusters overlap.
 
 ```{r}
-## First 5 terms of each cluster
-top_terms <- unique(unlist(lapply(enriched_terms, head, 5)))
+## Combine GO outputs into data frames
+go_result <- lapply(go_result, as.data.frame)
 
-## which clusters is each of these terms enriched in?
-df <- expand.grid(term = top_terms, cluster = names(enriched_terms))
-df$enriched <- mapply(function(t, cl) t %in% enriched_terms[[cl]],
-                      df$term, df$cluster)
+## Combine all results into one table, with a Cluster column
+plot_df <- bind_rows(go_result, .id = "Cluster") |>
+  mutate(Cluster = paste("Cluster", Cluster)) |>
+  arrange(Cluster, p.adjust) |>
+  mutate(Description = factor(Description, levels = rev(unique(Description))))
 
-ggplot(subset(df, enriched), aes(x = cluster, y = term)) +
-  geom_point(size = 4, colour = "steelblue") +
-  scale_y_discrete(limits = rev(top_terms)) +
-  labs(x = NULL, y = NULL, 
-       title = "Enriched GO cellular component terms per cluster") +
-  theme_bw()
+## Filter for top 5 terms per cluster
+top_terms <- plot_df |>
+  group_by(Cluster) |>
+  slice_min(p.adjust, n = 5, with_ties = FALSE) |>
+  pull(Description) |>
+  unique()
+
+## Plot
+plot_df |>
+  filter(Description %in% top_terms) |>
+  ggplot(aes(x = Cluster, y = Description)) +
+  geom_point(size = 5, colour = "steelblue") +
+  labs(title = "Enriched GO cellular component terms per cluster",
+       x = NULL, y = NULL) +
+  theme_bw() 
 ```
 
 The plot shows that most clusters correspond to a recognisable subcellular
