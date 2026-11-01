@@ -306,22 +306,20 @@ plot them side by side.
 
 ```{r, fig.width=12, fig.height=5}
 ## Colours for each compartment, with unknown in grey
-pred_cols <- c(setNames(getStockcol()[seq_along(getMarkerClasses(msn))],
-                        getMarkerClasses(msn)),
+classes <- getMarkerClasses(msn)
+pred_cols <- c(setNames(getStockcol()[seq_along(classes)], classes),
                unknown = getUnknowncol())
 
 ## Peptide support and missing values per predicted compartment
 msn |>
   fData() |>
   as_tibble() |>
-  dplyr::select(svm.pred, n_min, missing_max) |>
-  pivot_longer(-svm.pred, names_to = "measure", values_to = "value") |>
-  mutate(measure = recode(measure,
-                          n_min = "Minimum number of precursors",
-                          missing_max = "Maximum proportion missing")) |>
+  pivot_longer(c(n_min, missing_max), names_to = "measure", values_to = "value") |>
   ggplot(aes(x = svm.pred, y = value, fill = svm.pred)) +
   geom_boxplot(alpha = 0.7, outlier.size = 0.8) +
-  facet_wrap(~ measure, scales = "free_y") +
+  facet_wrap(~ measure, scales = "free_y",
+             labeller = as_labeller(c(n_min = "Minimum number of precursors",
+                                      missing_max = "Maximum proportion missing"))) +
   scale_fill_manual(values = pred_cols) +
   labs(x = "SVM prediction", y = NULL) +
   theme_bw() +
@@ -339,35 +337,76 @@ measure. Do you think this is biological or technical?
 The minimum and maximum hide which replicate is responsible for a poorly
 supported or incomplete profile. To see this, we return to the data of each
 replicate in our `QFeatures` object, before the replicates were joined, as we
-did in the lesson on assessing resolution. We coerce the normalised
-protein-level set of each replicate to an `MSnSet`, and add the `.n` and
-`prop_missing` columns that `addProfileQC()` stored in the protein-level sets
-in part 1.
+did in the lesson on assessing resolution. Let's store the names of these sets 
+(from our `QFeatures` object) so that we can coerce them into individual 
+`MSnSet`s for plotting.
+
 
 ```{r}
-## Normalised protein-level sets for each replicate, before joining
+## Save names of normalised protein-level sets for each replicate, before joining
 rep_sets <- c(rep1 = "proteins_norm_R1",
               rep2 = "proteins_norm_R2",
               rep3 = "proteins_norm_R3")
 
-## Sets output by aggregateFeatures, which contain .n and prop_missing
+## Create normalised protein-level MSnSets for individual replicates
+for (i in 1:length(rep_sets)) {
+  
+  se <- qf[[rep_sets[i]]] # Extract protein-level set
+  msnset <- as(se, "MSnSet") # Convert to MSnSet
+  assign(names(rep_sets[i]), msnset) # Assign name to MSnSet
+}
+```
+
+The normalised protein-level replicate sets already contain the `.n` column that 
+was generated when summarising precursor to protein level data using the 
+`aggregateFeatures` function. 
+
+```{r}
+rep1 |>
+  fData() |>
+  names()
+```
+
+However, since we imputed before normalising, the normalised data does not contain
+information about missing values. Instead, we had added this to the pre-normalised
+protein-level replicate sets (named `"proteins_R1"`, `"proteins_R2"` and `"proteins_R3"`)
+by creating the `prop_missing` column. Therefore, we copy this column to our
+normalised protein `MSnSet`s for each replicate, so that we can use it for plotting.
+
+
+```{r}
+## Store names of individual replicate MSnSets
+msnset_reps <- c(rep1, rep2, rep3)
+
+## Store names of pre-normalisation protein sets that contain prop_missing
 agg_sets <- c(rep1 = "proteins_R1",
               rep2 = "proteins_R2",
               rep3 = "proteins_R3")
 
-## One MSnSet per replicate, with its own peptide support and missing values
-msn_reps <- lapply(names(rep_sets), function(r) {
-  x <- as(qf[[rep_sets[r]]], "MSnSet")
-  rd <- rowData(qf[[agg_sets[r]]])
-  idx <- match(featureNames(x), rownames(rd))
-  fData(x)$n <- rd$.n[idx]
-  fData(x)$prop_missing <- rd$prop_missing[idx]
-  x
-})
-names(msn_reps) <- names(rep_sets)
+## Add prop_missing to the individual replicate MSnSets with normalised protein data
+for (i in 1:length(rep_sets)) {
+  
+  msnset <- msnset_reps[[i]]
+  protein_set <- qf[[agg_sets[i]]]
+  
+  fData(msnset)$prop_missing <- rowData(protein_set)$prop_missing
+  
+  assign(names(rep_sets)[i], msnset)
+  
+}
+```
+
+Now we have both columns of interest, `.n` for the number of precursors and 
+`prop_missing` for missingness, annotated on each individual replicate's 
+normalised protein-level `MSnSet`. Let's take a look at a `summary` of these
+data per replicate.
+
+```{r}
+## Store replicate MSnSets as list
+msn_reps <- c(rep1, rep2, rep3)
 
 ## Number of precursors and proportion missing per protein in each replicate
-sapply(msn_reps, function(x) summary(fData(x)$n))
+sapply(msn_reps, function(x) summary(fData(x)$.n))
 sapply(msn_reps, function(x) summary(fData(x)$prop_missing))
 ```
 
@@ -378,11 +417,13 @@ because they were missing from another replicate) are labelled `"unknown"`.
 
 ```{r}
 ## Copy the SVM predictions from the combined data to each replicate
-for (r in names(msn_reps)) {
-  ids <- featureNames(msn_reps[[r]])
-  pred <- fData(msn)[ids, "svm.pred"]
-  pred[is.na(pred)] <- "unknown"
-  fData(msn_reps[[r]])$svm.pred <- pred
+for (i in names(msn_reps)) {
+  
+  ids <- featureNames(msn_reps[[i]]) # Extract featureNames from each MSnSet
+  pred <- fData(msn)[ids, "svm.pred"] # Extract classifications from each MSnSet
+  pred[is.na(pred)] <- "unknown" # Set remaining proteins as unknown
+  
+  fData(msn_reps[[i]])$svm.pred <- pred # Add classifications from concatenated data to individual reps
 }
 ```
 
@@ -392,10 +433,11 @@ argument with `1.5 * (1 - fData(msn_reps[[r]])$prop_missing)`.
 
 ```{r, fig.width=15, fig.height=5}
 par(mfrow = c(1, 3))
-for (r in names(msn_reps)) {
-  plot2D(msn_reps[[r]], fcol = "svm.pred",
-         cex = 0.3 + log2(fData(msn_reps[[r]])$n) / 3,
-         main = paste("PCA:", r))
+for (i in names(msn_reps)) {
+  
+  plot2D(msn_reps[[i]], fcol = "svm.pred",
+         cex = 0.3 + log2(fData(msn_reps[[i]])$n) / 3,
+         main = paste("PCA:", i))
 }
 ```
 
@@ -410,7 +452,7 @@ support, more missing values or poorer resolution than the others.
 {{< level 2 >}}
 
 1. How many proteins are supported by only one precursor in at least one
-   replicate (`n_min == 1`)?
+   replicate (`n_min == 1`)? 
 2. What proportion of these are classified to a compartment by the SVM, and
    what proportion remain `"unknown"`? How does this compare with all
    proteins?
@@ -424,37 +466,59 @@ support, more missing values or poorer resolution than the others.
 
 ```{r}
 ## 1. Proteins with a single precursor in at least one replicate
-low_support <- featureNames(msn)[fData(msn)$n_min == 1]
-length(low_support)
+
+msn |>
+  fData() |>
+  as_tibble() |>
+  filter(n_min == 1) |>
+  nrow()
 ```
+
 
 ```{r}
-## 2. Proportion classified vs unknown, for these proteins and for all proteins
-prop.table(table(fData(msn)[low_support, "svm.pred"] == "unknown"))
-prop.table(table(fData(msn)$svm.pred == "unknown"))
+## 2. Relative classification frequency of proteins with 1 precursor vs. all data
+
+## Proportion of unknown in entire dataset
+is_unknown <- fData(msn)$svm.pred == "unknown" 
+prop.table(table(is_unknown))
+
+## Recalculate for proteins supported by n_min == 1
+low_support <- fData(msn)$n_min == 1
+prop.table(table(is_unknown[low_support]))
 ```
 
-The first table gives the proportion of low-support proteins that are
-classified (`FALSE`) or remain unknown (`TRUE`); the second gives the same for
-all proteins.
+The first table gives the proportion of all proteins that are
+classified (`FALSE`) or remain unknown (`TRUE`). The second table gives the same
+for only low-support proteins.
+
 
 ```{r, fig.width=7, fig.height=7}
 ## 3. Highlight on the t-SNE map
+
+## Extract featureNames for FOI (n_min == 1)
+low_support_prots <- featureNames(msn[low_support])
+
+## Annotate FOI on plot
 plot2D(tsne, method = "none", methargs = list(msn),
        fcol = "svm.pred", main = "t-SNE: single-precursor proteins")
-highlightOnPlot(tsne, foi = low_support, col = "black", pch = 1, cex = .8)
+highlightOnPlot(tsne, foi = low_support_prots, col = "black", pch = 1, cex = .8)
 ```
 
 ```{r}
 ## 4. Proteins with more than half of their values missing in a replicate
-high_missing <- featureNames(msn)[fData(msn)$missing_max > 0.5]
-length(high_missing)
+msn |>
+  fData() |>
+  as_tibble() |>
+  filter(missing_max > 0.5) |>
+  nrow()
 
 ## Proportion classified vs unknown
-prop.table(table(fData(msn)[high_missing, "svm.pred"] == "unknown"))
+high_missing <- fData(msn)$missing_max > 0.5
+prop.table(table(is_unknown[high_missing]))
 
 ## Overlap with the low-support proteins
-length(intersect(low_support, high_missing))
+high_missing_prots <- featureNames(msn[high_missing])
+length(intersect(low_support_prots, high_missing_prots))
 ```
 
 The 0.5 cut-off is arbitrary. Try other values and see how the numbers
@@ -504,8 +568,10 @@ subunits that helps newly made proteins to fold. We expect its subunits to be
 found together, making it a good first example.
 
 ```{r}
-## Members of the TRiC chaperonin
+## Return featureNames for members of the TRiC chaperonin
 tric <- find_genes(msn, "^(TCP1|CCT[2-8][AB]?)$")
+
+## Print the fData Genes and svm.pred for members of the TRiC chaperonin
 fData(msn)[tric, c("Genes", "svm.pred")]
 ```
 
@@ -593,8 +659,9 @@ v1 <- find_genes(msn, "^ATP6V1")
 v0 <- find_genes(msn, "^ATP6V0")
 
 ## Named vector of annotations
-vatpase <- c(setNames(rep("V-ATPase V1", length(v1)), v1),
-             setNames(rep("V-ATPase V0", length(v0)), v0))
+vatpase <- c(rep("V-ATPase V1", length(v1)),
+             rep("V-ATPase V0", length(v0)))
+names(vatpase) <- c(v1, v0)
 
 ## Add as a new fData column called "vatpase"
 msn <- addMarkers(msn, markers = vatpase, mcol = "vatpase")
