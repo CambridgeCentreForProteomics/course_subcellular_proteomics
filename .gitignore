@@ -30,3 +30,6 @@ _site
 materials/data/report.parquet
 course_files/preprocessed/*.rda
 course_files/preprocessed/*.RData
+
+# Other
+materials/P2_01_resolution_clustering_files/*
