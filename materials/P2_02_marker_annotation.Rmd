@@ -11,10 +11,9 @@ bibliography: ../course_refs.bib
   compartments, source an initial list, evaluate, refine and annotate
 - Retrieve published marker sets with `pRolocmarkers()` and add published or
   user-defined markers to an `MSnSet` with `addMarkers()`
-- Evaluate markers visually using PCA and t-SNE across several principal
-  components with `plot2D()`, marker profile plots and interactive
-  visualisation using the `pRolocGUI` package
-- Quantify the separation of subcellular compartments with `QSep()` method, and
+- Evaluate markers visually using PCA and t-SNE with `plot2D()`, marker profiles
+with `plotDist()`, and interactive visualisation using the `pRolocGUI` package
+- Quantify the separation of subcellular compartments with the `QSep()` method, and
   interpret raw and normalised QSep scores
 - Refine a marker list by removing outlying markers and combining or removing
   poorly resolved compartments, without over-curating the data
@@ -32,6 +31,7 @@ library("ggplot2")
 library("patchwork")
 library("stringr")
 library("pRoloc")
+library("pRolocGUI")
 library("magrittr")
 
 
@@ -62,7 +62,7 @@ different marker lists, and both may be valid, provided each decision is
 grounded in prior knowledge and supported by the data.
 
 The definition of subcellular markers can be broadly divided into five steps,
-with steps 3, 4 and 5 representing an iterative process, as outlined in Figure \@ref(fig:marker-curation).
+with steps 3, 4 and 5 representing an iterative process, as outlined below.
 
 1. Determine which subcellular organelles have been sufficiently resolved in the data
 2. Generate or source an initial marker list for the selected compartments in your organism
@@ -145,7 +145,7 @@ the code below should be edited to pass the extracted named character object
 ## Add markers to the MSnSet
 msn <- addMarkers(object = msn,
                   markers = "data/dialop_markers.csv",
-                  mcol = "markers_initial")
+                  mcol = "markers_initial") # Name for newly created fData col
 ```
 
 Upon successfully annotating the markers, a table is printed to the screen
@@ -161,9 +161,7 @@ msn |>
 
 If you wish to remove the markers from your data you can assign NULL to the
 output i.e., one would type `fData(msn)[, "markers_initial"] <- NULL` to remove
-the marker list. Additionally, if you wish to use a different name to "markers",
-to refer to your annotation list users can pass a new name using the argument
-`mcol` when using `addMarkers`. See the help documentation of `addMarkers` by
+the marker list. See the help documentation of `addMarkers` by
 typing `?addMarkers` for more details.
 
 ::: {.callout-note}
@@ -200,14 +198,12 @@ par(mfrow = c(2, 1))
 
 plot2D(msn, method = "PCA", fcol = "markers_initial",
        main = "Initial marker resolution PCA")
-
 addLegend(msn, where = "bottomright", fcol = "markers_initial", cex = .7)
 
 set.seed(399)
 
 plot2D(msn, method = "t-SNE", fcol = "markers_initial",
        main = "Initial marker resolution t-SNE")
-
 addLegend(msn, where = "bottomright", fcol = "markers_initial", cex = .7)
 ```
 
@@ -215,12 +211,12 @@ As expected, the majority of markers cluster together with other proteins from
 the same subcellular compartment. However, we can see some protein markers which
 do not cluster as tightly with the rest of their compartment. Additionally,
 whilst the t-SNE plot shows all clusters to be relatively well separated, the
-PCA plot displays an overlap between the ER (dark green) and plasma membrane
-(light green). This is because the `plot2D` function uses PC1 and PC2 by default
-which limits visualisation to compartments resolved in these first two
+PCA plot displays an overlap between the nucleus (dark purple) and ribosomal subunits
+(light pink and light orange). This is because the `plot2D` function uses PC1 and PC2
+by default which limits visualisation to compartments resolved in these first two
 dimensions. We can pass a vector of alternative PC dimensions to the `dims`
 argument within `plot2D` to explore resolution in these lower PCs. Below we show
-that the ribosome compartments, Golgi and lysosome are better differentiated
+that the ribosome compartments, nucleus, Golgi and lysosome are better differentiated
 when visualised with other PCs.
 
 
@@ -260,12 +256,13 @@ annotated as `"Mitochondrion"` in the `markers_initial` column of the `fData`.
 
 Check the marker names in the data
 ```{r}
+## Check marker classes
 getMarkerClasses(msn, fcol = "markers_initial")
 ```
 
 
 ```{r, fig.width=5, fig.height=3, eval=FALSE}
-## Subset mitochondrial markers
+## Get indices of mitochondrial proteins
 mt <- fData(msn)$markers_initial == "Mitochondrion"
 
 ## Plot the distributions of mitochondrial markers
@@ -278,7 +275,7 @@ outlined in the code chunk below. The `getMarkerClasses` function can be used
 to return a vector of all subcellular marker compartments in a given `MSnSet`.
 
 
-```{r, fig.width=10, fig.align=10}
+```{r}
 ## Define marker compartments
 marker_organelles <- getMarkerClasses(msn, fcol = "markers_initial")
 
@@ -335,10 +332,13 @@ In addition to identifying outlying markers in each of the annotated
 compartments, users should also consider whether all of the initial compartments
 have sufficient resolution to be included in downstream classification. From
 the marker plots generated above, the initial compartments in our marker set do
-seem to be reasonably well resolved. However, we can take a more quantitative
-approach to exploring resolution by using the `QSep` function within `pRoloc`.
-`QSep` is a method for quantifying the separation of clusters in subcellular spatial
-proteomics datasets [@Gatto2019].
+seem to be reasonably well resolved, perhaps with the exception of the actin 
+cytoskeleton. However, we can take a more quantitative approach to exploring
+resolution by using the `QSep` function within `pRoloc`. `QSep` is a method for 
+quantifying the separation of clusters in subcellular spatial proteomics datasets [@Gatto2019].
+
+We can carry out QSep analysis using the `QSep` function on the markers annotated
+on our `MSnSet`.
 
 ```{r}
 ## Carry out QSep
@@ -429,7 +429,9 @@ classify proteins to that compartment is determined almost entirely by its
 lowest pairwise QSep score. For compartments where all calculated QSep scores
 are low, users may consider whether it is appropriate to include the compartment
 at all or combine them with other classes under one umbrella term, for example
-here we could combine the 40S and 60S subunits into one term "Ribosome". By
+here we could combine the 40S and 60S subunits into one term "Ribosome". We would
+also likely remove "Actin cytoskeleton" as it has consistently low resolution
+against all other compartments. By
 contrast, for compartments with high overall scores but one or two low pairwise
 QSep scores it may be worth combining the compartments with lower resolution.
 After making any changes, QSep scores can be recalculated on the updated
@@ -547,7 +549,7 @@ actin_names
 
 In the next section we refine our marker list, and in doing so we make a
 series of choices: which outliers to remove, which compartments to keep and
-which classes to combine or drop. None of these choices is black and white,
+which classes to combine or drop. None of these choices are black and white,
 and there are several sensible ways to approach each one. For example, you
 might:
 
@@ -601,7 +603,8 @@ fData(msn)$markers <- fData(msn)$markers_initial
 Check it's been created,
 
 ```{r}
-msn |> fvarLabels()
+msn |>
+  fvarLabels()
 ```
 
 In the below code we remove the annotation for the following outlying proteins
@@ -634,6 +637,7 @@ markers using the `getMarkers` function. We see that previously we had 7011
 "unknown" (unannotated) proteins, and now we have 7014.
 
 ```{r}
+## Compare marker numbers in initial and updated annotation columns
 getMarkers(msn, fcol = "markers_initial")
 getMarkers(msn, fcol = "markers")
 ```
@@ -656,7 +660,9 @@ unreliable classifications. We therefore decide to remove it from the marker set
 This is a judgement call rather than the only correct answer. A researcher
 whose question centres on the actin cytoskeleton might reasonably choose to
 keep the class, accepting that classifications to it will be less certain and
-interpreting them with appropriate caution.
+interpreting them with appropriate caution. In such a scenario, it could also 
+be worth searching the literature for additional Actin cytoskeleton marker proteins
+to see whether resolution could be improved.
 
 Should users wish to remove the annotation for an entire compartment, the
 `fDataToUnknown` function provides an easy way to achieve this. We
@@ -714,9 +720,7 @@ profiles for each compartment with `plotDist`. Do the markers now fit the data
 well?
  
 **Task 4**
-Based on what you see, would you make any further changes to the marker list?
-For example, are there any compartments you would combine, such as the 40S and
-60S ribosomal subunits, or any remaining outliers? Discuss your reasoning with
+Based on what you see, would you make any further changes to the marker list? Discuss your reasoning with
 your neighbour. Remember that there is no single correct answer.
  
 ::::: {.callout-answer collapse="true"}
@@ -762,10 +766,12 @@ least well separated pair.
 
 ```{r, fig.width=10, fig.height=5}
 ## Lysosome average QSep values initial markers
-qsep_res@xnorm["Lysosome", ] |> median()
+qsep_res@xnorm["Lysosome", ] |> 
+  median()
 
 ## Lysosome average QSep values after curation of markers
-qsep_final@xnorm["Lysosome", ] |> median()
+qsep_final@xnorm["Lysosome", ] |> 
+  median()
 ```
 
  
