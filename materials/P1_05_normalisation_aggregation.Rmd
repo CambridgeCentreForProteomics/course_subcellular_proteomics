@@ -110,13 +110,13 @@ Let's take a look at what this normalisation has done to the data.
 
 ```{r}
 ## Before normalisation
-qf[["imp_precursors_R1"]] %>%
-  assay() %>%
+qf[["imp_precursors_R1"]] |>
+  assay() |>
   head()
 
 ## After normalisation
-qf[["norm_precursors_R1"]] %>%
-  assay() %>%
+qf[["norm_precursors_R1"]] |>
+  assay() |>
   head()
 ```
 
@@ -133,6 +133,49 @@ learning.
 plot(qf)
 ```
 
+Let's take a look at what normalisation has done to the data, starting with 
+replicate 1. 
+
+```{r, fig.width=10, fig.height=6}
+## Evaluate the effect of data normalisation on rep1
+
+par(mfrow = c(1, 2))
+
+## Plot pre-normalised data
+qf[["imp_precursors_R1"]] |>
+  assay() |>
+  longForm() |>
+  ggplot(aes(x = colname, y = value)) +
+  geom_boxplot() +
+  labs(x = "", y = "Raw abundance", title = "Pre-normalisation") +
+  theme_bw()
+
+## Plot post-normalised data
+qf[["norm_precursors_R1"]] |>
+  assay() |>
+  longForm() |>
+  ggplot(aes(x = colname, y = value)) +
+  geom_boxplot() +
+  labs(x = "", y = "Normalised abundance", title = "Post-normalisation") +
+  theme_bw()
+```
+
+We can see from these plots that the raw precursor abundance values are spread 
+across a wide dynamic range, spanning 7 orders of magnitude. This is very normal
+for cellular proteomics data. If we were to use the pre-normalised data, the 
+profile of a high abundance protein would be numerically very different to that
+of a low abundance protein, even if they fractionate in the same pattern across
+our biochemical gradient. Once we normalise our precursors, all have an abundance
+between 0 and 1. We can now see some shape to the profiles.
+
+Unlike in total proteome experiments where normalisation aims to remove variation,
+we do not expect the boxplots of normalised correlation profiles to be perfectly
+aligned. For each fraction, many proteins have low to 0 abundance. These are
+proteins that belong to organelles that primarily sediment elsewhere in the
+gradient. However, each fraction also has a long tail towards 1, indicating a 
+subset of proteins that did predominantly pellet in this fraction. A box plot with
+shape and structure like this is a first indication that our experiment may have
+worked - we would not want a flat profile of boxplots.
 
 ::: {.callout-note}
 #### At what stage should I normalise to generate profiles?
@@ -235,6 +278,71 @@ to downstream machine learning classifers.
 ```{r, fig.height=5}
 plot(qf)
 ```
+
+
+::: {.callout-exercise}
+#### Challenge: Using the .n column from aggregateFeatures
+
+{{< level 2 >}}
+
+1. Look at the `??aggregateFeatures` help documentation. What is the `.n` column?
+What does the column mean for our data specifically?
+
+2. Plot a histogram to explore the `.n` column in replicate 1 of our aggregated
+protein-level data. 
+
+
+::::: {.callout-answer collapse="true"}
+
+**Task 1**
+\
+One advantage of using the `aggregateFeatures` function is that it automatically
+adds a column to the aggregated data to indicate how many lower-level features
+(here precursors) were aggregated into each higher-level feature (here protein
+groups). This column is called `.n`. Of note, this column is created every time
+you use the `aggregateFeatures` function, and always has the same name. Hence, 
+if you did a two-step aggregation from precursors to peptides to proteins, the
+`.n` column in the peptide-level data would indicate how many precursors per peptide
+and in the protein-level data would be how many peptides per protein. 
+
+
+**Task 2**
+\
+Let's plot a histogram of the precursor support per protein group in our dataset.
+Again, we demonstrate with replicate 1 but advise users to plot for all replicates
+of all conditions.
+
+```{r}
+qf[["proteins_R1"]] |>
+  rowData() |>
+  as_tibble() |>
+  ggplot(aes(x = `.n`)) +
+  geom_histogram() +
+  labs(x = "Precursor support", y = "Number of proteins") +
+  theme_bw()
+```
+
+This initial histogram shows us that most proteins have < 100 precursors supporting
+them, which is not surprising. It's hard to see how low with the current binning.
+Let's create bins for 1-20 and then merge all others into a > 20 category.
+
+```{r}
+qf[["proteins_R1"]] |>
+  rowData() |>
+  as_tibble() |>
+  mutate(n_binned = factor(
+    if_else(.n > 20, ">20", as.character(.n)),
+    levels = c(as.character(1:20), ">20"))) |>
+  ggplot(aes(x = n_binned)) +
+  geom_bar() +
+  labs(x = "Precursor support", y = "Number of proteins") +
+  theme_bw()
+```
+
+
+:::::
+:::
+
 
 ### Re-normalisation
 
