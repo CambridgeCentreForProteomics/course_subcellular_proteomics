@@ -111,7 +111,7 @@ df <- data.frame("Description" = c("Extract quantitative data",
                  "QFeatures function" = c("assay", "rowData", "colData", "colnames", 
                                "rowDataNames", "rownames"))
 kableExtra::kable(df, caption = "Equivalent accessors/slot names between MSnbase and QFeatures",
-                  col.names = gsub("[.]", " ", names(df))) %>%
+                  col.names = gsub("[.]", " ", names(df))) |>
   kableExtra::kable_styling(latex_options = "HOLD_position", font_size = 14,
                            bootstrap_options = "hover" )
 ```
