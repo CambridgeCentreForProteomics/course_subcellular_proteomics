@@ -541,7 +541,9 @@ The output is a `data.frame` with one row per protein. The columns we use are:
 The remaining columns give the most probable niche in each condition and its
 probability. As explained above, we do not use these as localisations.
 
-As a quality control step, we look at the fitted profile (mean ± 1 standard
+Since the results of marker-based SANDLE are intrinsically related to the 
+quality of the markers provided, it is good practice to visualise the markers
+that we used as input data. We look at the fitted profile (mean ± 1 standard
 deviation) of each niche in one replicate. Each organelle should have a
 distinct and reasonably tight profile.
 
@@ -551,6 +553,10 @@ distinct and reasonably tight profile.
 ## QC check - plot fitted profile of markers for each niche
 plot_marker_profiles(marker_res, replicate = 1)
 ```
+
+These marker profiles look good. In practice, we would recommend doing this for
+each replicate of each condition. 
+
 
 :::{.callout-note}
 #### How the DL probability is computed
@@ -924,38 +930,34 @@ plot_protein_profiles(control, treated, proteins = top_by_type$protein,
 
 Next, let's put a few movers back onto the spatial maps. We plot the PCA of
 the combined data for each condition, coloured by localisation, and
-add the movers on top. We use the top four candidates from both methods, plus
-GLUT4 and Q8C129. We write one small function for this. `plot2D()` returns
-the PCA coordinates of every protein, which we use to place the points. The
-`col` and `pch` arguments can be a single value (all movers look the same) or
-one value per mover.
+add the movers on top using `highlightOnPlot`. We use the top four candidates
+from both methods, plus GLUT4 and Q8C129. 
 
 ```{r}
+## Save featureNames of protein of interest to annotate
 movers <- c(hits$protein[1:4], "P14142", "Q8C129")
 
-show_movers <- function(object, main, col = "yellow", pch = 21, labels = FALSE) {
-  col <- setNames(rep(col, length.out = length(movers)), movers)
-  pch <- setNames(rep(pch, length.out = length(movers)), movers)
-  pca <- plot2D(object, fcol = "final.localisation", main = main)  # returns PCA coordinates
-  m <- movers[movers %in% rownames(pca)]
-  points(pca[m, 1], pca[m, 2], pch = pch[m], bg = col[m], col = "black",
-         cex = 2, lwd = 1.5)
-  if (labels) text(pca[m, 1], pca[m, 2], m, pos = 3, cex = 0.7, font = 2)
-}
-```
-
-First, all movers in yellow, labelled with their accession.
-
-```{r}
+## Define plotting dimensions
 #| fig-width: 12
 #| fig-height: 6
 par(mfrow = c(1, 2))
-show_movers(basal, "Basal", labels = TRUE)
-show_movers(insulin, "Insulin", labels = TRUE)
+
+plot2D(basal, fcol = "final.localisation", main = "Basal")
+highlightOnPlot(basal, foi = movers, col = "black", bg = "yellow", pch = 21, cex = 1.5)
+highlightOnPlot(basal, foi = movers, labels = TRUE, col = "black", cex = 0.5, pos = 3)
+
+plot2D(insulin, fcol = "final.localisation", main = "Insulin")
+highlightOnPlot(basal, foi = movers, col = "black", bg = "yellow", pch = 21, cex = 1.5)
+highlightOnPlot(basal, foi = movers, labels = TRUE, col = "black", cex = 0.5, pos = 3)
 ```
 
-It is easier to follow individual proteins if each has its own colour and
-symbol.
+Here we see all movers in yellow, labelled with their accession number since
+the default for `labels = TRUE` is to use the `featureNames`. In some cases, it
+might be easier to compare the movers if each individual protein has its own 
+colour and symbol.The `bg` and `pch` arguments of `highlightOnPlot` can be a 
+single value (all movers look the same) or one value per feature of interest
+provided in a vector.
+
 
 ```{r}
 #| fig-width: 12
@@ -964,9 +966,16 @@ mover_col <- c("black", "red", "blue", "darkorange", "green3", "magenta")
 mover_pch <- c(21, 22, 23, 24, 25, 21)
 
 par(mfrow = c(1, 2))
-show_movers(basal, "Basal", mover_col, mover_pch)
-show_movers(insulin, "Insulin", mover_col, mover_pch)
+
+plot2D(basal, fcol = "final.localisation", main = "Basal")
+highlightOnPlot(basal, foi = movers, col = "black", bg = mover_col, pch = mover_pch, cex = 1.5)
+
+plot2D(insulin, fcol = "final.localisation", main = "Insulin")
+highlightOnPlot(basal, foi = movers, col = "black", bg = mover_col, pch = mover_pch, cex = 1.5)
+
 ```
+
+We can also plot a legend rather than cluttering our plot with labels.
 
 ```{r}
 #| fig-width: 6
@@ -988,8 +997,7 @@ to, a different cluster after insulin stimulation. A protein that moves to
 
 Choose three proteins from Challenge 3, or from the different types of
 movement above. Plot their profiles with `plot_protein_profiles()` and show
-them on the spatial maps using `show_movers()`. Remember that `show_movers()`
-uses the `movers` object, so you will need to redefine it first.
+them on the spatial maps using `highlightOnPlot`.
 
 ::: {.callout-answer collapse=true}
 
@@ -1003,14 +1011,29 @@ movers <- top_by_type |>
   ungroup() |>
   slice_head(n = 3) |>
   pull(protein)
+
+## Check that we have 3 accessions
 movers
 
+## Plot profiles of movers
 plot_protein_profiles(control, treated, proteins = movers,
                       labels = c("basal", "insulin"))
 
+## Plot maps of movers
 par(mfrow = c(1, 2))
-show_movers(basal, "Basal", col = c("black", "brown", "yellow"), pch = 21:23)
-show_movers(insulin, "Insulin", col = c("black", "brown", "yellow"), pch = 21:23)
+plot2D(basal, fcol = "final.localisation", main = "Basal")
+highlightOnPlot(basal, foi = movers, col = "black", bg = c("black", "brown", "yellow"), 
+                pch = 21:23, cex = 1.5)
+
+plot2D(insulin, fcol = "final.localisation", main = "Insulin")
+highlightOnPlot(basal, foi = movers, col = "black", bg = c("black", "brown", "yellow"),
+                pch = 21:23, cex = 1.5)
+
+## Add legend 
+par(mar = c(0, 0, 0, 0))
+plot.new()
+legend("center", legend = movers, pch = 21:23, pt.bg = c("black", "brown", "yellow"),
+       col = "black", pt.cex = 1.6, ncol = 3, bty = "n")
 ```
 
 :::
@@ -1025,7 +1048,7 @@ flow of proteins between conditions.
 
 Let's load the `bandle` package.
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 library("bandle")
 ```
 
