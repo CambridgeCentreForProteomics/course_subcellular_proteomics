@@ -98,7 +98,7 @@ biochemical fractionation, (2) peptide quantitation (label-based or label-free),
 and (3) mass spectrometry acquisition method (data-dependent acquisition, DDA,
 or data-independent acquisition, DIA).
 
-Our use-case data was generated using the DIA-LOP method from the Lilley lab at
+Our use-case data (\ref{fig-use-case}) was generated using the DIA-LOP method from the Lilley lab at
 the Universisty of Cambridge. DIA-LOP (Data-Independent Acquisition
 Localization of Organelle Proteins) is a high throughput subcellular
 proteomics method that offers a faster, label-free, and cost-effective
@@ -125,6 +125,10 @@ subcellular maps, matching the abundance profiles of unknown proteins against
 known organelle markers to map over 8,000 protein groups across 13 subcellular
 compartments. The raw MS data is available online through ProteomeXchange via
 the PRIDE repository under the identifier [PXD063082](https://www.ebi.ac.uk/pride/archive/projects/PXD063082).
+
+```{r fig-use-case, echo = FALSE, fig.cap = "Overview of the use-case data experimental design. U-2 OS cells were cultured in separate flasks to generate three independent biological replicates, each separated into 10 differential centrifugation (DC) fractions (R1F01–R3F10). (A) Gentle cell lysis using a ball-bearing homogeniser to keep organelles intact. (B) Organelle separation by differential ultracentrifugation, using successive spins at increasing speeds. (C) Mass spectrometry using data-independent acquisition (DIA) on a timsTOF instrument. (D) Correlation profiling-based data analysis: peptide identification with DIA-NN, quality control (QC), and spatial mapping with semi-supervised machine learning classification in pRoloc. Adapted from McCaskie et al. (2025).", fig.align = "center", out.width = "90%"}
+knitr::include_graphics("figs/u2-os-dialop-kieran.png", error = FALSE)
+```
 
 
 <!-- ## Isobaric peptide labelling using Tandem Mass Tags (TMT) -->

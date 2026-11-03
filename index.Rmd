@@ -55,7 +55,6 @@ Current workshops are run by:
 - **Lisa Breckels** - Cambridge Centre for Proteomics, University of Cambridge, UK
 - **Charlotte Hutchings** - BioHub, Chicago, USA
 
-
 ## Authors
 <!-- 
 The listing below shows an example of how you can give more details about yourself.
@@ -66,10 +65,13 @@ About the authors:
 
 - **Lisa Breckels** <a href="https://orcid.org/0000-0001-8918-7171" target="_blank"><i class="fa-brands fa-orcid" style="color:#a6ce39"></i></a> <a href="https://github.com/lmsimp" target="_blank"><i class="fa-brands fa-github" style="color:#4078c0"></i></a>\
   *Affiliation*: Cambridge Centre for Proteomics, Department of Biochemistry, University of Cambridge\
-  *Roles*: writing - original draft; conceptualisation; coding
+  *Roles*: writing - original draft; conceptualisation; coding; formal analysis
 - **Charlotte Hutchings** <a href="https://orcid.org/0000-0002-2727-7806" target="_blank"><i class="fa-brands fa-orcid" style="color:#a6ce39"></i></a> <a href="https://github.com/Charl-Hutchings" target="_blank"><i class="fa-brands fa-github" style="color:#4078c0"></i></a>\
   *Affiliation*: Cambridge Centre for Proteomics, Department of Biochemistry, University of Cambridge\
-  *Roles*: writing - original draft; conceptualisation; coding
+  *Roles*: writing - original draft; conceptualisation; coding; formal analysis
+- **Kieran McCaskie** <a href="https://orcid.org/0009-0005-3564-648X" target="_blank"><i class="fa-brands fa-orcid" style="color:#a6ce39"></i></a> \
+  *Affiliation*: Cambridge Centre for Proteomics, Department of Biochemistry, University of Cambridge\
+  *Roles*: investigation; coding; formal analysis
 
 ## Citation
 
@@ -120,9 +122,13 @@ The `pRoloc` R/Bioconductor package:
 >  doi:10.1093/bioinformatics/btu013. Epub 2014 Jan 11. PubMed PMID: 24413670; PubMed Central
 >  PMCID: PMC3998135.
 
-Case-study data:
+Case-study 1 - U2-OS DIA-LOP data:
 
 > McCaskie K, Hutchings C, Feret R, et al. Localization of Organelle Proteins Using Data-Independent Acquisition (DIA-LOP). Mol Cell Proteomics. 2025;24(9):101047. [doi:10.1016/j.mcpro.2025.101047](https://pubmed.ncbi.nlm.nih.gov/40783120/)
+
+Case-study 2 - Mouse 3T3-L1 adipocyte LOPIT-DC data:
+
+> Conway OJ, Christopher JA, Breckels LM, et al. Dynamic subcellular proteomics identifies regulators of adipocyte insulin action. Nat Commun. 2026;17(1):3310
 
 ## Acknowledgements
 
