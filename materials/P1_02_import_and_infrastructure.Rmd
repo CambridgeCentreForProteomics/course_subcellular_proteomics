@@ -531,48 +531,73 @@ quantified. We can explore this by inspecting the number of rows in each
 per-run set, which corresponds to the number of precursors quantified in that
 run (here a biochemical fraction from one replicate).
 
+
 ::: {.callout-exercise}
-#### Challenge: Precursors per sample
+#### Number of precursors per sample
+
+{{< level 1 >}}
+
+1. By examining the `QFeatures` object, determine how how many precursors are
+quantified in each sample.
 
 {{< level 2 >}}
 
-Find a function to determine how many precursors are quantified in each sample.
-Use it to create a bar plot showing the number of precursors identified in each
-sample, coloured by replicate. Based on your plot:
+2. Use this information to create a bar plot to visualise the number of
+precursors identified in each sample, coloured by replicate.
 
-- Which group tends to have the most precursors identified?
+
+3. Based on your plot,
+
+- Which sample tends to have the most precursors identified?
 - Is there any sample that looks like an outlier?
 
-<details><summary>Hint</summary>Browse the `QFeatures` documentation with
-`?QFeatures` to find a suitable function for obtaining per-run feature
-counts.</details>
+<details><summary>Hint</summary>Start with applying the `nrows` function
+to your `QFeatures` object.</details>
+
 
 ::::: {.callout-answer collapse="true"}
 
-One (of many different) answers
+One (of many different) answers. First let's find the number or precursors per
+sample.
 
 ```{r}
-#| label: create-subset
-plot_df <- data.frame(
-  n_precursors = nrows(qf),
-  sample = names(nrows(qf))) |>
-  merge(data.frame(colData(qf)), by.x = "sample", by.y = "runCol") 
+qf |> 
+  nrows()
+```
 
+Now create a barplot of the number of precursors quantified.
+
+```{r}
+## Number of precursors per sample
+n_precursors <- nrows(qf)
+
+## Create data.frame of information we need
+plot_df <- data.frame(
+  n_precursors = n_precursors,
+  sample = names(n_precursors),
+  replicate = colData(qf)[, "Replicate"]) 
+
+## Now produce a barplot
 plot_df |>
-ggplot(aes(x = sample, y = n_precursors, fill = Replicate)) +
+  ggplot(aes(x = sample, y = n_precursors, fill = replicate)) +
   geom_bar(stat = "identity") +
   labs(x = "Sample", y = "Number of precursors") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
 ```
+
+We see from the boxplot that the first three of the samples have a much lower 
+number of samples quantified in comparison to all samples. 
+
 :::::
 :::
+
 
 ### Exploring the row data
 
 The `rowData` of each per-run `SummarizedExperiment` contains quality metrics
 from DIA-NN. This information can be accessed on a run-by-run level by
 using the `rowData` function. For example, let's look at the `rowData` for run 1
-stored in `qf[[1]]`.
+which is stored in `qf[[1]]`.
 
 ```{r}
 #| label: compare-sample-counts
@@ -614,9 +639,12 @@ for each sample. This will help with our data exploration.
 
 # 1. Create a data.frame of the sample information
 
-cdata <- data.frame(colData(qf))
+cdata <- qf |> 
+  colData() |> 
+  data.frame()
 
 # 2. Merge this with the row data
+
 # Note: Our data is in separate sets, so the sample names are in the 'assay'
 # column. We merge with the column data (using the runCol column) to get group
 # information for each sample
@@ -631,7 +659,7 @@ we can now visualise quality metrics from DIA-NN.
 
 
 ::: {.callout-exercise}
-#### Challenge: Exploring rowData metrics
+#### Exploring `rowData` metrics
 
 {{< level 2 >}}
 
