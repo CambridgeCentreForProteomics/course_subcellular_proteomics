@@ -93,6 +93,10 @@ rapidly delivered to the plasma membrane in response to insulin, allowing the
 cell to take up glucose. We should therefore expect to see some proteins
 moving in this dataset.
 
+```{r fig-use-case2, echo = FALSE, fig.cap = "LOPIT-DC maps the spatial proteome of 3T3-L1 adipocytes under basal and insulin-stimulated conditions. a) Schematic of the experimental workflow used. b) Venn diagrams of overlap in proteins identified across three replicates of LOPIT-DC in basal and insulin-stimulated conditions. Data for each condition was concatenated to give 4005 proteins in common across both conditions. c) Profile of organelle marker proteins across all 10 fractions (basal replicate 1 data shown, all replicates in Extended Data Fig. 1b). d) Principal component analysis (PCA) projection of concatenated basal data (n = 3 biological replicates) showing distinct clustering of organelle marker proteins. Each point represents an individual protein. e) PCA projection of proteins allocated to each organelle under basal and insulin-stimulated conditions. One point is one protein and points are coloured according to localisation.", fig.align = "center", out.width = "90%"}
+knitr::include_graphics("figs/adipocyte_lopit.png", error = FALSE)
+```
+
 ## BANDLE and SANDLE
 
 In the workflow paper accompanying this course [@Hutchings2025] we used
