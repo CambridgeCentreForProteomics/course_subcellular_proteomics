@@ -1,5 +1,5 @@
 ---
-author: "Lisa Breckels & Charlotte Hutchings"
+author: "Lisa Breckels & Charlotte Hutchings, contributions from Kieran McCaskie & Oliver Crook"
 date: today
 number-sections: false
 ---
