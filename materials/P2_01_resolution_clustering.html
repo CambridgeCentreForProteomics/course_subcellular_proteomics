@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.11.9">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>6&nbsp; Assessment of resolution</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../materials/P2_02_marker_annotation.html" rel="next">
+<link href="../materials/P1_05_normalisation_aggregation.html" rel="prev">
+<link href="../site_libs/quarto-contrib/quarto-project/cambiotraining/courseformat/img/university-of-cambridge-favicon.ico" rel="icon">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-d8be12bca9bf4cff8dfae3f7a7d6c145.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-7df8b6b947f49bbb2b70116bd26b3010.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="../site_libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="../site_libs/lightable-0.0.1/lightable.css" rel="stylesheet">
+
+
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../site_libs/quarto-contrib/quarto-project/cambiotraining/courseformat/img/university_crest_reversed.png" alt="" class="navbar-logo light-content">
+    <img src="../site_libs/quarto-contrib/quarto-project/cambiotraining/courseformat/img/university_crest_reversed.png" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Subcellular proteomics analysis</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="https://github.com/CambridgeCentreForProteomics/course_subcellular_proteomics"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="fa6-brands:github" style="font-size: 1.25em;" aria-label="Icon github from fa6-brands Iconify.design set." title="CRIT GitHub"></iconify-icon></span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://bsky.app/profile/bioinfocambs.bsky.social"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="fa6-brands:bluesky" style="font-size: 1.25em;" aria-label="Icon bluesky from fa6-brands Iconify.design set." title="CRIT Bluesky"></iconify-icon></span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://genomic.social/@BioInfoCambs"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="fa6-brands:mastodon" style="font-size: 1.25em;" aria-label="Icon mastodon from fa6-brands Iconify.design set." title="CRIT Mastodon"></iconify-icon></span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://bioinfotraining.bio.cam.ac.uk/"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="mdi:web" style="font-size: 1.25em;" aria-label="Icon web from mdi Iconify.design set." title="CRIT Website"></iconify-icon></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav" aria-label="Toolbar">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <a class="flex-grow-1 no-decor" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+          <h1 class="quarto-secondary-nav-title"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Assessment of resolution</span></h1>
+        </a>     
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto" aria-label="Section">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-controls="quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-1-label">Welcome</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../setup.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data &amp; Setup</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-controls="quarto-sidebar-section-2" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-2-label">Part I: Data processing</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-2" aria-labelledby="quarto-sidebar-section-2-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P1_01_intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">The use-case data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P1_02_import_and_infrastructure.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Import and infrastructure</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P1_03_qc_data_processing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data processing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P1_04_missing_values.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Missing data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P1_05_normalisation_aggregation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Data transformation and aggregation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-controls="quarto-sidebar-section-3" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-3-label">Part II: Subcellular mapping</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-3" aria-labelledby="quarto-sidebar-section-3-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P2_01_resolution_clustering.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Assessment of resolution</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P2_02_marker_annotation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Data annotation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P2_03_ml_classification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Protein localisation prediction</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P2_04_features_of_interest.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Visualisation and exploration</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-controls="quarto-sidebar-section-4" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-4-label">Part III: Differential localisation</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-4" aria-labelledby="quarto-sidebar-section-4-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P3_01_sandle.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Differential localisation analyses</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-controls="quarto-sidebar-section-5" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-5-label">Glossary</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-5" aria-labelledby="quarto-sidebar-section-5-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P4_01_glossary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Glossary</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#generating-a-subcellular-spatial-map" id="toc-generating-a-subcellular-spatial-map" class="nav-link active" data-scroll-target="#generating-a-subcellular-spatial-map"><span class="header-section-number">6.1</span> Generating a subcellular spatial map</a></li>
+  <li><a href="#conversion-to-msnset" id="toc-conversion-to-msnset" class="nav-link" data-scroll-target="#conversion-to-msnset"><span class="header-section-number">6.2</span> Conversion to <code>MSnSet</code></a></li>
+  <li><a href="#initial-assessment-of-data-resolution" id="toc-initial-assessment-of-data-resolution" class="nav-link" data-scroll-target="#initial-assessment-of-data-resolution"><span class="header-section-number">6.3</span> Initial assessment of data resolution</a>
+  <ul class="collapse">
+  <li><a href="#visualisation-using-dimensionality-reduction" id="toc-visualisation-using-dimensionality-reduction" class="nav-link" data-scroll-target="#visualisation-using-dimensionality-reduction"><span class="header-section-number">6.3.1</span> Visualisation using dimensionality reduction</a></li>
+  <li><a href="#do-the-replicates-agree" id="toc-do-the-replicates-agree" class="nav-link" data-scroll-target="#do-the-replicates-agree"><span class="header-section-number">6.3.2</span> Do the replicates agree?</a></li>
+  <li><a href="#visualisation-using-heatmaps" id="toc-visualisation-using-heatmaps" class="nav-link" data-scroll-target="#visualisation-using-heatmaps"><span class="header-section-number">6.3.3</span> Visualisation using heatmaps</a></li>
+  </ul></li>
+  <li><a href="#unsupervised-learning" id="toc-unsupervised-learning" class="nav-link" data-scroll-target="#unsupervised-learning"><span class="header-section-number">6.4</span> Unsupervised learning</a>
+  <ul class="collapse">
+  <li><a href="#hierarchical-clustering-with-hclust" id="toc-hierarchical-clustering-with-hclust" class="nav-link" data-scroll-target="#hierarchical-clustering-with-hclust"><span class="header-section-number">6.4.1</span> Hierarchical clustering with <code>hclust</code></a></li>
+  <li><a href="#hierarchical-clustering-with-hdbscan" id="toc-hierarchical-clustering-with-hdbscan" class="nav-link" data-scroll-target="#hierarchical-clustering-with-hdbscan"><span class="header-section-number">6.4.2</span> Hierarchical clustering with <code>HDBSCAN</code></a></li>
+  <li><a href="#validation-of-clusters" id="toc-validation-of-clusters" class="nav-link" data-scroll-target="#validation-of-clusters"><span class="header-section-number">6.4.3</span> Validation of clusters</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content" tabindex="-1">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title d-none d-lg-block"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Assessment of resolution</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Learning objectives
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Convert protein-level data from a <code>QFeatures</code> object into an <code>MSnSet</code> so that it can be used with <code>pRoloc</code></li>
+<li>Explain why the resolution of the data should be assessed before defining markers or running a classifier</li>
+<li>Visualise unlabelled protein correlation profiles using dimensionality reduction (PCA and t-SNE with <code>plot2D</code>) and heatmaps (<code>pheatmap</code>)</li>
+<li>Recognise the signs of good and poor resolution, and understand the limitations of dimensionality reduction plots</li>
+<li>Check that each replicate shows the same structure before relying on the combined data</li>
+<li>Use unsupervised clustering (<code>hclust</code> and <code>hdbscan</code>) to find groups of proteins with similar correlation profiles</li>
+<li>Use GO cellular component enrichment (<code>enrichGO</code>) to identify which subcellular compartments the clusters represent, and use this to decide which compartments to include as classes for machine learning</li>
+</ul>
+</div>
+</div>
+<section id="generating-a-subcellular-spatial-map" class="level2" data-number="6.1">
+<h2 data-number="6.1" class="anchored" data-anchor-id="generating-a-subcellular-spatial-map"><span class="header-section-number">6.1</span> Generating a subcellular spatial map</h2>
+<p>Now that we have generated our final dataset containing protein correlation profiles, we can use this data to generate spatial maps. Specifically, in part 2 of this course we will discuss how to determine the steady-state localisation of proteins utilising classical or Bayesian supervised machine learning algorithms. To do so we will focus on the concatenated U-2 OS DIA-LOP dataset and show how to generate a static spatial map from this data. We will also look at each replicate individually, to check that they show the same structure before we rely on the combined data.</p>
+<p>All protein correlation profiling methods, including LOP, PCP, DOMs and others, are based on the fractionation patterns of different organelles across a biochemical gradient. Patterns of proteins which co-fractionate together are indicative of proteins which co-localise together within the cell <span class="citation" data-cites="DeDuve1981">(<a href="#ref-DeDuve1981" role="doc-biblioref">De Duve and Beaufay 1981</a>)</span>. The computational analysis of such methodologies requires us to (1) identify distinct patterns of protein co-fractionation, and (2) associate each identified fractionation pattern with marker proteins known to reside in a particular subcellular compartment. Hence, we predict protein localisation by comparing the correlation profiles of query proteins to those of marker proteins with a known subcellular localisation.</p>
+<p>We will first discuss the definition of marker proteins, that is proteins which are known to consistently localise to a subcellular niche in a given cell type <em>and</em> under given conditions. The correlation profiles of the selected marker proteins will then be used to train a supervised machine learning classifier. The output of this algorithm will be a predicted subcellular localisation for each of our proteins. Finally, we show how to visualise the predicted protein localisations to generate a spatial map of the cell.</p>
+</section>
+<section id="conversion-to-msnset" class="level2" data-number="6.2">
+<h2 data-number="6.2" class="anchored" data-anchor-id="conversion-to-msnset"><span class="header-section-number">6.2</span> Conversion to <code>MSnSet</code></h2>
+<p>This section of the workflow requires specialised functions for data visualisation and machine learning. Such functions exist within the <a href="https://www.bioconductor.org/packages/release/bioc/html/pRoloc.html"><code>pRoloc</code> package</a> <span class="citation" data-cites="pRoloc2014">(<a href="#ref-pRoloc2014" role="doc-biblioref">Gatto et al. 2014</a>)</span>. In order to use the functions within <code>pRoloc</code> we need our data to be stored in an <code>MSnSet</code> rather than a <code>QFeatures</code> object. Although there is currently no function available to directly convert a <code>QFeatures</code> object into an <code>MSnSetList</code>, we can use the <code>as</code> function to coerce each experimental set (or <code>SummarizedExperiment</code>) of our <code>QFeatures</code> object into an <code>MSnSet</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Coerce each experimental set of interest into an MSnSet</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>msn <span class="ot">&lt;-</span> <span class="fu">as</span>(<span class="at">object =</span> qf[[<span class="st">"proteins_joined"</span>]], <span class="at">Class =</span> <span class="st">"MSnSet"</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="do">## Verify</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>msn</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>MSnSet (storageMode: lockedEnvironment)
+assayData: 8736 features, 27 samples 
+  element names: exprs 
+protocolData: none
+phenoData
+  sampleNames: R1F01 R1F02 ... R3F10 (27 total)
+  varLabels: Replicate Fraction runCol
+  varMetadata: labelDescription
+featureData
+  featureNames: A0A096LP01 A0A0B4J2F0 ... Q9Y6Y8 (8736 total)
+  fvarLabels: Channel Decoy ... missing_mean (23 total)
+  fvarMetadata: labelDescription
+experimentData: use 'experimentData(object)'
+Annotation:  
+- - - Processing information - - -
+ MSnbase version: 2.39.5 </code></pre>
+</div>
+</div>
+<p>As a reminder for readers, the structure of an <code>MSnSet</code> object is very similar to that of a <code>SummarizedExperiment</code>, or <code>QFeatures</code> experimental set. The relationship between these <code>QFeatures</code> and <code>MSnSet</code> functions is summarised below.</p>
+<div class="cell">
+<div class="cell-output-display">
+<table class="table table-hover caption-top table-sm table-striped small">
+<caption>Equivalent accessors/slot names between MSnbase and QFeatures</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">Description</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">MSnbase function</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">QFeatures function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Extract quantitative data</td>
+<td style="text-align: left;">exprs</td>
+<td style="text-align: left;">assay</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Extract feature data</td>
+<td style="text-align: left;">fData</td>
+<td style="text-align: left;">rowData</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Extract experiment data</td>
+<td style="text-align: left;">pData</td>
+<td style="text-align: left;">colData</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">The quantitative column names</td>
+<td style="text-align: left;">sampleNames</td>
+<td style="text-align: left;">colnames</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Column names of feature data</td>
+<td style="text-align: left;">fvarLabels</td>
+<td style="text-align: left;">rowDataNames</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Row names of the dataset</td>
+<td style="text-align: left;">featureNames</td>
+<td style="text-align: left;">rownames</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><br></p>
+<p>The columns we added to the <code>rowData</code> of the joined set at the end of part 1 are carried over into the <code>fData</code> of our <code>MSnSet</code>. These are the number of precursors per protein in each replicate (<code>n_rep1</code>, <code>n_rep2</code>, <code>n_rep3</code>) with their minimum and mean (<code>n_min</code>, <code>n_mean</code>), and the proportion of missing values per protein in each replicate (<code>missing_rep1</code>, <code>missing_rep2</code>, <code>missing_rep3</code>) with their maximum and mean (<code>missing_max</code>, <code>missing_mean</code>).</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Columns carried over from the QFeatures object</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fData</span>(msn) <span class="sc">|&gt;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "Channel"            "Decoy"              "Proteotypic"       
+ [4] "Protein.Ids"        "Protein.Group"      "Protein.Names"     
+ [7] "Genes"              "PG.TopN"            "Genes.TopN"        
+[10] "Translated.Q.Value" "Channel.Q.Value"    "Lib.PG.Q.Value"    
+[13] "is_contaminant"     "n_rep1"             "n_rep2"            
+[16] "n_rep3"             "n_min"              "n_mean"            
+[19] "missing_rep1"       "missing_rep2"       "missing_rep3"      
+[22] "missing_max"        "missing_mean"      </code></pre>
+</div>
+</div>
+<section id="peptide-level-subcellular-spatial-mapping" class="level4">
+<h4 class="anchored" data-anchor-id="peptide-level-subcellular-spatial-mapping">Peptide-level subcellular spatial mapping</h4>
+<p>The majority of correlation profiling experiments aim to generate one or more protein-level cell maps. Therefore, previous data analysis workflows, including our first <a href="https://f1000research.com/articles/5-2926">F1000 workflow for spatial proteomics</a> <span class="citation" data-cites="Breckels2018">(<a href="#ref-Breckels2018" role="doc-biblioref">Breckels et al. 2018</a>)</span>, started with the protein-level data output from a database search. However, it is also possible to generate cell maps at the peptide or even PSM/precursor level. In particular, peptide-level spatial maps have the potential to provide information about the differential localisation of proteoforms by revealing cases where peptides corresponding to the same master protein accession behave differently. For instance, the modified and unmodified versions of peptide sequences can be mapped separately rather than being aggregating into a single protein-level entry. Further, peptide-level maps can be used for quality control to investigate how consistent the profiles and predicted localisations of peptides are for proteins with limited peptide support.</p>
+<p>One of the advantages of processing the data from the lowest possible level (PSM/precursor-level) within the <code>QFeatures</code> infrastructure is the ability to store and access all of these data levels in a single object. In part 1 of this workflow we aggregated our PSM data directly to protein by using the <code>aggregateFeatures</code> function to group precursors based on their protein accession. To get peptide-level information, we could have included an additional intermediate aggregation step, as demonstrated in <span class="citation" data-cites="Hutchings2023">Hutchings et al. (<a href="#ref-Hutchings2023" role="doc-biblioref">2023</a>)</span>. Here, we would first aggregate all precursors into peptides by passing either <code>Sequence</code> (ignore modifications) or <code>Modified.Sequence</code> (include modifications) to the <code>fcol</code> argument in <code>aggregateFeatures</code>, and then all peptides into proteins by passing <code>Protein.Group</code>. The peptide-level data could then be extracted into an <code>MSnSet</code> in the same way as demonstrated above. All functions used throughout the rest of the workflow could be equally applied to an <code>MSnSet</code> containing peptide-level data, although some functions may require longer to run given that the peptide-level data is larger than the corresponding protein-level dataset.</p>
+<p>To generate peptide-level spatial maps using this workflow:</p>
+<ol type="1">
+<li>Aggregate from PSMs/precursors to peptides within the <code>QFeatures</code> infrastructure</li>
+<li>Extract peptide-level experimental set from <code>QFeatures</code> into an <code>MSnSet</code></li>
+<li>Continue to use the rest of the workflow in the same way as demonstrated for protein-level data</li>
+</ol>
+<p>An example workflow for peptide-level mapping is provided in the Appendix, which is available from Zenodo under the identifier <a href="http://doi.org/10.5281/zenodo.15100485">doi:10.5281/zenodo.15100485</a>.</p>
+</section>
+</section>
+<section id="initial-assessment-of-data-resolution" class="level2" data-number="6.3">
+<h2 data-number="6.3" class="anchored" data-anchor-id="initial-assessment-of-data-resolution"><span class="header-section-number">6.3</span> Initial assessment of data resolution</h2>
+<p>Prior to the annotation of marker proteins, it is first necessary to assess the resolution of the data. The aim of this assessment is to verify that subcellular niches have been successfully separated along the biochemical fractionation gradient and that there are distinct patterns of co-fractionation present in the data.</p>
+<section id="visualisation-using-dimensionality-reduction" class="level3" data-number="6.3.1">
+<h3 data-number="6.3.1" class="anchored" data-anchor-id="visualisation-using-dimensionality-reduction"><span class="header-section-number">6.3.1</span> Visualisation using dimensionality reduction</h3>
+<p>One way in which the initial assessment of resolution can be made is by using dimensionality reduction methods to summarise and visualise the dataset. Rather than looking directly at protein correlation profiles, here comprised of 27 dimensions (the fractions of all three replicates), we simplify the data and visualise it in a two dimensional space. In this case, proteins which are localised to the same subcellular niche should have similar correlation profiles and cluster together within a two dimensional space. For a more in-depth discussion regarding the interpretation of dimensionality reduction plots for correlation profiling data users are directed to <span class="citation" data-cites="Gatto2019">Gatto et al. (<a href="#ref-Gatto2019" role="doc-biblioref">2019</a>)</span>.</p>
+<p>Principal Component Analysis (PCA) and t-distributed Stochastic Neighbour Embedding (t-SNE) are two dimensionality reduction methods which are commonly used for the visualisation of spatial proteomics data. The <code>plot2D</code> and <code>plot3D</code> functions within <code>pRoloc</code> can be used to generate and visualise PCA and t-SNE data, along with other approaches to dimensionality reduction (all methods are listed in <code>plot2Dmethods</code>). We pass our <code>msn</code> object to <code>plot2D</code> and specify <code>"PCA"</code> or <code>"t-SNE"</code> as our method. We also specify <code>fcol = NULL</code> to ignore any feature data and prevent the colouring of features (proteins) based on any annotation. Finally, when using any method which requires random number generation, we include a <code>set.seed</code> function to ensure reproducibility. Without setting a seed we would get a different t-SNE plot each time the code is executed.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="do">## Visualise unlabelled data using PCA and t-SNE</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>msn  <span class="sc">|&gt;</span> </span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot2D</span>(<span class="at">fcol =</span> <span class="cn">NULL</span>, <span class="at">col =</span> <span class="st">"black"</span>, <span class="at">method =</span> <span class="st">"PCA"</span>, <span class="at">main =</span> <span class="st">"PCA"</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">399</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>msn <span class="sc">|&gt;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot2D</span>(<span class="at">fcol =</span> <span class="cn">NULL</span>, <span class="at">col =</span> <span class="st">"black"</span>, <span class="at">method =</span> <span class="st">"t-SNE"</span>, <span class="at">main =</span> <span class="st">"t-SNE"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required namespace: Rtsne</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_01_resolution_clustering_files/figure-html/unnamed-chunk-3-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="P2_01_resolution_clustering_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="960"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>By visualising the data without any annotation we can see evidence for the presence of clusters within our dataset. This is our first indication that the experiment has been successful and that different subcellular compartments have been separated along the fractionation gradient. At this point users are looking for the data to have shape and structure. If dimensionality reduction results in a mass of features in the middle of the plot with minimal shape or clusters, this indicates that (1) data pre-processing was not performed correctly e.g., a log2 transformation was applied, or (2) the experiment itself lacks resolution, potentially due to over-lysis of cells resulting in loss of subcellular structures prior to biochemical fractionation.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>An additional note on dimensionality reduction
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Dimensionality reduction methods are excellent visualisation tools for subcellular proteomics data. However, users should be careful when interpreting such figures since they only represent a simplified snapshot of the data. PCA, for example, uses a linear data transformation which means that distance can be directly interpreted (proteins closer together have more similar fractionation profiles). However, only two or three principal components can be visualised in a given plot meaning that clusters resolved in alternative principal components (i.e., dimensions) cannot be seen. The t-SNE and Uniform Manifold Approximation and Projection for Dimension Reduction (UMAP) methods, on the other hand, require non-linear transformation of the data which prevents interpretation of distance and can result in clustering artefacts <span class="citation" data-cites="Wattenberg2016">(<a href="#ref-Wattenberg2016" role="doc-biblioref">Wattenberg et al. 2016</a>)</span> but tends to show more of the overall variation. Only visualisation of the protein correlation profiles themselves can provide a true picture of the data.</p>
+</div>
+</div>
+</section>
+<section id="do-the-replicates-agree" class="level3" data-number="6.3.2">
+<h3 data-number="6.3.2" class="anchored" data-anchor-id="do-the-replicates-agree"><span class="header-section-number">6.3.2</span> Do the replicates agree?</h3>
+<p>Before relying on the combined data, it is worth checking that each replicate shows the same overall structure. We coerce the normalised protein-level set of each replicate, before joining, into its own <code>MSnSet</code> and plot each one.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Normalised protein-level sets for each replicate, before joining</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>rep_sets <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="at">rep1 =</span> <span class="st">"proteins_norm_R1"</span>,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>              <span class="at">rep2 =</span> <span class="st">"proteins_norm_R2"</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>              <span class="at">rep3 =</span> <span class="st">"proteins_norm_R3"</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="do">## One MSnSet per replicate</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>msn_reps <span class="ot">&lt;-</span> <span class="fu">lapply</span>(rep_sets, <span class="cf">function</span>(s) <span class="fu">as</span>(qf[[s]], <span class="st">"MSnSet"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>))</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (r <span class="cf">in</span> <span class="fu">names</span>(msn_reps)) {</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot2D</span>(msn_reps[[r]], <span class="at">fcol =</span> <span class="cn">NULL</span>, <span class="at">col =</span> <span class="st">"black"</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">main =</span> <span class="fu">paste</span>(<span class="st">"PCA:"</span>, r))</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_01_resolution_clustering_files/figure-html/unnamed-chunk-5-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="P2_01_resolution_clustering_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="1440"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Each replicate has its own PCA, so the plots may be rotated or mirrored relative to each other. What matters is that the same clusters and overall shape appear in each replicate. If one replicate showed much less structure, this could indicate a problem with that fractionation and would be worth investigating before combining the data.</p>
+<p>In this course we classify proteins using the combined data rather than each replicate separately. As discussed in the aggregation lesson, combining the replicates increases resolution, since each protein is described by its profiles in all three replicates, and avoids having to reconcile three separate sets of predictions, for example by a majority vote. It also reduces the influence of any one replicate on the result.</p>
+</section>
+<section id="visualisation-using-heatmaps" class="level3" data-number="6.3.3">
+<h3 data-number="6.3.3" class="anchored" data-anchor-id="visualisation-using-heatmaps"><span class="header-section-number">6.3.3</span> Visualisation using heatmaps</h3>
+<p>In addition to dimensionality reduction, heatmaps are also a popular tool for visualising patterns and relationships in large datasets. To gain a snapshot of proteins behaviour across different fractions and replicates we can use the <code>pheatmap</code> function from the <code>pheatmap</code> package to generate a clustered heatmap of the normalised protein correlation profiles. The input to <code>pheatmap</code> is the matrix of correlation profiles stored in the <code>exprs</code> slot of the <code>MSnSet</code>. By default a hierarchical clustering is performed on the correlation profiles and the heatmap is ordered according to this clustering.</p>
+<p>Since we wish to visualise the correlation profile of each protein in an intuitive order (that is the order of the biochemical fractionation gradient), we tell <code>pheatmap</code> not to cluster based on columns (quantitative channels) by setting <code>cluster_cols</code> to <code>FALSE</code>. This will retain the column order we have in our <code>MSnSet</code> rather than clustering similar columns together. In order to get some idea of which proteins (rows of the <code>MSnSet</code>) exhibit similar normalised abundance distributions and, therefore, could reside in the same subcellular compartment, we set <code>cluster_rows</code> to <code>TRUE</code>. This means that proteins (rows) with similar correlation profiles will be grouped together.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Plot heatmap of protein correlation profiles - row clustering only</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">pheatmap</span>(<span class="at">mat =</span> <span class="fu">exprs</span>(msn),</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">cluster_rows =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">cluster_cols =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">show_rownames =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_01_resolution_clustering_files/figure-html/unnamed-chunk-6-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="P2_01_resolution_clustering_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<!-- ```{r heatmap-lopit, out.width = '70%', echo = FALSE, fig.cap = "Heatmap of the correlation profiles from all replicates in the U-2 OS data."} -->
+<!-- knitr::include_graphics("figs/heatmap_protein_quant.pdf", error = FALSE) -->
+<!-- ``` -->
+<p>We can quickly see patterns of similarity emerging for proteins across fractions, and also across replicates, indicated by coloured blocks. The colours reflect the normalised relative abundance for each protein in each fraction and replicate; blue indicating a low recorded normalised abundance and yellow, orange and red indicating a high normalised abundance value for a given protein. Protein (row) names are omitted for clarity. Blocks with different colours across columns are indicative of structured correlation profiles. A block of proteins that all peak in the same fractions, with a pattern not shared by other blocks, gives us confidence that these profiles will be resolved from others in the dataset and that this set of proteins could represent a subcellular niche. Depending on the experimental design we expect to see a similar trend between replicates in where proteins peak in abundance across the same fractions.</p>
+</section>
+</section>
+<section id="unsupervised-learning" class="level2" data-number="6.4">
+<h2 data-number="6.4" class="anchored" data-anchor-id="unsupervised-learning"><span class="header-section-number">6.4</span> Unsupervised learning</h2>
+<section id="hierarchical-clustering-with-hclust" class="level3" data-number="6.4.1">
+<h3 data-number="6.4.1" class="anchored" data-anchor-id="hierarchical-clustering-with-hclust"><span class="header-section-number">6.4.1</span> Hierarchical clustering with <code>hclust</code></h3>
+<p>Although visualisation tools can help us see structure and indicate that some subcellular compartments have been resolved, the plots we have looked at so far cannot tell us <em>which</em> compartments are resolved. Unsupervised learning via clustering analysis can be used to gain insight into which subcellular niches we have the ability to resolve in our data. At a basic level, clustering methods simply seek to find structure in an unlabelled dataset via grouping data points whose members are similar in some way. This step is particularly useful for those studying the spatial proteome of non-model organisms or aiming to discover new subcellular structures. Several unsupervised machine learning algorithms such as hierarchical clustering and <em>k</em>-means, are available in <a href="https://www.bioconductor.org/packages/release/bioc/html/pRoloc.html"><code>pRoloc</code></a> via the <a href="https://www.bioconductor.org/packages/release/bioc/html/MLInterfaces.html"><code>MLInterfaces</code></a> package, as outlined in the vignette <a href="https://bioconductor.org/packages/3.20/bioc/vignettes/pRoloc/inst/doc/v01-pRoloc-tutorial.html#51_Unsupervised_ML">Using pRoloc for spatial proteomics data analysis</a>.</p>
+<p>In the section above we carried out hierarchical clustering and visualisation using the <code>pheatmap</code> function. This allowed us to cluster rows and see groups of rows (proteins) with similar abundance profiles (correlation profiles). We can take this a step further by annotating the discovered clusters on our data using dimensionality reduction.</p>
+<p>First, we regenerate the same heatmap as above with some additional annotations to make the individual clusters easier to see. Here, we choose to do the hierarchical clustering separately from the plotting so that we have all of the data we need in an accessible object. The same hierarchical clustering carried out within the <code>pheatmap</code> function can also be completed using the <code>hclust</code> function from the <code>stats</code> package. We first pass the quantitative <code>exprs</code> data of our <code>msn</code> to the <code>dist</code> function to generate a distance matrix, and then pass this distance matrix to <code>hclust</code>. We will store the results in an object called <code>hc</code>. Next, we use the <code>cutree</code> function to specify how many clusters we wish to split the data into. The most appropriate number will vary depending on the data size and resolution, so users should test a few options. Here, we demonstrate using 12 clusters since most high-quality correlation profiling experiments resolve 10-15 subcellular compartments.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Carry out hierarchical clustering with hclust</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>hc <span class="ot">&lt;-</span> msn <span class="sc">|&gt;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">exprs</span>() <span class="sc">|&gt;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dist</span>() <span class="sc">|&gt;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">hclust</span>()</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="do">## Specify number of clusters (k) and extract proteins in each cluster</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>k <span class="ot">&lt;-</span> <span class="dv">12</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>cl <span class="ot">&lt;-</span> <span class="fu">cutree</span>(hc, k)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Now that we have a named vector containing all of our proteins with an associated hierarchical cluster number, we can regenerate our heatmap and annotate this information. To do so, we generate a <code>data.frame</code> with a column called <code>Cluster</code> containing the cluster number and make sure that the <code>rownames</code> match the <code>featureNames</code> of our <code>msn</code> object. We also define our own colours to match the default colours used by <code>plot2D</code> such that our clusters have the same colour annotations in our heatmap and dimensionality reduction visualisation. Finally, we use the <code>pheatmap</code> function as above but pass our row annotation <code>data.frame</code> to <code>annotation_row</code> and our pre-defined colours to <code>annotation_colors</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Create a dataframe containing cluster annotations</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>cl_annot <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="st">"Cluster"</span> <span class="ot">=</span> <span class="fu">factor</span>(cl))</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="do">## Define colours (to be same as PCA below = default plot2D)</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>my_cols <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="st">"Cluster"</span> <span class="ot">=</span> <span class="fu">getStockcol</span>()[<span class="dv">1</span><span class="sc">:</span>k] <span class="sc">|&gt;</span> <span class="fu">set_names</span>(<span class="dv">1</span><span class="sc">:</span>k))</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="do">## Plot heatmap with rows annotated by cluster number</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="fu">pheatmap</span>(<span class="at">mat =</span> <span class="fu">exprs</span>(msn), </span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">cluster_rows =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">cluster_cols =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>         <span class="at">show_rownames =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>         <span class="at">cutree_rows =</span> k, </span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>         <span class="at">annotation_row =</span> cl_annot,</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>         <span class="at">annotation_colors =</span> my_cols)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_01_resolution_clustering_files/figure-html/unnamed-chunk-8-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="P2_01_resolution_clustering_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>To plot these hierarchical clusters on a dimensionality reduction map, we first add the cluster information to the <code>fData</code> of our <code>MSnSet</code>. We can then use the <code>plot2D</code> function to generate PCA plots with the discovered clusters annotated. As above, we pass our <code>msn</code> object and specify the dimensionality reduction method to use. We also tell the function which column of our <code>fData</code> to be used for colouring the points - here we use the newly created <code>hc</code> column.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Add hierarchical cluster information to MSnSet fData</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fData</span>(msn)<span class="sc">$</span>hc <span class="ot">&lt;-</span> cl</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="do">## Visualise hierarchical clusters on PCA</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>msn <span class="sc">|&gt;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot2D</span>(<span class="at">fcol =</span> <span class="st">"hc"</span>, <span class="at">method =</span> <span class="st">"PCA"</span>, <span class="at">main =</span> <span class="st">"Hierarchical clustering results on PCA"</span>)</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="do">## Add legend</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>msn <span class="sc">|&gt;</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">addLegend</span>(<span class="at">fcol =</span> <span class="st">"hc"</span>, <span class="at">cex =</span> <span class="fl">0.7</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_01_resolution_clustering_files/figure-html/unnamed-chunk-9-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="P2_01_resolution_clustering_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="576"></a></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="hierarchical-clustering-with-hdbscan" class="level3" data-number="6.4.2">
+<h3 data-number="6.4.2" class="anchored" data-anchor-id="hierarchical-clustering-with-hdbscan"><span class="header-section-number">6.4.2</span> Hierarchical clustering with <code>HDBSCAN</code></h3>
+<p>Hierarchical DBSCAN (HDBSCAN) is another form of clustering which can be executed in R using the <a href="https://cran.r-project.org/web/packages/dbscan/index.html"><code>dbscan</code> package</a> <span class="citation" data-cites="Hahsler2019">(<a href="#ref-Hahsler2019" role="doc-biblioref">Hahsler et al. 2019</a>)</span>. This algorithm has been used to successfully uncover and validate clusters in subcellular spatial proteomics data generated from <em>Toxoplasma gondii</em> <span class="citation" data-cites="Barylyuk2020">(<a href="#ref-Barylyuk2020" role="doc-biblioref">Barylyuk et al. 2020</a>)</span> and African trypanosomes <span class="citation" data-cites="Moloney2023">(<a href="#ref-Moloney2023" role="doc-biblioref">Moloney et al. 2023</a>)</span>. Extensive documentation on the use of HDBSCAN and related algorithms can be found at <a href="https://hdbscan.readthedocs.io/en/latest/basic_hdbscan.html">https://hdbscan.readthedocs.io/en/latest/basic_hdbscan.html</a>. The main benefit of the <code>hdbscan</code> function is its simplicity. Users are only required to optimise a single parameter; the minimum number of points to comprise a cluster, termed <code>minPts</code>. The optimal value for this parameter will depend upon the structure and resolution of the data, so some initial exploration is required. Given that a subcellular compartment will need to comprise at least 10-15 marker proteins for use in machine learning (discussed later in this workflow), we recommend testing values between 10 and 20 for <code>minPts</code>, as demonstrated below.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Test a cluster size between 10 and 20 proteins per cluster</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>min_N <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">10</span><span class="sc">:</span><span class="dv">20</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>cluster_N <span class="ot">&lt;-</span> <span class="fu">vector</span>(<span class="at">mode =</span> <span class="st">"numeric"</span>, <span class="at">length =</span> <span class="fu">length</span>(min_N))</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="do">## Run HDBSCAN -- this takes a few minutes to run</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(min_N)) {</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  result <span class="ot">&lt;-</span> msn <span class="sc">|&gt;</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">exprs</span>() <span class="sc">|&gt;</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">hdbscan</span>(<span class="at">minPts =</span> min_N[i])</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  cluster_N[i] <span class="ot">&lt;-</span> <span class="fu">max</span>(result<span class="sc">$</span>cluster)</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="do">## Structure results into a data.frame</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>hdb_opt <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(min_N, cluster_N)</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="do">## Plot minimum cluster size against resulting number of clusters</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>hdb_opt <span class="sc">|&gt;</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> min_N, <span class="at">y =</span> cluster_N)) <span class="sc">+</span> </span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>() <span class="sc">+</span> </span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Min proteins per cluster"</span>, </span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Number of clusters"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>For this data the unsupervised algorithm has identified only a small number of clusters within our correlation profiling data. Whilst it may be worth exploring the results of clustering with various <code>minPts</code>, we will here demonstrate how to look at the results derived from a <code>minPts</code> value of 10. We first run the HDBSCAN algorithm with our selected <code>minPts</code> and append these results to the <code>fData</code> of our <code>msn</code> object to look at the results.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Run HDBSCAN using optimal minimum cluster size - here 10</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>hdb_results <span class="ot">&lt;-</span> msn <span class="sc">|&gt;</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">exprs</span>() <span class="sc">|&gt;</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">hdbscan</span>(<span class="at">minPts =</span> <span class="dv">10</span>)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="do">## Add the results of HDBSCAN to our MSnSet</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="fu">fData</span>(msn)<span class="sc">$</span>hdb_cluster_id <span class="ot">&lt;-</span> hdb_results<span class="sc">$</span>cluster</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="fu">fData</span>(msn)<span class="sc">$</span>hdb_cluster_prob <span class="ot">&lt;-</span> hdb_results<span class="sc">$</span>membership_prob</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="do">## Check how many proteins are in each cluster </span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>msn <span class="sc">|&gt;</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fData</span>() <span class="sc">|&gt;</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(hdb_cluster_id) <span class="sc">|&gt;</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">table</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+   0    1    2    3    4    5    6 
+4409   53   18 2895  592   60  709 </code></pre>
+</div>
+</div>
+<p>As we can see, <code>hdbscan</code> has allocated the proteins to 1 of the 6 clusters it has found in the data. This information is found in <code>hdb_results$cluster</code> and we have added it to our <code>MSnSet</code> and it is can be accessed via <code>fData(msn)$hdb_cluster_id</code>. If we check the column names of the <code>fData</code> we can verify the results have been stored in the <code>MSnSet</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Check columns in fData</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>msn <span class="sc">|&gt;</span> </span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fvarLabels</span>()  <span class="co"># does the same as names() for fData</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "Channel"            "Decoy"              "Proteotypic"       
+ [4] "Protein.Ids"        "Protein.Group"      "Protein.Names"     
+ [7] "Genes"              "PG.TopN"            "Genes.TopN"        
+[10] "Translated.Q.Value" "Channel.Q.Value"    "Lib.PG.Q.Value"    
+[13] "is_contaminant"     "n_rep1"             "n_rep2"            
+[16] "n_rep3"             "n_min"              "n_mean"            
+[19] "missing_rep1"       "missing_rep2"       "missing_rep3"      
+[22] "missing_max"        "missing_mean"       "hc"                
+[25] "hdb_cluster_id"     "hdb_cluster_prob"  </code></pre>
+</div>
+</div>
+<p>Notice that some proteins are allocated to cluster “0”. The “0” category denotes proteins which did not fit into any of the discovered clusters.</p>
+<p>We can use the <code>plot2D</code> function to generate PCA and t-SNE plots with the discovered clusters annotated. As before, we pass our <code>msn</code> object and specify the dimensionality reduction method we wish to use. We also tell the function which column of our <code>fData</code> to be used for colouring the points - here we use the newly created <code>hdb_cluster_id</code> column. Finally, we pass the argument <code>unknown = "0"</code> so that the large cluster of uncertain proteins remains unlabelled.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="do">## Visualise HDBSCAN unsupervised clustering using PCA</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>msn <span class="sc">|&gt;</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot2D</span>(<span class="at">fcol =</span> <span class="st">"hdb_cluster_id"</span>, <span class="at">method =</span> <span class="st">"PCA"</span>, <span class="at">unknown =</span> <span class="st">"0"</span>,</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">main =</span> <span class="st">"HDBSCAN results on PCA"</span>)</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="do">## Visualise HDBSCAN unsupervised clustering using t-SNE</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">399</span>)</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>msn <span class="sc">|&gt;</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot2D</span>(<span class="at">fcol =</span> <span class="st">"hdb_cluster_id"</span>, <span class="at">method =</span> <span class="st">"t-SNE"</span>, <span class="at">unknown =</span> <span class="st">"0"</span>,</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>         <span class="at">main =</span> <span class="st">"HDBSCAN results on t-SNE"</span>)</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a><span class="do">## Add legend</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>msn <span class="sc">|&gt;</span> </span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">addLegend</span>(<span class="at">fcol =</span> <span class="st">"hdb_cluster_id"</span>, <span class="at">unknown =</span> <span class="st">"0"</span>, <span class="at">cex =</span> .<span class="dv">7</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_01_resolution_clustering_files/figure-html/unnamed-chunk-13-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-6"><img src="P2_01_resolution_clustering_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="960"></a></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="validation-of-clusters" class="level3" data-number="6.4.3">
+<h3 data-number="6.4.3" class="anchored" data-anchor-id="validation-of-clusters"><span class="header-section-number">6.4.3</span> Validation of clusters</h3>
+<p>Visualisation confirms that the clustering looks real and sensible. Therefore, we will use gene ontology (GO) enrichment analyses to determine which subcellular niches each of the discovered clusters represent. Many packages exist to facilitate GO enrichment analysis in R, including <a href="https://bioconductor.org/packages/release/bioc/html/topGO.html"><code>topGO</code></a> <span class="citation" data-cites="topGO">(<a href="#ref-topGO" role="doc-biblioref">Alexa 2022</a>)</span>, <a href="https://www.bioconductor.org/packages/release/bioc/html/GOfuncR.html"><code>GOfuncR</code></a> <span class="citation" data-cites="GofuncR">(<a href="#ref-GofuncR" role="doc-biblioref">Grote 2022</a>)</span>, and <a href="https://bioconductor.org/packages/release/bioc/html/clusterProfiler.html"><code>clusterProfiler</code></a> <span class="citation" data-cites="Wu2021">(<a href="#ref-Wu2021" role="doc-biblioref">Wu et al. 2021</a>)</span>. Here we will use <code>enrichGO</code> function in the <code>clusterProfiler</code> package. The aim of this gene ontology enrichment analysis is to determine whether the proteins assigned to a given cluster are enriched for any cellular component (CC) GO terms. That is, we ask whether the proteins in a cluster are annotated with a CC GO term more than expected by chance based on the entire dataset.</p>
+<p>To use the <code>enrichGO</code> function we will pass a vector containing the protein accessions of interest, here those within a given HDBSCAN cluster. We also need to provide a background, or ‘<code>universe</code>’, which is a vector containing the accessions of all proteins within our spatial map. Other arguments include the <code>keyType</code> to tell the function that we are using UniProt accessions, <code>OrgDb</code> to pass a database object for the species of interest (here <code>org.Hs.eg.db</code> for human samples), and <code>ont</code> to indicate that we wish to consider only GO categories annotated as cellular component (CC). For users studying other model organisms, the <code>org.Hs.eg.db</code> object can be swapped out for a database corresponding to the species of interest e.g., <code>org.Mm.eg.db</code> for mouse. Users mapping the spatial proteome of a non-model organism may need to manually assess the proteins comprising each cluster to determine their identities.</p>
+<p>Below we demonstrate how to carry out GO enrichment on cluster number 6.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Extract protein accessions in the cluster</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>protein_id <span class="ot">&lt;-</span> msn <span class="sc">|&gt;</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fData</span>() <span class="sc">|&gt;</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(hdb_cluster_id <span class="sc">==</span> <span class="dv">6</span>) <span class="sc">|&gt;</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(Protein.Group)</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="do">## Extract all protein accessions in the data</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>background_proteins <span class="ot">&lt;-</span> msn <span class="sc">|&gt;</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fData</span>() <span class="sc">|&gt;</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(Protein.Group)</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="do">## Carry out GO enrichment searching for CC terms</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>cluster_6_go <span class="ot">&lt;-</span> <span class="fu">enrichGO</span>(<span class="at">gene =</span> protein_id,</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>                         <span class="at">universe =</span> background_proteins,</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>                         <span class="at">OrgDb =</span> org.Hs.eg.db,</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>                         <span class="at">keyType =</span> <span class="st">"UNIPROT"</span>,</span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>                         <span class="at">ont =</span> <span class="st">"CC"</span>,</span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>                         <span class="at">pAdjustMethod =</span> <span class="st">"BH"</span>,</span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>                         <span class="at">readable =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>                         <span class="at">pvalueCutoff =</span> <span class="fl">0.01</span>,</span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>                         <span class="at">qvalueCutoff =</span> <span class="fl">0.01</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="do">## View the first few enriched terms</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>cluster_6_go <span class="sc">|&gt;</span> </span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slot</span>(<span class="st">"result"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(Description) <span class="sc">|&gt;</span> </span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "mitochondrial inner membrane"            
+[2] "mitochondrial matrix"                    
+[3] "organelle inner membrane"                
+[4] "mitochondrial protein-containing complex"
+[5] "respiratory chain complex"               
+[6] "organellar ribosome"                     </code></pre>
+</div>
+</div>
+<p>We can plot the results using the <code>barplot</code> function. We pass the argument <code>showCategory = 10</code> to tell <code>enrichGO</code> to only plot the first 10 enriched terms. Other plotting functions are available in the <code>enrichGO</code> package. We refer users to the online book for the package which can be found at https://yulab-smu.top/biomedical-knowledge-mining-book/.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Plot results</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">barplot</span>(cluster_6_go, <span class="at">showCategory =</span> <span class="dv">10</span>) <span class="sc">+</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Enriched terms in Cluster 6"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_01_resolution_clustering_files/figure-html/unnamed-chunk-16-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-7"><img src="P2_01_resolution_clustering_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The results of GO enrichment indicate that cluster 6 represents proteins associated with the mitochondrion. This provides an additional unbiased level of evidence that the mitochondrion is sufficiently resolved in our dataset to be included as a compartment in the downstream analyses.</p>
+<p>To simplify the investigation of all discovered clusters, the code below can be used to generate a <code>list</code> of the enriched CC GO terms for each cluster.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Extract the number of clusters we have found</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> hdb_results[[<span class="st">"cluster"</span>]] <span class="sc">|&gt;</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">max</span>()</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="do">## Define protein background</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>background_proteins <span class="ot">&lt;-</span> msn <span class="sc">|&gt;</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fData</span>() <span class="sc">|&gt;</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(Protein.Group)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Initialise a container for the GO output</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>go_result <span class="ot">&lt;-</span> <span class="fu">vector</span>(<span class="st">"list"</span>, n)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="do">## For loop over each cluster number carrying out GO enrichment</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n) {</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  <span class="do">## Step (1) - extract protein IDs in the cluster</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  protein_id <span class="ot">&lt;-</span> msn <span class="sc">|&gt;</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">fData</span>() <span class="sc">|&gt;</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(hdb_cluster_id <span class="sc">==</span> i) <span class="sc">|&gt;</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pull</span>(Protein.Group)</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>  <span class="do">## Step (2) - run enrichGO</span></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>  go_result[[i]] <span class="ot">&lt;-</span> <span class="fu">enrichGO</span>(<span class="at">gene =</span> protein_id,</span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>                             <span class="at">universe =</span> background_proteins,</span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>                             <span class="at">OrgDb =</span> org.Hs.eg.db,</span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>                             <span class="at">keyType =</span> <span class="st">"UNIPROT"</span>,</span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>                             <span class="at">ont =</span> <span class="st">"CC"</span>,</span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>                             <span class="at">pAdjustMethod =</span> <span class="st">"BH"</span>,</span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>                             <span class="at">readable =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a>                             <span class="at">pvalueCutoff =</span> <span class="fl">0.01</span>,</span>
+<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a>                             <span class="at">qvalueCutoff =</span> <span class="fl">0.01</span>)</span>
+<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>To get an overview of the enrichment results, we plot a selection of significantly enriched GO cellular component terms for each cluster. All terms passed a p-value and q-value threshold of 0.01, and we show five terms from each cluster’s list. Each row is a GO term and each column a cluster. A dot means that term is significantly enriched in that cluster. A term can appear in more than one cluster, so the plot shows both what each cluster is enriched for and where clusters overlap.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Combine GO outputs into data frames</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>go_result <span class="ot">&lt;-</span> <span class="fu">lapply</span>(go_result, as.data.frame)</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="do">## Combine all results into one table, with a Cluster column</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>plot_df <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(go_result, <span class="at">.id =</span> <span class="st">"Cluster"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Cluster =</span> <span class="fu">paste</span>(<span class="st">"Cluster"</span>, Cluster)) <span class="sc">|&gt;</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(Cluster, p.adjust) <span class="sc">|&gt;</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Description =</span> <span class="fu">factor</span>(Description, <span class="at">levels =</span> <span class="fu">rev</span>(<span class="fu">unique</span>(Description))))</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="do">## Filter for top 5 terms per cluster</span></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>top_terms <span class="ot">&lt;-</span> plot_df <span class="sc">|&gt;</span></span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Cluster) <span class="sc">|&gt;</span></span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_min</span>(p.adjust, <span class="at">n =</span> <span class="dv">5</span>, <span class="at">with_ties =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(Description) <span class="sc">|&gt;</span></span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unique</span>()</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a><span class="do">## Plot</span></span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>plot_df <span class="sc">|&gt;</span></span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Description <span class="sc">%in%</span> top_terms) <span class="sc">|&gt;</span></span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Cluster, <span class="at">y =</span> Description)) <span class="sc">+</span></span>
+<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">5</span>, <span class="at">colour =</span> <span class="st">"steelblue"</span>) <span class="sc">+</span></span>
+<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Enriched GO cellular component terms per cluster"</span>,</span>
+<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_01_resolution_clustering_files/figure-html/unnamed-chunk-19-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-8"><img src="P2_01_resolution_clustering_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The plot shows that most clusters correspond to a recognisable subcellular compartment:</p>
+<ul>
+<li>Clusters 1 and 2 are enriched for chromatin and chromosome terms, such as heterochromatin, kinetochore and condensed chromosome, so they likely represent chromatin-associated nuclear proteins. They share many terms, which suggests the clustering has split one broad nuclear or chromatin compartment into two. These clusters may reflect real biological differences, or they may be technical: the clustering may have resolved two sub-populations of proteins that we would consider part of the same niche.</li>
+<li>Cluster 3 is enriched for terms related to RNA processing and the ribosome: the spliceosome, preribosome and cytosolic ribosome. It also shares some chromosome terms with clusters 1 and 2. This cluster is likely a mixture of nuclear and cytosolic ribonucleoprotein complexes, which often co-fractionate in correlation profiling experiments.</li>
+<li>Cluster 4 is enriched for endoplasmic reticulum, cell surface and extracellular matrix terms. Proteins of the secretory pathway and the plasma membrane often have similar fractionation profiles, so they can be hard to separate.</li>
+<li>Cluster 5 is enriched for lysosome and Golgi terms. It shares terms such as primary lysosome and azurophil granule with cluster 4.</li>
+<li>Cluster 6 is clearly mitochondrial, with terms such as mitochondrial inner membrane, mitochondrial matrix and respiratory chain complex.</li>
+</ul>
+<p>When interpreting this plot, keep in mind that GO terms are hierarchical. Many enriched terms are closely related (for example, “condensed chromosome” and “condensed chromosome, centromeric region”), so a cluster can have many significant terms that all describe the same compartment. Showing a few terms per cluster makes the main pattern easier to see. These terms are a selection rather than the most significant ones, so the full list of enriched terms should be checked before drawing conclusions.</p>
+<p>Overall, GO enrichment gives us confidence that the unsupervised clusters reflect real subcellular structure in the data. It also helps us decide which compartments are well resolved, and therefore which subcellular classes to include when defining markers. A cluster that maps cleanly to a single compartment, such as cluster 6, is a good candidate for marker selection. Clusters that are mixed or share many terms, such as clusters 1–3 and 4–5, may need to be combined into broader classes or examined more closely before markers are assigned.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Key Points
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Functions in <code>pRoloc</code> require data in an <code>MSnSet</code>. Protein-level sets in a <code>QFeatures</code> object can be coerced with <code>as(..., "MSnSet")</code>, where <code>assay</code>, <code>rowData</code> and <code>colData</code> become <code>exprs</code>, <code>fData</code> and <code>pData</code>.</li>
+<li>Before defining markers, check that the data has resolution: distinct patterns of co-fractionation that separate subcellular niches.</li>
+<li>PCA, t-SNE and heatmaps of unlabelled data give a quick first look. Clear shape and clusters indicate good resolution, whereas a single central mass of proteins suggests a processing error (e.g.&nbsp;log transformation) or a failed fractionation.</li>
+<li>Plotting each replicate separately checks that they show the same structure before relying on the combined data.</li>
+<li>Dimensionality reduction is a simplified view of the data. PCA shows only a few components, and distances in t-SNE and UMAP cannot be interpreted directly. Always set a seed for methods that use random numbers.</li>
+<li>Unsupervised clustering with <code>hclust</code> or <code>hdbscan</code> finds groups of proteins with similar profiles without using any prior annotation. Parameters such as the number of clusters (<code>k</code>) or <code>minPts</code> should be explored, not fixed.</li>
+<li>GO cellular component enrichment against a background of all proteins in the data links clusters to subcellular compartments. Clusters that map cleanly to one compartment indicate a well-resolved niche. Mixed or overlapping clusters indicate compartments that may need to be combined or examined more closely before markers are defined.</li>
+</ul>
+</div>
+</div>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="ref-topGO" class="csl-entry" role="listitem">
+Alexa, Adrian. 2022. <em><span class="nocase">topGO</span>: Enrichment Analysis for Gene Ontology</em>.
+</div>
+<div id="ref-Barylyuk2020" class="csl-entry" role="listitem">
+Barylyuk, Konstantin, Ludek Koreny, Huiling Ke, et al. 2020. <span>“A Comprehensive Subcellular Atlas of the Toxoplasma Proteome via hyperLOPIT Provides Spatial Context for Protein Functions.”</span> <em>Cell Host and Microbe</em> 28 (5): 752–766.e9. <a href="https://doi.org/10.1016/j.chom.2020.09.011">https://doi.org/10.1016/j.chom.2020.09.011</a>.
+</div>
+<div id="ref-Breckels2018" class="csl-entry" role="listitem">
+Breckels, Lisa M., Claire M. Mulvey, Kathryn S. Lilley, and Laurent Gatto. 2018. <span>“A Bioconductor Workflow for Processing and Analysing Spatial Proteomics Data.”</span> <em>F1000Research</em> 5 (July): 2926. <a href="https://doi.org/10.12688/f1000research.10411.2">https://doi.org/10.12688/f1000research.10411.2</a>.
+</div>
+<div id="ref-DeDuve1981" class="csl-entry" role="listitem">
+De Duve, C, and H Beaufay. 1981. <span>“A Short History of Tissue Fractionation.”</span> <em>The Journal of Cell Biology</em> 91 (3): 293s–299s. <a href="https://doi.org/10.1083/jcb.91.3.293s">https://doi.org/10.1083/jcb.91.3.293s</a>.
+</div>
+<div id="ref-Gatto2019" class="csl-entry" role="listitem">
+Gatto, Laurent, Lisa M. Breckels, and Kathryn S. Lilley. 2019. <span>“Assessing Sub-Cellular Resolution in Spatial Proteomics Experiments.”</span> <em>Current Opinion in Chemical Biology</em> 48 (February): 123–49. <a href="https://doi.org/10.1016/j.cbpa.2018.11.015">https://doi.org/10.1016/j.cbpa.2018.11.015</a>.
+</div>
+<div id="ref-pRoloc2014" class="csl-entry" role="listitem">
+Gatto, Laurent, Lisa M. Breckels, Samuel Wieczorek, Thomas Burger, and Kathryn S. Lilley. 2014. <span>“Mass-Spectrometry Based Spatial Proteomics Data Analysis Using pRoloc and pRolocdata.”</span> <em>Bioinformatics</em>.
+</div>
+<div id="ref-GofuncR" class="csl-entry" role="listitem">
+Grote, Steffi. 2022. <em><span>GOfuncR</span>: Gene Ontology Enrichment Using <span>FUNC</span></em>.
+</div>
+<div id="ref-Hahsler2019" class="csl-entry" role="listitem">
+Hahsler, Michael, Matthew Piekenbrock, and Derek Doran. 2019. <span>“Dbscan: Fast Density-Based Clustering with r.”</span> <em>Journal of Statistical Software</em> 91 (1). <a href="https://doi.org/10.18637/jss.v091.i01">https://doi.org/10.18637/jss.v091.i01</a>.
+</div>
+<div id="ref-Hutchings2023" class="csl-entry" role="listitem">
+Hutchings, Charlotte, Charlotte S. Dawson, Thomas Krueger, Kathryn S. Lilley, and Lisa M. Breckels. 2023. <span>“A Bioconductor Workflow for Processing, Evaluating, and Interpreting Expression Proteomics Data.”</span> <em>F1000Research</em> 12 (October): 1402. <a href="https://doi.org/10.12688/f1000research.139116.1">https://doi.org/10.12688/f1000research.139116.1</a>.
+</div>
+<div id="ref-Moloney2023" class="csl-entry" role="listitem">
+Moloney, Nicola M., Konstantin Barylyuk, Eelco Tromer, et al. 2023. <span>“Mapping Diversity in African Trypanosomes Using High Resolution Spatial Proteomics.”</span> <em>Nature Communications</em> 14 (1). <a href="https://doi.org/10.1038/s41467-023-40125-z">https://doi.org/10.1038/s41467-023-40125-z</a>.
+</div>
+<div id="ref-Wattenberg2016" class="csl-entry" role="listitem">
+Wattenberg, Martin, Fernanda Viégas, and Ian Johnson. 2016. <span>“How to Use t-SNE Effectively.”</span> <em>Distill</em> 1 (10). <a href="https://doi.org/10.23915/distill.00002">https://doi.org/10.23915/distill.00002</a>.
+</div>
+<div id="ref-Wu2021" class="csl-entry" role="listitem">
+Wu, Tianzhi, Erqiang Hu, Shuangbin Xu, et al. 2021. <span>“<span class="nocase">clusterProfiler</span> 4.0: A Universal Enrichment Tool for Interpreting Omics Data.”</span> <em>The Innovation</em> 2 (3): 100141. <a href="https://doi.org/10.1016/j.xinn.2021.100141">https://doi.org/10.1016/j.xinn.2021.100141</a>.
+</div>
+</div>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+          if (!link.classList.contains('no-external-icon')) {
+          }
+        }
+      }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
+          if (lineIds.length > 0) {
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            placeBand(gutterDiv, el, lastEl);
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
+  </script>
+<nav class="page-navigation" aria-label="Page">
+  <div class="nav-page nav-page-previous">
+      <a href="../materials/P1_05_normalisation_aggregation.html" class="pagination-link" aria-label="Data transformation and aggregation">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Data transformation and aggregation</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../materials/P2_02_marker_annotation.html" class="pagination-link" aria-label="Data annotation">
+        <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Data annotation</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>Licensed <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> <img src="https://creativecommons.org/images/deed/cc_icon_black_x2.png" class="img-fluid" width="25"> Cambridge Research Informatics Training</p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

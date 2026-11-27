@@ -1,0 +1,1582 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.11.9">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>5&nbsp; Data transformation and aggregation</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../materials/P2_01_resolution_clustering.html" rel="next">
+<link href="../materials/P1_04_missing_values.html" rel="prev">
+<link href="../site_libs/quarto-contrib/quarto-project/cambiotraining/courseformat/img/university-of-cambridge-favicon.ico" rel="icon">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-d8be12bca9bf4cff8dfae3f7a7d6c145.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-7df8b6b947f49bbb2b70116bd26b3010.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../site_libs/quarto-contrib/quarto-project/cambiotraining/courseformat/img/university_crest_reversed.png" alt="" class="navbar-logo light-content">
+    <img src="../site_libs/quarto-contrib/quarto-project/cambiotraining/courseformat/img/university_crest_reversed.png" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Subcellular proteomics analysis</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="https://github.com/CambridgeCentreForProteomics/course_subcellular_proteomics"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="fa6-brands:github" style="font-size: 1.25em;" aria-label="Icon github from fa6-brands Iconify.design set." title="CRIT GitHub"></iconify-icon></span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://bsky.app/profile/bioinfocambs.bsky.social"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="fa6-brands:bluesky" style="font-size: 1.25em;" aria-label="Icon bluesky from fa6-brands Iconify.design set." title="CRIT Bluesky"></iconify-icon></span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://genomic.social/@BioInfoCambs"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="fa6-brands:mastodon" style="font-size: 1.25em;" aria-label="Icon mastodon from fa6-brands Iconify.design set." title="CRIT Mastodon"></iconify-icon></span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://bioinfotraining.bio.cam.ac.uk/"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="mdi:web" style="font-size: 1.25em;" aria-label="Icon web from mdi Iconify.design set." title="CRIT Website"></iconify-icon></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav" aria-label="Toolbar">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <a class="flex-grow-1 no-decor" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+          <h1 class="quarto-secondary-nav-title"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Data transformation and aggregation</span></h1>
+        </a>     
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto" aria-label="Section">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-controls="quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-1-label">Welcome</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../setup.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data &amp; Setup</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-controls="quarto-sidebar-section-2" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-2-label">Part I: Data processing</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-2" aria-labelledby="quarto-sidebar-section-2-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P1_01_intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">The use-case data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P1_02_import_and_infrastructure.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Import and infrastructure</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P1_03_qc_data_processing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data processing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P1_04_missing_values.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Missing data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P1_05_normalisation_aggregation.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Data transformation and aggregation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-controls="quarto-sidebar-section-3" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-3-label">Part II: Subcellular mapping</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-3" aria-labelledby="quarto-sidebar-section-3-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P2_01_resolution_clustering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Assessment of resolution</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P2_02_marker_annotation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Data annotation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P2_03_ml_classification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Protein localisation prediction</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P2_04_features_of_interest.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Visualisation and exploration</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-controls="quarto-sidebar-section-4" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-4-label">Part III: Differential localisation</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-4" aria-labelledby="quarto-sidebar-section-4-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P3_01_sandle.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Differential localisation analyses</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-controls="quarto-sidebar-section-5" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-5-label">Glossary</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-5" aria-labelledby="quarto-sidebar-section-5-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P4_01_glossary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Glossary</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#normalisation" id="toc-normalisation" class="nav-link active" data-scroll-target="#normalisation"><span class="header-section-number">5.1</span> Normalisation</a></li>
+  <li><a href="#aggregation" id="toc-aggregation" class="nav-link" data-scroll-target="#aggregation"><span class="header-section-number">5.2</span> Aggregation</a>
+  <ul class="collapse">
+  <li><a href="#re-normalisation" id="toc-re-normalisation" class="nav-link" data-scroll-target="#re-normalisation"><span class="header-section-number">5.2.1</span> Re-normalisation</a></li>
+  </ul></li>
+  <li><a href="#concatenating-datasets-for-machine-learning" id="toc-concatenating-datasets-for-machine-learning" class="nav-link" data-scroll-target="#concatenating-datasets-for-machine-learning"><span class="header-section-number">5.3</span> Concatenating datasets for machine learning</a>
+  <ul class="collapse">
+  <li><a href="#concatenation-gives-equal-weight-to-all-replicates" id="toc-concatenation-gives-equal-weight-to-all-replicates" class="nav-link" data-scroll-target="#concatenation-gives-equal-weight-to-all-replicates"><span class="header-section-number">5.3.1</span> Concatenation gives equal weight to all replicates</a></li>
+  <li><a href="#keeping-track-of-peptide-support-and-missing-values" id="toc-keeping-track-of-peptide-support-and-missing-values" class="nav-link" data-scroll-target="#keeping-track-of-peptide-support-and-missing-values"><span class="header-section-number">5.3.2</span> Keeping track of peptide support and missing values</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content" tabindex="-1">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title d-none d-lg-block"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Data transformation and aggregation</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Learning Objectives
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Understand why log transformation is not needed when preparing data for spatial proteomics, unlike expression proteomics</li>
+<li>Understand the different role normalisation plays in spatial proteomics, and be able to apply row-sum normalisation with <code>normalize()</code></li>
+<li>Be able to aggregate precursor-level data to protein level with <code>aggregateFeatures()</code>, and understand how the choice of aggregation function relates to the scale of the data</li>
+<li>Know how to concatenate replicates into a single dataset with <code>joinAssays()</code> and keep only proteins found in all replicates</li>
+<li>Summarise peptide support (the number of precursors per protein) and the proportion of imputed values per protein, and add them to the joined data</li>
+<li>Understand the benefits and limitations of concatenating datasets for downstream machine learning</li>
+</ul>
+</div>
+</div>
+<p>In our previous expression proteomics workflow we described the processing steps required to prepare quantitative proteomics data for differential abundance analysis <span class="citation" data-cites="Hutchings2023">(<a href="#ref-Hutchings2023" role="doc-biblioref">Hutchings et al. 2023</a>)</span>. Such preparation involved log2 transformation of the peptide-level quantitation data before aggregating to the protein level and normalising. These steps differ from those required when processing subcellular spatial proteomics data.</p>
+<p>Quantitative proteomics data often undergoes logarithmic transformation prior to statistical analysis. The reason for this is that the majority of statistical tests require the data to display a normal distribution. Whilst raw quantitative MS-based proteomics data is dramatically skewed towards 0, the log2 transformed data is approximately normal. In this subcellular spatial proteomics workflow, however, the goal is not to prepare our data for downstream statistical differential abundance analysis. Instead, we are preparing the data for a machine learning classifier for which the input is protein correlation profiles across a biochemical gradient. The machine learning algorithm which we will use does not make the assumption that our data has a normal distribution, therefore we do not need to perform logarithmic transformation. In fact, logarithmic transformation would reduce the subcellular resolution by flattening our abundance distribution profiles.</p>
+<p>The second data processing step which differs between expression and spatial proteomics analysis is that of normalisation. In most proteomics experiments the goal of normalisation is to remove any technological variation and account for experimental error. As a result, normalised data should contain near-identical samples in which the majority of variation is of biological importance. In spatial proteomics normalisation plays a different role because we are interested in the shape of protein abundance profiles rather than the magnitude of the intensity in each channel. Hence, the aim of normalisation here is to scale all of our quantitation data into the same space (within the range of 0 and 1) whilst maintaining the shape of our abundance profiles. If we did not do this, proteins with the same distribution across the gradient but different abundances would display very different profiles.</p>
+<section id="normalisation" class="level2" data-number="5.1">
+<h2 data-number="5.1" class="anchored" data-anchor-id="normalisation"><span class="header-section-number">5.1</span> Normalisation</h2>
+<p>Based on De Duve’s principle <span class="citation" data-cites="deDuve1964">(<a href="#ref-deDuve1964" role="doc-biblioref">Duve 1964</a>)</span> we know that proteins which are co-localised within the cell will exhibit similar abundance distribution profiles across a fractionation gradient. This means that we we can infer the location of proteins by matching their abundance profiles to profiles of well-known organelle residents, termed “markers”. In order to get information about the abundance distribution of each protein across the fractionation gradient we need to carry out row sum normalisation. To do this we make use of the <code>normalize</code> function within the <code>QFeatures</code> infrastructure.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define number of replicates</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>R <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Define names for indexing imputed datasets</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>imp_names <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"imp_precursors_R"</span>, R)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="do">## Define new names for normalised datasets</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>norm_names <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"norm_precursors_R"</span>, R)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>qf <span class="ot">&lt;-</span> <span class="fu">normalize</span>(qf, </span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>                <span class="at">i =</span> imp_names,</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>                <span class="at">name =</span> norm_names,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>                <span class="at">method =</span> <span class="st">"sum"</span>)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>qf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>An instance of class QFeatures (type: bulk) with 12 sets:
+
+ [1] precursors: SummarizedExperiment with 195024 rows and 30 columns 
+ [2] precursors_filtered: SummarizedExperiment with 184629 rows and 30 columns 
+ [3] precursors_subset: SummarizedExperiment with 166166 rows and 27 columns 
+ ...
+ [10] norm_precursors_R1: SummarizedExperiment with 143825 rows and 9 columns 
+ [11] norm_precursors_R2: SummarizedExperiment with 142689 rows and 9 columns 
+ [12] norm_precursors_R3: SummarizedExperiment with 136758 rows and 9 columns </code></pre>
+</div>
+</div>
+<p>Let’s take a look at what this normalisation has done to the data.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Before normalisation</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>qf[[<span class="st">"imp_precursors_R1"</span>]] <span class="sc">|&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assay</span>() <span class="sc">|&gt;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                                       R1F01       R1F02
+(UniMod:1)AAATGPSFWLGNETLK2                         388311.8   296742.22
+(UniMod:1)AAGGDHGSPDSYR2                            134005.9   128122.91
+(UniMod:1)AAPGPALC(UniMod:4)LFDVDGTLTAPR2           135927.0    94776.24
+(UniMod:1)AAPSDGFKPR2                              1244341.8   279365.78
+(UniMod:1)AASC(UniMod:4)VLLHTGQK2                   732803.6   387572.59
+(UniMod:1)AC(UniMod:4)GLVASNLNLKPGEC(UniMod:4)LR3 12490694.0 15127720.00
+                                                       R1F03      R1F04
+(UniMod:1)AAATGPSFWLGNETLK2                         786489.8   718602.1
+(UniMod:1)AAGGDHGSPDSYR2                            281546.0   224696.4
+(UniMod:1)AAPGPALC(UniMod:4)LFDVDGTLTAPR2           246816.0   230541.0
+(UniMod:1)AAPSDGFKPR2                               315527.9   361600.5
+(UniMod:1)AASC(UniMod:4)VLLHTGQK2                   772495.3   953171.6
+(UniMod:1)AC(UniMod:4)GLVASNLNLKPGEC(UniMod:4)LR3 16473741.0 17547538.0
+                                                       R1F05      R1F06
+(UniMod:1)AAATGPSFWLGNETLK2                        267421.78   425931.6
+(UniMod:1)AAGGDHGSPDSYR2                           253349.28   321790.8
+(UniMod:1)AAPGPALC(UniMod:4)LFDVDGTLTAPR2           94942.18   367641.8
+(UniMod:1)AAPSDGFKPR2                              493374.91   458619.7
+(UniMod:1)AASC(UniMod:4)VLLHTGQK2                 1561474.88  1507725.0
+(UniMod:1)AC(UniMod:4)GLVASNLNLKPGEC(UniMod:4)LR3 7336119.50 20522496.0
+                                                       R1F07     R1F08
+(UniMod:1)AAATGPSFWLGNETLK2                         487451.7  112726.1
+(UniMod:1)AAGGDHGSPDSYR2                            284531.0  180961.8
+(UniMod:1)AAPGPALC(UniMod:4)LFDVDGTLTAPR2           263045.1  125799.3
+(UniMod:1)AAPSDGFKPR2                               498305.0 1038005.8
+(UniMod:1)AASC(UniMod:4)VLLHTGQK2                  1039457.8  318357.0
+(UniMod:1)AC(UniMod:4)GLVASNLNLKPGEC(UniMod:4)LR3 12355033.0 6337665.5
+                                                       R1F09
+(UniMod:1)AAATGPSFWLGNETLK2                         74228.73
+(UniMod:1)AAGGDHGSPDSYR2                           148826.14
+(UniMod:1)AAPGPALC(UniMod:4)LFDVDGTLTAPR2          105934.13
+(UniMod:1)AAPSDGFKPR2                             1194328.38
+(UniMod:1)AASC(UniMod:4)VLLHTGQK2                  152708.73
+(UniMod:1)AC(UniMod:4)GLVASNLNLKPGEC(UniMod:4)LR3 3220615.00</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="do">## After normalisation</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>qf[[<span class="st">"norm_precursors_R1"</span>]] <span class="sc">|&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assay</span>() <span class="sc">|&gt;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                                       R1F01      R1F02
+(UniMod:1)AAATGPSFWLGNETLK2                       0.10914054 0.08340362
+(UniMod:1)AAGGDHGSPDSYR2                          0.06844613 0.06544128
+(UniMod:1)AAPGPALC(UniMod:4)LFDVDGTLTAPR2         0.08161712 0.05690822
+(UniMod:1)AAPSDGFKPR2                             0.21149795 0.04748317
+(UniMod:1)AASC(UniMod:4)VLLHTGQK2                 0.09868390 0.05219294
+(UniMod:1)AC(UniMod:4)GLVASNLNLKPGEC(UniMod:4)LR3 0.11211303 0.13578224
+                                                       R1F03      R1F04
+(UniMod:1)AAATGPSFWLGNETLK2                       0.22105412 0.20197334
+(UniMod:1)AAGGDHGSPDSYR2                          0.14380510 0.11476806
+(UniMod:1)AAPGPALC(UniMod:4)LFDVDGTLTAPR2         0.14820020 0.13842793
+(UniMod:1)AAPSDGFKPR2                             0.05362956 0.06146041
+(UniMod:1)AASC(UniMod:4)VLLHTGQK2                 0.10402903 0.12836002
+(UniMod:1)AC(UniMod:4)GLVASNLNLKPGEC(UniMod:4)LR3 0.14786376 0.15750186
+                                                       R1F05      R1F06
+(UniMod:1)AAATGPSFWLGNETLK2                       0.07516269 0.11971414
+(UniMod:1)AAGGDHGSPDSYR2                          0.12940309 0.16436096
+(UniMod:1)AAPGPALC(UniMod:4)LFDVDGTLTAPR2         0.05700786 0.22074984
+(UniMod:1)AAPSDGFKPR2                             0.08385781 0.07795055
+(UniMod:1)AASC(UniMod:4)VLLHTGQK2                 0.21027794 0.20303965
+(UniMod:1)AC(UniMod:4)GLVASNLNLKPGEC(UniMod:4)LR3 0.06584699 0.18420427
+                                                       R1F07      R1F08
+(UniMod:1)AAATGPSFWLGNETLK2                       0.13700522 0.03168329
+(UniMod:1)AAGGDHGSPDSYR2                          0.14532975 0.09242976
+(UniMod:1)AAPGPALC(UniMod:4)LFDVDGTLTAPR2         0.15794493 0.07553594
+(UniMod:1)AAPSDGFKPR2                             0.08469577 0.17642749
+(UniMod:1)AASC(UniMod:4)VLLHTGQK2                 0.13997987 0.04287194
+(UniMod:1)AC(UniMod:4)GLVASNLNLKPGEC(UniMod:4)LR3 0.11089537 0.05688514
+                                                       R1F09
+(UniMod:1)AAATGPSFWLGNETLK2                       0.02086304
+(UniMod:1)AAGGDHGSPDSYR2                          0.07601586
+(UniMod:1)AAPGPALC(UniMod:4)LFDVDGTLTAPR2         0.06360796
+(UniMod:1)AAPSDGFKPR2                             0.20299729
+(UniMod:1)AASC(UniMod:4)VLLHTGQK2                 0.02056471
+(UniMod:1)AC(UniMod:4)GLVASNLNLKPGEC(UniMod:4)LR3 0.02890735</code></pre>
+</div>
+</div>
+<p>Through the process of row sum normalisation we have now converted our raw quantitative values into a <em>correlation profile</em> or <em>protein profile</em> across the fractionation gradient. The abundance values represent the proportion of total quantification for each precursor that comes from each fraction, with each row sum being equal to 1. This scales all data into the same space so that we can use the shape rather than the intensity of profiles for downstream machine learning.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(qf)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P1_05_normalisation_aggregation_files/figure-html/unnamed-chunk-4-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="P1_05_normalisation_aggregation_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Let’s take a look at what normalisation has done to the data, starting with replicate 1.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Evaluate the effect of data normalisation on rep1</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="do">## Plot pre-normalised data</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>qf[[<span class="st">"imp_precursors_R1"</span>]] <span class="sc">|&gt;</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assay</span>() <span class="sc">|&gt;</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">longForm</span>() <span class="sc">|&gt;</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> colname, <span class="at">y =</span> value)) <span class="sc">+</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">""</span>, <span class="at">y =</span> <span class="st">"Raw abundance"</span>, <span class="at">title =</span> <span class="st">"Pre-normalisation"</span>) <span class="sc">+</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P1_05_normalisation_aggregation_files/figure-html/unnamed-chunk-5-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="P1_05_normalisation_aggregation_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="960"></a></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Plot post-normalised data</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>qf[[<span class="st">"norm_precursors_R1"</span>]] <span class="sc">|&gt;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assay</span>() <span class="sc">|&gt;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">longForm</span>() <span class="sc">|&gt;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> colname, <span class="at">y =</span> value)) <span class="sc">+</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">""</span>, <span class="at">y =</span> <span class="st">"Normalised abundance"</span>, <span class="at">title =</span> <span class="st">"Post-normalisation"</span>) <span class="sc">+</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P1_05_normalisation_aggregation_files/figure-html/unnamed-chunk-5-2.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="P1_05_normalisation_aggregation_files/figure-html/unnamed-chunk-5-2.png" class="img-fluid figure-img" width="960"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We can see from these plots that the raw precursor abundance values are spread across a wide dynamic range, spanning 7 orders of magnitude. This is very normal for cellular proteomics data. If we were to use the pre-normalised data, the profile of a high abundance protein would be numerically very different to that of a low abundance protein, even if they fractionate in the same pattern across our biochemical gradient. Once we normalise our precursors, all have an abundance between 0 and 1. We can now see some shape to the profiles.</p>
+<p>Unlike in total proteome experiments where normalisation aims to remove variation, we do not expect the boxplots of normalised correlation profiles to be perfectly aligned. For each fraction, many proteins have low to 0 abundance. These are proteins that belong to organelles that primarily sediment elsewhere in the gradient. However, each fraction also has a long tail towards 1, indicating a subset of proteins that did predominantly pellet in this fraction. A box plot with shape and structure like this is a first indication that our experiment may have worked - we would not want a flat profile of boxplots.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>At what stage should I normalise to generate profiles?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<section id="before-or-after-imputation-depends-on-extent-of-data-missingness" class="level4">
+<h4 class="anchored" data-anchor-id="before-or-after-imputation-depends-on-extent-of-data-missingness">Before or after imputation? (Depends on extent of data missingness)</h4>
+<p>Some experimental designs yield a relatively low proportion of missing values, for example label-based methods that use TMT such as LOPIT. As a result, after an initial filtering step, there are very few values to impute. Applying a baseline k-NN imputation to such data can be more successful when the data are in a similar space after normalisation, as discussed in <span class="citation" data-cites="Hutchings2025">Hutchings et al. (<a href="#ref-Hutchings2025" role="doc-biblioref">2025</a>)</span>. We note that by applying imputation after normalisation, the final imputed profiles will no longer sum to exactly 1. However, since such designs have such low missingness, the sum should not greatly exceed 1. By contrast, where datasets have a greater proportion of missing data to impute, as is the case for this example where we have a DIA LFQ design row sum normalisation of a limited number of fractions would generate a short profile summed to one and subsequent imputation could result in a correlation profile with an undesirably high sum value. Here it is necessary to impute prior to normalisation to ensure the generation of sensible correlation profiles in the same final space (between 0 and 1).</p>
+</section>
+<section id="before-or-after-aggregation-in-practice-it-makes-little-difference" class="level4">
+<h4 class="anchored" data-anchor-id="before-or-after-aggregation-in-practice-it-makes-little-difference">Before or after aggregation? (In practice, it makes little difference)</h4>
+<p>In this workflow we normalise each precursor profile to sum to 1 <em>before</em> aggregating to protein level. Precursors from the same protein can differ in raw intensity by orders of magnitude, mainly because they ionise differently, not because of the biology. If we aggregated raw intensities, a single very intense precursor could largely determine the protein’s profile.</p>
+<p>For localisation, what matters is the <em>shape</em> of the profile across fractions, and each precursor is an independent measurement of that shape. Normalising first puts all precursors on the same scale, so each contributes equally to the protein profile. Aggregating with a median then gives a consensus profile that is robust to the occasional precursor with an unusual profile.</p>
+<p>The trade-off is that low-intensity, noisier precursors are given the same weight as high-intensity ones. Our earlier intensity-based filtering helps by removing the weakest precursors. Because the median of profiles that each sum to 1 does not itself sum exactly to 1, we normalise once more after aggregation.</p>
+<p>In practice, we find the order makes little difference to the resolution of the final spatial map. Either approach is reasonable, as long as the final protein profiles are normalised before downstream analysis.</p>
+</section>
+</div>
+</div>
+</section>
+<section id="aggregation" class="level2" data-number="5.2">
+<h2 data-number="5.2" class="anchored" data-anchor-id="aggregation"><span class="header-section-number">5.2</span> Aggregation</h2>
+<p>Now that we have our final precursor-level dataset we can aggregate this upward to the protein level. The aim of this step is to combine data from all component precursors into a single protein-level entry. This entry will have one master protein accession and one quantitative value per biochemical fraction per sample.</p>
+<p>Within the <code>QFeatures</code> infrastructure aggregation is carried out using the <code>aggregateFeatures</code> function. This function provides users with several options on how to aggregate multiple quantitation values into a single value. The methods differ with respect to how they deal with missing data as well as whether they require log2 or raw quantitation data as their input.</p>
+<p>In our sister workflow <span class="citation" data-cites="Hutchings2023">Hutchings et al. (<a href="#ref-Hutchings2023" role="doc-biblioref">2023</a>)</span> we aggregate using <code>robustSummary</code>, a state-of-the-art aggregation method which is notably robust to outliers and missing values <span class="citation" data-cites="Sticker2020 Goeminne2016">(<a href="#ref-Sticker2020" role="doc-biblioref">Sticker et al. 2020</a>; <a href="#ref-Goeminne2016" role="doc-biblioref">Goeminne et al. 2016</a>)</span>. However, our data is not currently suitable for <code>robustSummary</code> aggregation as this method requires log2 transformed data. Whilst it would be relatively simple to log2 transform our quantitative data using the <code>logTransform</code> function within the <code>QFeatures</code> infrastructure, we would need to reverse this transformation by taking the exponential of the resulting protein data, which is not so simple. Instead we will aggregate precursors straight to protein level using <code>colMedians</code> method from the <code>matrixStats</code> package. We specify this method using the <code>fun =</code> argument, as well as telling the function which <code>rowData</code> column we wish to use for aggregation.</p>
+<p>Here, we demonstrate one-step aggregation, from precursors directly to protein. This means aggregating all precursors with the same value of <code>"Protein.Group"</code>. For an example of two-step aggregation, from precursor to peptide followed by peptide to protein, users are directed to <span class="citation" data-cites="Hutchings2023">Hutchings et al. (<a href="#ref-Hutchings2023" role="doc-biblioref">2023</a>)</span>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>agg_names <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"proteins_R"</span>, R)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>qf <span class="ot">&lt;-</span> QFeatures<span class="sc">::</span><span class="fu">aggregateFeatures</span>(qf,</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">i =</span> norm_names,</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">fcol =</span> <span class="st">"Protein.Group"</span>, </span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">name =</span> agg_names,</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">fun =</span> matrixStats<span class="sc">::</span>colMedians)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |=======================                                               |  33%
+  |                                                                            
+  |===============================================                       |  67%
+  |                                                                            
+  |======================================================================| 100%</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Verify</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>qf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>An instance of class QFeatures (type: bulk) with 15 sets:
+
+ [1] precursors: SummarizedExperiment with 195024 rows and 30 columns 
+ [2] precursors_filtered: SummarizedExperiment with 184629 rows and 30 columns 
+ [3] precursors_subset: SummarizedExperiment with 166166 rows and 27 columns 
+ ...
+ [13] proteins_R1: SummarizedExperiment with 9185 rows and 9 columns 
+ [14] proteins_R2: SummarizedExperiment with 8995 rows and 9 columns 
+ [15] proteins_R3: SummarizedExperiment with 8955 rows and 9 columns </code></pre>
+</div>
+</div>
+<p>We have now populated the <code>QFeatures</code> object with protein-level data containing the row normalised protein correlation profiles. From looking at the summary in <code>experiments(qf)</code> we have around 9000 proteins in each replicate experiment. These protein correlation profiles contain spatial information and are the input to downstream machine learning classifers.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(qf)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P1_05_normalisation_aggregation_files/figure-html/unnamed-chunk-7-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="P1_05_normalisation_aggregation_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-exercise no-icon callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Exercise</span>Exercise 1 - Challenge: Using the .n column from aggregateFeatures
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<div class="callout-exercise">
+<p><font style="font-variant: small-caps">Level:</font> <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i><br></p>
+<ol type="1">
+<li><p>Look at the <code>??aggregateFeatures</code> help documentation. What is the <code>.n</code> column? What does the column mean for our data specifically?</p></li>
+<li><p>Plot a histogram to explore the <code>.n</code> column in replicate 1 of our aggregated protein-level data.</p></li>
+</ol>
+<div class="callout callout-style-default callout-answer no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Answer</span>Answer
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="callout-answer" data-collapse="true">
+<p><strong>Task 1</strong><br>
+One advantage of using the <code>aggregateFeatures</code> function is that it automatically adds a column to the aggregated data to indicate how many lower-level features (here precursors) were aggregated into each higher-level feature (here protein groups). This column is called <code>.n</code>. Of note, this column is created every time you use the <code>aggregateFeatures</code> function, and always has the same name. Hence, if you did a two-step aggregation from precursors to peptides to proteins, the <code>.n</code> column in the peptide-level data would indicate how many precursors per peptide and in the protein-level data would be how many peptides per protein.</p>
+<p><strong>Task 2</strong><br>
+Let’s plot a histogram of the precursor support per protein group in our dataset. Again, we demonstrate with replicate 1 but advise users to plot for all replicates of all conditions.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>qf[[<span class="st">"proteins_R1"</span>]] <span class="sc">|&gt;</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowData</span>() <span class="sc">|&gt;</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">|&gt;</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="st">`</span><span class="at">.n</span><span class="st">`</span>)) <span class="sc">+</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>() <span class="sc">+</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Precursor support"</span>, <span class="at">y =</span> <span class="st">"Number of proteins"</span>) <span class="sc">+</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`stat_bin()` using `bins = 30`. Pick better value `binwidth`.</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P1_05_normalisation_aggregation_files/figure-html/unnamed-chunk-8-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="P1_05_normalisation_aggregation_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>This initial histogram shows us that most proteins have &lt; 100 precursors supporting them, which is not surprising. It’s hard to see how low with the current binning. Let’s create bins for 1-20 and then merge all others into a &gt; 20 category.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>qf[[<span class="st">"proteins_R1"</span>]] <span class="sc">|&gt;</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowData</span>() <span class="sc">|&gt;</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">|&gt;</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">n_binned =</span> <span class="fu">factor</span>(</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">if_else</span>(.n <span class="sc">&gt;</span> <span class="dv">20</span>, <span class="st">"&gt;20"</span>, <span class="fu">as.character</span>(.n)),</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">levels =</span> <span class="fu">c</span>(<span class="fu">as.character</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>), <span class="st">"&gt;20"</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> n_binned)) <span class="sc">+</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>() <span class="sc">+</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Precursor support"</span>, <span class="at">y =</span> <span class="st">"Number of proteins"</span>) <span class="sc">+</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P1_05_normalisation_aggregation_files/figure-html/unnamed-chunk-9-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-6"><img src="P1_05_normalisation_aggregation_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<section id="re-normalisation" class="level3" data-number="5.2.1">
+<h3 data-number="5.2.1" class="anchored" data-anchor-id="re-normalisation"><span class="header-section-number">5.2.1</span> Re-normalisation</h3>
+<p>Before aggregation, each precursor profile summed to 1. However, the median of several profiles that each sum to 1 does not itself sum exactly to 1. Let’s check the row sums of our protein-level data.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>qf[[<span class="st">"proteins_R1"</span>]] <span class="sc">|&gt;</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assay</span>() <span class="sc">|&gt;</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowSums</span>() <span class="sc">|&gt;</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summary</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.3724  0.9302  0.9665  0.9533  0.9990  1.1904 </code></pre>
+</div>
+</div>
+<p>The row sums are close to 1, but not exactly 1. To make sure every protein profile is on exactly the same scale before machine learning, we apply row-sum normalisation once more, this time at the protein level.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>prot_norm_names <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"proteins_norm_R"</span>, R)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>qf <span class="ot">&lt;-</span> <span class="fu">normalize</span>(qf,</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">i =</span> agg_names,</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>                <span class="at">name =</span> prot_norm_names,</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>                <span class="at">method =</span> <span class="st">"sum"</span>)</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>qf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>An instance of class QFeatures (type: bulk) with 18 sets:
+
+ [1] precursors: SummarizedExperiment with 195024 rows and 30 columns 
+ [2] precursors_filtered: SummarizedExperiment with 184629 rows and 30 columns 
+ [3] precursors_subset: SummarizedExperiment with 166166 rows and 27 columns 
+ ...
+ [16] proteins_norm_R1: SummarizedExperiment with 9185 rows and 9 columns 
+ [17] proteins_norm_R2: SummarizedExperiment with 8995 rows and 9 columns 
+ [18] proteins_norm_R3: SummarizedExperiment with 8955 rows and 9 columns </code></pre>
+</div>
+</div>
+<p>Every protein profile should now sum to exactly 1.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>qf[[<span class="st">"proteins_norm_R1"</span>]] <span class="sc">|&gt;</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assay</span>() <span class="sc">|&gt;</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowSums</span>() <span class="sc">|&gt;</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summary</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+      1       1       1       1       1       1 </code></pre>
+</div>
+</div>
+<p>This step changes the scale of each profile very slightly but does not change its shape, so the spatial information is preserved.</p>
+</section>
+</section>
+<section id="concatenating-datasets-for-machine-learning" class="level2" data-number="5.3">
+<h2 data-number="5.3" class="anchored" data-anchor-id="concatenating-datasets-for-machine-learning"><span class="header-section-number">5.3</span> Concatenating datasets for machine learning</h2>
+<p>Previous subcellular proteomics experiments utilising protein correlation profiles have benefited from the combining of datasets <span class="citation" data-cites="Barylyuk2020 Christoforou2016 Moloney2023">(<a href="#ref-Barylyuk2020" role="doc-biblioref">Barylyuk et al. 2020</a>; <a href="#ref-Christoforou2016" role="doc-biblioref">Christoforou et al. 2016</a>; <a href="#ref-Moloney2023" role="doc-biblioref">Moloney et al. 2023</a>)</span>, that is the concatenation of replicates or experiments that utilise different gradients <span class="citation" data-cites="Trotter2010">(<a href="#ref-Trotter2010" role="doc-biblioref">Trotter et al. 2010</a>)</span>. Since the use-case experiment included three biological replicates each with 9 biochemical fractions we can concatenate these data into a single dataset with 27 columns. In order to do this, the column names must be different in each replicate. By looking at the <code>colnames</code> of each experimental set per condition we verify we indeed have unique names.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(qf[[<span class="st">"proteins_R1"</span>]])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "R1F01" "R1F02" "R1F03" "R1F04" "R1F05" "R1F06" "R1F07" "R1F08" "R1F09"</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(qf[[<span class="st">"proteins_R2"</span>]])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "R2F01" "R2F02" "R2F04" "R2F05" "R2F06" "R2F07" "R2F08" "R2F09" "R2F10"</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(qf[[<span class="st">"proteins_R3"</span>]])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "R3F01" "R3F03" "R3F04" "R3F05" "R3F06" "R3F07" "R3F08" "R3F09" "R3F10"</code></pre>
+</div>
+</div>
+<p>If the <code>colnames</code> were not unique to each replicate we would have to use the <code>renameColname</code> function, specifying which experimental set we wish to change the column names of (<code>i =</code> argument) and then providing a vector of new column names (<code>value =</code> argument).</p>
+<p>We can use <code>joinAssays</code> to concatenate the fractions across replicates to improve the discrimination between organelle signatures.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>agg_names <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"proteins_norm_R1"</span>, </span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>               <span class="st">"proteins_norm_R2"</span>, </span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>               <span class="st">"proteins_norm_R3"</span>)</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>qf <span class="ot">&lt;-</span> <span class="fu">joinAssays</span>(qf, </span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>                 <span class="at">i =</span> agg_names, </span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>                 <span class="at">name =</span> <span class="st">"proteins_joined"</span>)</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a><span class="do">## Verify</span></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>qf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>An instance of class QFeatures (type: bulk) with 19 sets:
+
+ [1] precursors: SummarizedExperiment with 195024 rows and 30 columns 
+ [2] precursors_filtered: SummarizedExperiment with 184629 rows and 30 columns 
+ [3] precursors_subset: SummarizedExperiment with 166166 rows and 27 columns 
+ ...
+ [17] proteins_norm_R2: SummarizedExperiment with 8995 rows and 9 columns 
+ [18] proteins_norm_R3: SummarizedExperiment with 8955 rows and 9 columns 
+ [19] proteins_joined: SummarizedExperiment with 9326 rows and 27 columns </code></pre>
+</div>
+</div>
+<p>Finally, we filter to only keep proteins that are found in all replicates. This is necessary because the machine learning algorithms in <code>pRoloc</code> do not accept missingness.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>qf <span class="ot">&lt;-</span> <span class="fu">filterNA</span>(qf, <span class="at">i =</span> <span class="st">"proteins_joined"</span>)</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="do">## Verify</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>qf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>An instance of class QFeatures (type: bulk) with 19 sets:
+
+ [1] precursors: SummarizedExperiment with 195024 rows and 30 columns 
+ [2] precursors_filtered: SummarizedExperiment with 184629 rows and 30 columns 
+ [3] precursors_subset: SummarizedExperiment with 166166 rows and 27 columns 
+ ...
+ [17] proteins_norm_R2: SummarizedExperiment with 8995 rows and 9 columns 
+ [18] proteins_norm_R3: SummarizedExperiment with 8955 rows and 9 columns 
+ [19] proteins_joined: SummarizedExperiment with 8736 rows and 27 columns </code></pre>
+</div>
+</div>
+<p>We see our final protein level data contain 8736 proteins.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(qf)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P1_05_normalisation_aggregation_files/figure-html/unnamed-chunk-15-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-7"><img src="P1_05_normalisation_aggregation_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<section id="concatenation-gives-equal-weight-to-all-replicates" class="level3" data-number="5.3.1">
+<h3 data-number="5.3.1" class="anchored" data-anchor-id="concatenation-gives-equal-weight-to-all-replicates"><span class="header-section-number">5.3.1</span> Concatenation gives equal weight to all replicates</h3>
+<p>By concatenating the datasets we give each biological replicate an equal weight for the downstream machine learning classification. This means that any variability between experiments will be accounted for. For example, if a protein has an abundance distribution profile similar to that of nuclear protein markers in one of the three replicates, but is more similar to cytoplasmic markers in the remaining two replicates, this will be reflected by the fact that the protein will either be classified with a lower confidence or not classified at all. If each replicate was analysed separately, the protein may receive conflicting classifications in each replicate which would require a user-defined resolution.</p>
+<p>Another potential advantage of concatenating datasets is the inclusion of data derived from different gradient variations <span class="citation" data-cites="Barylyuk2020 Trotter2010">(<a href="#ref-Barylyuk2020" role="doc-biblioref">Barylyuk et al. 2020</a>; <a href="#ref-Trotter2010" role="doc-biblioref">Trotter et al. 2010</a>)</span>. Although many subcellular compartments are well resolved using a single gradient, some compartments remain more challenging to resolve due to their similarities or connections with other compartments. For example, compartments within the endomembrane system can generate similar fractionation profiles. Where no single gradient will provide optimal separation of all organelles of interest, it is possible to design different gradients which provide optimal separation different organelles. These data can then be concatenated to generated a combined dataset with greater final resolution of all desired compartments.</p>
+<p>Overall, data concatenation has been shown to have benefits for downstream machine learning in many cases. Ultimately, however, the decision to concatenate replicates will depend on the goal of the experiment and type of data analysis required to answer the experimental question. In particular, where the experimental aim is to identify differential localisation between conditions it is recommended to repeat the same biochemical gradient across all three replicates to avoid complicating downstream analysis.</p>
+</section>
+<section id="keeping-track-of-peptide-support-and-missing-values" class="level3" data-number="5.3.2">
+<h3 data-number="5.3.2" class="anchored" data-anchor-id="keeping-track-of-peptide-support-and-missing-values"><span class="header-section-number">5.3.2</span> Keeping track of peptide support and missing values</h3>
+<p>Before we move on, we record two pieces of information about the quality of each protein profile, so that we can use them later when interpreting our spatial maps:</p>
+<ol type="1">
+<li><strong>Peptide support</strong>: the number of precursors used to calculate each protein profile. Proteins quantified from only one or two precursors tend to have noisier profiles. <code>aggregateFeatures</code> recorded this in a <code>rowData</code> column called <code>.n</code>.</li>
+<li><strong>Missing values</strong>: how much of each profile was imputed. In the previous lesson we recorded the number of missing values per precursor, before imputation, in a <code>rowData</code> column called <code>nNA</code>. Proteins whose precursors had many missing values rely more heavily on imputation and should be interpreted with more caution.</li>
+</ol>
+<p>Neither of these makes it through to the joined set. <code>aggregateFeatures</code> does not carry <code>nNA</code> up to the protein level, and <code>joinAssays</code> only keeps <code>rowData</code> columns that are identical in every set, which <code>.n</code> is not.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="do">## .n is in the protein-level set of each replicate...</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rowData</span>(qf[[<span class="st">"proteins_R1"</span>]])<span class="sc">$</span>.n <span class="sc">|&gt;</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summary</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   1.00    5.00   10.00   15.66   20.00  474.00 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="do">## ...but not in the joined set</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="st">".n"</span> <span class="sc">%in%</span> <span class="fu">colnames</span>(<span class="fu">rowData</span>(qf[[<span class="st">"proteins_joined"</span>]]))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] FALSE</code></pre>
+</div>
+</div>
+<p>We have written a small function, <code>addProfileQC()</code>, that summarises these to the protein level for each replicate and adds them to the joined set. For each protein it calculates the proportion of its precursor values that were missing before imputation, and then adds the following columns to the joined set:</p>
+<ul>
+<li><code>n_rep1</code>, <code>n_rep2</code>, <code>n_rep3</code>: number of precursors in each replicate</li>
+<li><code>n_min</code>, <code>n_mean</code>: minimum and mean across replicates</li>
+<li><code>missing_rep1</code>, <code>missing_rep2</code>, <code>missing_rep3</code>: proportion of values missing before imputation in each replicate</li>
+<li><code>missing_max</code>, <code>missing_mean</code>: maximum and mean across replicates</li>
+</ul>
+<p>We report the minimum peptide support and maximum missingness because a protein profile is only as good as its weakest replicate.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the addProfileQC() function</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="do">## addProfileQC()</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="do">##</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="do">## Records two indicators of protein profile quality in a QFeatures object</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="do">## and carries them through to the joined (concatenated) set:</span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a><span class="do">##</span></span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a><span class="do">##   - peptide support: the `.n` column added by aggregateFeatures()</span></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a><span class="do">##   - missingness: the proportion of precursor values that were missing</span></span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a><span class="do">##     before imputation, calculated from the per-precursor `nNA` column</span></span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a><span class="do">##</span></span>
+<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a><span class="do">## Both are lost by joinAssays(), because they differ between replicates.</span></span>
+<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a><span class="do">##</span></span>
+<span id="cb40-12"><a href="#cb40-12" aria-hidden="true" tabindex="-1"></a><span class="do">## Arguments</span></span>
+<span id="cb40-13"><a href="#cb40-13" aria-hidden="true" tabindex="-1"></a><span class="do">##   qf          a QFeatures object</span></span>
+<span id="cb40-14"><a href="#cb40-14" aria-hidden="true" tabindex="-1"></a><span class="do">##   prec_sets   named character vector of precursor-level sets that carry `nNA`</span></span>
+<span id="cb40-15"><a href="#cb40-15" aria-hidden="true" tabindex="-1"></a><span class="do">##   prot_sets   named character vector of protein-level sets that carry `.n`</span></span>
+<span id="cb40-16"><a href="#cb40-16" aria-hidden="true" tabindex="-1"></a><span class="do">##               (same names and order as prec_sets, e.g. rep1, rep2, rep3)</span></span>
+<span id="cb40-17"><a href="#cb40-17" aria-hidden="true" tabindex="-1"></a><span class="do">##   joined_set  name of the joined protein-level set</span></span>
+<span id="cb40-18"><a href="#cb40-18" aria-hidden="true" tabindex="-1"></a><span class="do">##   group_col   rowData column linking precursors to proteins</span></span>
+<span id="cb40-19"><a href="#cb40-19" aria-hidden="true" tabindex="-1"></a><span class="do">##</span></span>
+<span id="cb40-20"><a href="#cb40-20" aria-hidden="true" tabindex="-1"></a><span class="do">## Adds to each protein-level set:</span></span>
+<span id="cb40-21"><a href="#cb40-21" aria-hidden="true" tabindex="-1"></a><span class="do">##   prop_missing</span></span>
+<span id="cb40-22"><a href="#cb40-22" aria-hidden="true" tabindex="-1"></a><span class="do">## Adds to the joined set:</span></span>
+<span id="cb40-23"><a href="#cb40-23" aria-hidden="true" tabindex="-1"></a><span class="do">##   n_&lt;rep&gt;, n_min, n_mean, missing_&lt;rep&gt;, missing_max, missing_mean</span></span>
+<span id="cb40-24"><a href="#cb40-24" aria-hidden="true" tabindex="-1"></a><span class="do">##</span></span>
+<span id="cb40-25"><a href="#cb40-25" aria-hidden="true" tabindex="-1"></a><span class="do">## Returns the updated QFeatures object.</span></span>
+<span id="cb40-26"><a href="#cb40-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-27"><a href="#cb40-27" aria-hidden="true" tabindex="-1"></a>addProfileQC <span class="ot">&lt;-</span> <span class="cf">function</span>(qf,</span>
+<span id="cb40-28"><a href="#cb40-28" aria-hidden="true" tabindex="-1"></a>                         prec_sets,</span>
+<span id="cb40-29"><a href="#cb40-29" aria-hidden="true" tabindex="-1"></a>                         prot_sets,</span>
+<span id="cb40-30"><a href="#cb40-30" aria-hidden="true" tabindex="-1"></a>                         <span class="at">joined_set =</span> <span class="st">"proteins_joined"</span>,</span>
+<span id="cb40-31"><a href="#cb40-31" aria-hidden="true" tabindex="-1"></a>                         <span class="at">group_col =</span> <span class="st">"Protein.Group"</span>) {</span>
+<span id="cb40-32"><a href="#cb40-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-33"><a href="#cb40-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stopifnot</span>(<span class="fu">identical</span>(<span class="fu">names</span>(prec_sets), <span class="fu">names</span>(prot_sets)))</span>
+<span id="cb40-34"><a href="#cb40-34" aria-hidden="true" tabindex="-1"></a>  reps <span class="ot">&lt;-</span> <span class="fu">names</span>(prot_sets)</span>
+<span id="cb40-35"><a href="#cb40-35" aria-hidden="true" tabindex="-1"></a>  joined_ids <span class="ot">&lt;-</span> <span class="fu">rownames</span>(qf[[joined_set]])</span>
+<span id="cb40-36"><a href="#cb40-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-37"><a href="#cb40-37" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (r <span class="cf">in</span> reps) {</span>
+<span id="cb40-38"><a href="#cb40-38" aria-hidden="true" tabindex="-1"></a>    prec <span class="ot">&lt;-</span> prec_sets[[r]]</span>
+<span id="cb40-39"><a href="#cb40-39" aria-hidden="true" tabindex="-1"></a>    prot <span class="ot">&lt;-</span> prot_sets[[r]]</span>
+<span id="cb40-40"><a href="#cb40-40" aria-hidden="true" tabindex="-1"></a>    rd <span class="ot">&lt;-</span> <span class="fu">rowData</span>(qf[[prec]])</span>
+<span id="cb40-41"><a href="#cb40-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-42"><a href="#cb40-42" aria-hidden="true" tabindex="-1"></a>    <span class="do">## Proportion of missing values per protein:</span></span>
+<span id="cb40-43"><a href="#cb40-43" aria-hidden="true" tabindex="-1"></a>    <span class="do">## total missing values / (number of precursors x number of fractions)</span></span>
+<span id="cb40-44"><a href="#cb40-44" aria-hidden="true" tabindex="-1"></a>    tot_na <span class="ot">&lt;-</span> <span class="fu">tapply</span>(rd<span class="sc">$</span>nNA, rd[[group_col]], sum)</span>
+<span id="cb40-45"><a href="#cb40-45" aria-hidden="true" tabindex="-1"></a>    tot_values <span class="ot">&lt;-</span> <span class="fu">tapply</span>(rd<span class="sc">$</span>nNA, rd[[group_col]], length) <span class="sc">*</span> <span class="fu">ncol</span>(qf[[prec]])</span>
+<span id="cb40-46"><a href="#cb40-46" aria-hidden="true" tabindex="-1"></a>    prop <span class="ot">&lt;-</span> tot_na <span class="sc">/</span> tot_values</span>
+<span id="cb40-47"><a href="#cb40-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-48"><a href="#cb40-48" aria-hidden="true" tabindex="-1"></a>    <span class="do">## Add to the protein-level set of this replicate</span></span>
+<span id="cb40-49"><a href="#cb40-49" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rowData</span>(qf[[prot]])<span class="sc">$</span>prop_missing <span class="ot">&lt;-</span></span>
+<span id="cb40-50"><a href="#cb40-50" aria-hidden="true" tabindex="-1"></a>      <span class="fu">as.numeric</span>(prop[<span class="fu">rownames</span>(qf[[prot]])])</span>
+<span id="cb40-51"><a href="#cb40-51" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb40-52"><a href="#cb40-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-53"><a href="#cb40-53" aria-hidden="true" tabindex="-1"></a>  <span class="do">## Extract a rowData column from each replicate, matched to the joined set</span></span>
+<span id="cb40-54"><a href="#cb40-54" aria-hidden="true" tabindex="-1"></a>  per_rep <span class="ot">&lt;-</span> <span class="cf">function</span>(col, prefix) {</span>
+<span id="cb40-55"><a href="#cb40-55" aria-hidden="true" tabindex="-1"></a>    m <span class="ot">&lt;-</span> <span class="fu">sapply</span>(prot_sets, <span class="cf">function</span>(s) {</span>
+<span id="cb40-56"><a href="#cb40-56" aria-hidden="true" tabindex="-1"></a>      rd <span class="ot">&lt;-</span> <span class="fu">rowData</span>(qf[[s]])</span>
+<span id="cb40-57"><a href="#cb40-57" aria-hidden="true" tabindex="-1"></a>      rd[[col]][<span class="fu">match</span>(joined_ids, <span class="fu">rownames</span>(rd))]</span>
+<span id="cb40-58"><a href="#cb40-58" aria-hidden="true" tabindex="-1"></a>    })</span>
+<span id="cb40-59"><a href="#cb40-59" aria-hidden="true" tabindex="-1"></a>    m <span class="ot">&lt;-</span> <span class="fu">matrix</span>(m, <span class="at">ncol =</span> <span class="fu">length</span>(prot_sets))</span>
+<span id="cb40-60"><a href="#cb40-60" aria-hidden="true" tabindex="-1"></a>    <span class="fu">colnames</span>(m) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(prefix, reps)</span>
+<span id="cb40-61"><a href="#cb40-61" aria-hidden="true" tabindex="-1"></a>    m</span>
+<span id="cb40-62"><a href="#cb40-62" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb40-63"><a href="#cb40-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-64"><a href="#cb40-64" aria-hidden="true" tabindex="-1"></a>  n_mat <span class="ot">&lt;-</span> <span class="fu">per_rep</span>(<span class="st">".n"</span>, <span class="st">"n_"</span>)</span>
+<span id="cb40-65"><a href="#cb40-65" aria-hidden="true" tabindex="-1"></a>  miss_mat <span class="ot">&lt;-</span> <span class="fu">per_rep</span>(<span class="st">"prop_missing"</span>, <span class="st">"missing_"</span>)</span>
+<span id="cb40-66"><a href="#cb40-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-67"><a href="#cb40-67" aria-hidden="true" tabindex="-1"></a>  <span class="do">## Per-replicate values plus summaries across replicates</span></span>
+<span id="cb40-68"><a href="#cb40-68" aria-hidden="true" tabindex="-1"></a>  qc_df <span class="ot">&lt;-</span> <span class="fu">DataFrame</span>(n_mat,</span>
+<span id="cb40-69"><a href="#cb40-69" aria-hidden="true" tabindex="-1"></a>                     <span class="at">n_min =</span> <span class="fu">apply</span>(n_mat, <span class="dv">1</span>, min),</span>
+<span id="cb40-70"><a href="#cb40-70" aria-hidden="true" tabindex="-1"></a>                     <span class="at">n_mean =</span> <span class="fu">rowMeans</span>(n_mat),</span>
+<span id="cb40-71"><a href="#cb40-71" aria-hidden="true" tabindex="-1"></a>                     miss_mat,</span>
+<span id="cb40-72"><a href="#cb40-72" aria-hidden="true" tabindex="-1"></a>                     <span class="at">missing_max =</span> <span class="fu">apply</span>(miss_mat, <span class="dv">1</span>, max),</span>
+<span id="cb40-73"><a href="#cb40-73" aria-hidden="true" tabindex="-1"></a>                     <span class="at">missing_mean =</span> <span class="fu">rowMeans</span>(miss_mat))</span>
+<span id="cb40-74"><a href="#cb40-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-75"><a href="#cb40-75" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowData</span>(qf[[joined_set]]) <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="fu">rowData</span>(qf[[joined_set]]), qc_df)</span>
+<span id="cb40-76"><a href="#cb40-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-77"><a href="#cb40-77" aria-hidden="true" tabindex="-1"></a>  qf</span>
+<span id="cb40-78"><a href="#cb40-78" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>qf <span class="ot">&lt;-</span> <span class="fu">addProfileQC</span>(qf,</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">prec_sets =</span> <span class="fu">c</span>(<span class="at">rep1 =</span> <span class="st">"norm_precursors_R1"</span>,</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">rep2 =</span> <span class="st">"norm_precursors_R2"</span>,</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">rep3 =</span> <span class="st">"norm_precursors_R3"</span>),</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>                   <span class="at">prot_sets =</span> <span class="fu">c</span>(<span class="at">rep1 =</span> <span class="st">"proteins_R1"</span>,</span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">rep2 =</span> <span class="st">"proteins_R2"</span>,</span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">rep3 =</span> <span class="st">"proteins_R3"</span>),</span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a>                   <span class="at">joined_set =</span> <span class="st">"proteins_joined"</span>)</span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a><span class="do">## Verify</span></span>
+<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a><span class="fu">rowData</span>(qf[[<span class="st">"proteins_joined"</span>]]) <span class="sc">|&gt;</span></span>
+<span id="cb41-12"><a href="#cb41-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">|&gt;</span></span>
+<span id="cb41-13"><a href="#cb41-13" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="fu">starts_with</span>(<span class="st">"n_"</span>), <span class="fu">starts_with</span>(<span class="st">"missing_"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb41-14"><a href="#cb41-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>           n_rep1 n_rep2 n_rep3 n_min   n_mean missing_rep1 missing_rep2
+A0A096LP01      4      2      2     2 2.666667    0.6666667    0.7777778
+A0A0B4J2F0      2      2      2     2 2.000000    0.7222222    0.6666667
+A0A3B3IRV3      6      3      4     3 4.333333    0.2592593    0.5555556
+A0A3B3IS91      3      3      3     3 3.000000    0.7037037    0.5925926
+A0AV96          2      3      2     2 2.333333    0.1111111    0.5925926
+A0AVF1         11      9      9     9 9.666667    0.4040404    0.5308642
+           missing_rep3 missing_max missing_mean
+A0A096LP01    0.7777778   0.7777778    0.7407407
+A0A0B4J2F0    0.7222222   0.7222222    0.7037037
+A0A3B3IRV3    0.3888889   0.5555556    0.4012346
+A0A3B3IS91    0.5925926   0.7037037    0.6296296
+A0AV96        0.3888889   0.5925926    0.3641975
+A0AVF1        0.4814815   0.5308642    0.4721287</code></pre>
+</div>
+</div>
+<p>These columns will be carried over into part 2 of the course, where we will use them to help interpret our spatial maps.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Key Points
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Spatial proteomics data are prepared for machine learning on profile <em>shape</em>, not for statistical tests, so log transformation is not needed and would flatten the profiles.</li>
+<li>Row-sum normalisation turns raw intensities into profiles that sum to 1. This puts all features on the same scale while preserving the shape of their distribution across the gradient.</li>
+<li>For sparse label-free data, impute before normalising, so that profiles are complete before they are scaled.</li>
+<li>Aggregation combines precursors into one profile per protein group. The aggregation method must match the data: <code>robustSummary</code> needs log-transformed input, whereas <code>colMedians</code> can be used on normalised profiles directly.</li>
+<li>Whether you normalise before or after aggregation makes little practical difference, as long as the final protein profiles are normalised.</li>
+<li><code>aggregateFeatures()</code> and <code>joinAssays()</code> only keep <code>rowData</code> columns that are the same for every feature being combined, so per-replicate quality information, such as the number of precursors (<code>.n</code>) and the proportion of missing values, must be summarised and added back to the joined set.</li>
+<li>Concatenating replicates with <code>joinAssays()</code> gives each replicate equal weight in classification, so inconsistent proteins are classified with lower confidence rather than given conflicting labels.</li>
+<li>Concatenation can also combine different gradients to improve resolution. For differential localisation between conditions, however, the same gradient should be used across all replicates.</li>
+</ul>
+</div>
+</div>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="ref-Barylyuk2020" class="csl-entry" role="listitem">
+Barylyuk, Konstantin, Ludek Koreny, Huiling Ke, et al. 2020. <span>“A Comprehensive Subcellular Atlas of the Toxoplasma Proteome via hyperLOPIT Provides Spatial Context for Protein Functions.”</span> <em>Cell Host and Microbe</em> 28 (5): 752–766.e9. <a href="https://doi.org/10.1016/j.chom.2020.09.011">https://doi.org/10.1016/j.chom.2020.09.011</a>.
+</div>
+<div id="ref-Christoforou2016" class="csl-entry" role="listitem">
+Christoforou, Andy, Claire M. Mulvey, Lisa M. Breckels, et al. 2016. <span>“A Draft Map of the Mouse Pluripotent Stem Cell Spatial Proteome.”</span> <em>Nature Communications</em> 7 (1). <a href="https://doi.org/10.1038/ncomms9992">https://doi.org/10.1038/ncomms9992</a>.
+</div>
+<div id="ref-deDuve1964" class="csl-entry" role="listitem">
+Duve, Christian de. 1964. <span>“Principles of Tissue Fractionation.”</span> <em>Journal of Theoretical Biology</em> 6 (1): 33–59. <a href="https://doi.org/10.1016/0022-5193(64)90065-7">https://doi.org/10.1016/0022-5193(64)90065-7</a>.
+</div>
+<div id="ref-Goeminne2016" class="csl-entry" role="listitem">
+Goeminne, Ludger J. E., Kris Gevaert, and Lieven Clement. 2016. <span>“Peptide-Level Robust Ridge Regression Improves Estimation, Sensitivity, and Specificity in Data-Dependent Quantitative Label-Free Shotgun Proteomics.”</span> <em>Molecular and Cellular Proteomics</em> 15 (2): 657–68. <a href="https://doi.org/10.1074/mcp.m115.055897">https://doi.org/10.1074/mcp.m115.055897</a>.
+</div>
+<div id="ref-Hutchings2023" class="csl-entry" role="listitem">
+Hutchings, Charlotte, Charlotte S. Dawson, Thomas Krueger, Kathryn S. Lilley, and Lisa M. Breckels. 2023. <span>“A Bioconductor Workflow for Processing, Evaluating, and Interpreting Expression Proteomics Data.”</span> <em>F1000Research</em> 12 (October): 1402. <a href="https://doi.org/10.12688/f1000research.139116.1">https://doi.org/10.12688/f1000research.139116.1</a>.
+</div>
+<div id="ref-Hutchings2025" class="csl-entry" role="listitem">
+Hutchings, Charlotte, Thomas Krueger, Oliver M Crook, Laurent Gatto, Kathryn S Lilley, and Lisa M Breckels. 2025. <span>“An Updated Bioconductor Workflow for Correlation Profiling Subcellular Proteomics.”</span> <em>F1000Research</em> 14: 714. <a href="https://doi.org/10.12688/f1000research.165543.1">https://doi.org/10.12688/f1000research.165543.1</a>.
+</div>
+<div id="ref-Moloney2023" class="csl-entry" role="listitem">
+Moloney, Nicola M., Konstantin Barylyuk, Eelco Tromer, et al. 2023. <span>“Mapping Diversity in African Trypanosomes Using High Resolution Spatial Proteomics.”</span> <em>Nature Communications</em> 14 (1). <a href="https://doi.org/10.1038/s41467-023-40125-z">https://doi.org/10.1038/s41467-023-40125-z</a>.
+</div>
+<div id="ref-Sticker2020" class="csl-entry" role="listitem">
+Sticker, Adriaan, Ludger Goeminne, Lennart Martens, and Lieven Clement. 2020. <span>“Robust Summarization and Inference in Proteome-Wide Label-Free Quantification.”</span> <em>Molecular and Cellular Proteomics</em> 19 (7): 1209–19. <a href="https://doi.org/10.1074/mcp.ra119.001624">https://doi.org/10.1074/mcp.ra119.001624</a>.
+</div>
+<div id="ref-Trotter2010" class="csl-entry" role="listitem">
+Trotter, Matthew W. B., Pawel G. Sadowski, Tom P. J. Dunkley, Arnoud J. Groen, and Kathryn S. Lilley. 2010. <span>“Improved Sub‐cellular Resolution via Simultaneous Analysis of Organelle Proteomics Data Across Varied Experimental Conditions.”</span> <em>PROTEOMICS</em> 10 (23): 4213–19. <a href="https://doi.org/10.1002/pmic.201000359">https://doi.org/10.1002/pmic.201000359</a>.
+</div>
+</div>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+          if (!link.classList.contains('no-external-icon')) {
+          }
+        }
+      }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
+          if (lineIds.length > 0) {
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            placeBand(gutterDiv, el, lastEl);
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
+  </script>
+<nav class="page-navigation" aria-label="Page">
+  <div class="nav-page nav-page-previous">
+      <a href="../materials/P1_04_missing_values.html" class="pagination-link" aria-label="Missing data">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Missing data</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../materials/P2_01_resolution_clustering.html" class="pagination-link" aria-label="Assessment of resolution">
+        <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Assessment of resolution</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>Licensed <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> <img src="https://creativecommons.org/images/deed/cc_icon_black_x2.png" class="img-fluid" width="25"> Cambridge Research Informatics Training</p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

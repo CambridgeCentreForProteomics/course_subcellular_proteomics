@@ -1,0 +1,1780 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.11.9">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>7&nbsp; Data annotation</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../materials/P2_03_ml_classification.html" rel="next">
+<link href="../materials/P2_01_resolution_clustering.html" rel="prev">
+<link href="../site_libs/quarto-contrib/quarto-project/cambiotraining/courseformat/img/university-of-cambridge-favicon.ico" rel="icon">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-d8be12bca9bf4cff8dfae3f7a7d6c145.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-7df8b6b947f49bbb2b70116bd26b3010.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../site_libs/quarto-contrib/quarto-project/cambiotraining/courseformat/img/university_crest_reversed.png" alt="" class="navbar-logo light-content">
+    <img src="../site_libs/quarto-contrib/quarto-project/cambiotraining/courseformat/img/university_crest_reversed.png" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Subcellular proteomics analysis</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="https://github.com/CambridgeCentreForProteomics/course_subcellular_proteomics"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="fa6-brands:github" style="font-size: 1.25em;" aria-label="Icon github from fa6-brands Iconify.design set." title="CRIT GitHub"></iconify-icon></span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://bsky.app/profile/bioinfocambs.bsky.social"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="fa6-brands:bluesky" style="font-size: 1.25em;" aria-label="Icon bluesky from fa6-brands Iconify.design set." title="CRIT Bluesky"></iconify-icon></span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://genomic.social/@BioInfoCambs"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="fa6-brands:mastodon" style="font-size: 1.25em;" aria-label="Icon mastodon from fa6-brands Iconify.design set." title="CRIT Mastodon"></iconify-icon></span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://bioinfotraining.bio.cam.ac.uk/"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="mdi:web" style="font-size: 1.25em;" aria-label="Icon web from mdi Iconify.design set." title="CRIT Website"></iconify-icon></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav" aria-label="Toolbar">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <a class="flex-grow-1 no-decor" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+          <h1 class="quarto-secondary-nav-title"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Data annotation</span></h1>
+        </a>     
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto" aria-label="Section">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-controls="quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-1-label">Welcome</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../setup.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data &amp; Setup</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-controls="quarto-sidebar-section-2" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-2-label">Part I: Data processing</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-2" aria-labelledby="quarto-sidebar-section-2-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P1_01_intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">The use-case data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P1_02_import_and_infrastructure.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Import and infrastructure</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P1_03_qc_data_processing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data processing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P1_04_missing_values.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Missing data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P1_05_normalisation_aggregation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Data transformation and aggregation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-controls="quarto-sidebar-section-3" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-3-label">Part II: Subcellular mapping</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-3" aria-labelledby="quarto-sidebar-section-3-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P2_01_resolution_clustering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Assessment of resolution</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P2_02_marker_annotation.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Data annotation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P2_03_ml_classification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Protein localisation prediction</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P2_04_features_of_interest.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Visualisation and exploration</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-controls="quarto-sidebar-section-4" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-4-label">Part III: Differential localisation</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-4" aria-labelledby="quarto-sidebar-section-4-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P3_01_sandle.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Differential localisation analyses</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-controls="quarto-sidebar-section-5" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-5-label">Glossary</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-5" aria-labelledby="quarto-sidebar-section-5-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P4_01_glossary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Glossary</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#defining-markers-for-machine-learning" id="toc-defining-markers-for-machine-learning" class="nav-link active" data-scroll-target="#defining-markers-for-machine-learning"><span class="header-section-number">7.1</span> Defining markers for machine learning</a></li>
+  <li><a href="#marker-lists-from-prolocmarkers" id="toc-marker-lists-from-prolocmarkers" class="nav-link" data-scroll-target="#marker-lists-from-prolocmarkers"><span class="header-section-number">7.2</span> Marker lists from <code>pRolocmarkers</code></a></li>
+  <li><a href="#adding-user-defined-marker-lists" id="toc-adding-user-defined-marker-lists" class="nav-link" data-scroll-target="#adding-user-defined-marker-lists"><span class="header-section-number">7.3</span> Adding user-defined marker lists</a></li>
+  <li><a href="#evaluating-markers" id="toc-evaluating-markers" class="nav-link" data-scroll-target="#evaluating-markers"><span class="header-section-number">7.4</span> Evaluating markers</a></li>
+  <li><a href="#quantifying-resolution-using-qsep" id="toc-quantifying-resolution-using-qsep" class="nav-link" data-scroll-target="#quantifying-resolution-using-qsep"><span class="header-section-number">7.5</span> Quantifying resolution using <code>QSep</code></a></li>
+  <li><a href="#interactive-data-visualisation" id="toc-interactive-data-visualisation" class="nav-link" data-scroll-target="#interactive-data-visualisation"><span class="header-section-number">7.6</span> Interactive data visualisation</a></li>
+  <li><a href="#refining-marker-lists" id="toc-refining-marker-lists" class="nav-link" data-scroll-target="#refining-marker-lists"><span class="header-section-number">7.7</span> Refining marker lists</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content" tabindex="-1">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title d-none d-lg-block"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Data annotation</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Learning objectives
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Define a subcellular marker, and explain why markers must be curated for the specific cell type and conditions being studied</li>
+<li>Describe the iterative process of marker curation: select resolved compartments, source an initial list, evaluate, refine and annotate</li>
+<li>Retrieve published marker sets with <code>pRolocmarkers()</code> and add published or user-defined markers to an <code>MSnSet</code> with <code>addMarkers()</code></li>
+<li>Evaluate markers visually using PCA and t-SNE with <code>plot2D()</code>, marker profiles with <code>plotDist()</code>, and interactive visualisation using the <code>pRolocGUI</code> package</li>
+<li>Quantify the separation of subcellular compartments with the <code>QSep()</code> method, and interpret raw and normalised QSep scores</li>
+<li>Refine a marker list by removing outlying markers and combining or removing poorly resolved compartments, without over-curating the data</li>
+</ul>
+</div>
+</div>
+<section id="defining-markers-for-machine-learning" class="level2" data-number="7.1">
+<h2 data-number="7.1" class="anchored" data-anchor-id="defining-markers-for-machine-learning"><span class="header-section-number">7.1</span> Defining markers for machine learning</h2>
+<p>In the context of spatial proteomics data analysis, a marker is a protein known to reside in a single subcellular niche within a given system <em>and</em> under given conditions. In other words, markers are proteins which we can confidently assign to a known single localisation based on prior knowledge. In the context of protein localisation prediction, marker proteins constitute the labelled training data provided to the classification algorithm. Defining marker proteins can be challenging and time consuming, but it is critical to obtain a list of markers which are representative of the experiment and dataset of interest.</p>
+<p>It is worth stressing at the outset that there is no single correct marker list. Marker curation is not a mechanical step with a fixed answer, but a series of informed decisions that depend on the biology of the system and the structure of the data. Which compartments are resolved, which proteins reliably represent them, and how much variation to tolerate within a compartment will all differ between organisms, cell types, experimental conditions and fractionation methods. A marker list that works well for one dataset may be a poor fit for another, even from the same organism. Two analysts working on the same data may also reasonably arrive at slightly different marker lists, and both may be valid, provided each decision is grounded in prior knowledge and supported by the data.</p>
+<p>The definition of subcellular markers can be broadly divided into five steps, with steps 3, 4 and 5 representing an iterative process, as outlined below.</p>
+<ol type="1">
+<li>Determine which subcellular organelles have been sufficiently resolved in the data</li>
+<li>Generate or source an initial marker list for the selected compartments in your organism</li>
+<li>Evaluate the suitability of the marker list for your specific dataset</li>
+<li>Update the marker list by removing outliers, combining compartments or expanding markers</li>
+<li>Carry out protein localisation classification using curated markers</li>
+</ol>
+<p><br></p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="figs/marker_curation.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="A graphical representation of the process of marker curation. Markers are proteins which are known to localise to a single subcellular compartment in the given cell type and condition of interest. The selection of confident markers is critical for successful prediction of protein localisation and differential localisation. (!) After using curated markers for protein localisation classification, users might still need to do some final curation e.g., if localisation prediction results do not look sensible (over- or under-classification of a particular organelle). However, users should be cautious when repeatedly refining markers lists as to ensure that the final markers remain representative of the literature and data structure."><img src="figs/marker_curation.png" class="img-fluid figure-img" style="width:90.0%" alt="A graphical representation of the process of marker curation. Markers are proteins which are known to localise to a single subcellular compartment in the given cell type and condition of interest. The selection of confident markers is critical for successful prediction of protein localisation and differential localisation. (!) After using curated markers for protein localisation classification, users might still need to do some final curation e.g., if localisation prediction results do not look sensible (over- or under-classification of a particular organelle). However, users should be cautious when repeatedly refining markers lists as to ensure that the final markers remain representative of the literature and data structure."></a></p>
+<figcaption>A graphical representation of the process of marker curation. Markers are proteins which are known to localise to a single subcellular compartment in the given cell type and condition of interest. The selection of confident markers is critical for successful prediction of protein localisation and differential localisation. (!) After using curated markers for protein localisation classification, users might still need to do some final curation e.g., if localisation prediction results do not look sensible (over- or under-classification of a particular organelle). However, users should be cautious when repeatedly refining markers lists as to ensure that the final markers remain representative of the literature and data structure.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Having visualised the data to validate the presence of clusters and explored which subcellular organelles may be resolved in the dataset, we can now start with an initial marker list. For model organisms, pre-existing marker lists can often be derived from published subcellular proteomics datasets. For simplicity, the <code>pRoloc</code> package stores a number of curated marker sets as well as published marker sets, as discussed below. However, for non-model organisms with limited pre-existing subcellular proteomics data it may be necessary to manually curate an initial marker list. In such cases we would advise users to apply unsupervised clustering to their data in order to guide marker discovery.</p>
+</section>
+<section id="marker-lists-from-prolocmarkers" class="level2" data-number="7.2">
+<h2 data-number="7.2" class="anchored" data-anchor-id="marker-lists-from-prolocmarkers"><span class="header-section-number">7.2</span> Marker lists from <code>pRolocmarkers</code></h2>
+<p>The <code>pRoloc</code> package contains marker protein lists for a number of organisms, including curated organism reference sets and published marker lists. To see which marker sets are available we can use the <code>pRolocmarkers</code> function. Type <code>?pRolocmarkers</code> for more details.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="do">## View available marker sets within pRoloc</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">pRolocmarkers</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>14 marker lists (version 2) available:
+Arabidopsis thaliana [atha]:
+ Ids: TAIR, 543 markers
+Drosophila melanogaster [dmel]:
+ Ids: Uniprot, 179 markers
+Gallus gallus [ggal]:
+ Ids: IPI, 102 markers
+Homo sapiens [hsap_christopher]:
+ Ids: Uniprot, 1509 markers
+Homo sapiens [hsap_geladaki]:
+ Ids: Uniprot, 579 markers
+Homo sapiens [hsap_itzhak]:
+ Ids: Uniprot, 1076 markers
+Homo sapiens [hsap_villaneuva]:
+ Ids: Uniprot, 682 markers
+Homo sapiens [hsap]:
+ Ids: Uniprot, 872 markers
+Mus musculus [mmus_christoforou]:
+ Ids: Uniprot, 922 markers
+Mus musculus [mmus]:
+ Ids: Uniprot, 937 markers
+Saccharomyces cerevisiae [scer_sgd]:
+ Ids: SGD, 259 markers
+Saccharomyces cerevisiae [scer_uniprot]:
+ Ids: Uniprot, 259 markers
+Toxoplasma gondii [toxo_barylyuk]:
+ Ids: ToxoDB gene identifier, 718 markers
+Trypanosoma brucei [tryp_moloney]:
+ Ids: TriTrypDB gene identifier, 891 markers</code></pre>
+</div>
+</div>
+<p>We can see a number of lists, each labelled with species, ID type (UniProt protein accessions, species-specific gene IDs etc.) and the number of markers. The name of the marker set is indicated inside of square brackets. Reference marker sets for model organisms are named after their species: <code>atha</code> for the <em>Arabidopsis thaliana</em> reference set, <code>dmel</code> for <em>Drosophila melanogaster</em>, <code>hsap</code> for <em>Homo sapiens</em>, <code>mmus</code> for <em>Mus musculus</em>, and <code>ggal</code> for <em>Gallus gallus</em>. Marker sets extracted directly from publications are named using the nomenclature <code>species_author</code> e.g., <code>hsap_christopher</code> for the marker list used in <span class="citation" data-cites="Christopher2025">Christopher et al. (<a href="#ref-Christopher2025" role="doc-biblioref">2025</a>)</span>.</p>
+<p>To use one of the marker lists stored in <code>pRolocmarkers</code>, users should first extract the marker list into a named character vector by using the <code>pRolocmarkers</code> function and passing the name of the desired marker list.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Example extract markers from pRolocmarkers</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>human_mrk <span class="ot">&lt;-</span> <span class="fu">pRolocmarkers</span>(<span class="st">"hsap"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>These markers can then be used to annotate the data via the <code>addMarkers</code> function, as demonstrated below.</p>
+</section>
+<section id="adding-user-defined-marker-lists" class="level2" data-number="7.3">
+<h2 data-number="7.3" class="anchored" data-anchor-id="adding-user-defined-marker-lists"><span class="header-section-number">7.3</span> Adding user-defined marker lists</h2>
+<p>It is possible to import and apply a user-defined marker list. The markers should be imported as either (i) a named vector where subcellular marker annotations are entries and feature accessions are the corresponding names, or (ii) from a <code>.csv</code> file with two columns, one for the subcellular marker annotation and another for the corresponding feature name. Of note, the feature names used in the marker list must be of the same format as those in the <code>featureNames</code> of the <code>MSnSet</code> to be annotated. In the use-case the format is UniProt protein accessions but <code>featureNames</code> could also be gene names or organisms-specific identifiers.</p>
+<p>We show how to load from a <code>.csv</code> file in the below code chunk and add annotation to the proteins in the data based on the marker list we have provided. A new column will be added to the data, which we will call “markers_initial”. This is done by passing the argument <code>mcol = "markers_initial"</code>. For users who have extracted markers from <code>pRolocmarkers</code>, the code below should be edited to pass the extracted named character object (e.g., <code>human_mrk</code> generated above) to the <code>markers</code> argument.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Add markers to the MSnSet</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>msn <span class="ot">&lt;-</span> <span class="fu">addMarkers</span>(<span class="at">object =</span> msn,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">markers =</span> <span class="st">"data/dialop_markers.csv"</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>                  <span class="at">mcol =</span> <span class="st">"markers_initial"</span>) <span class="co"># Name for newly created fData col</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Markers in data: 1725 out of 8736</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>organelleMarkers
+Actin Cytoskeleton          Chromatin            Cytosol           Endosome 
+                30                 69                366                 34 
+                ER              Golgi           Lysosome      Mitochondrion 
+               231                 38                 36                346 
+           Nucleus         Peroxisome                 PM         Proteasome 
+               402                 17                 82                 28 
+      Ribosome 40S       Ribosome 60S            unknown 
+                14                 32               7011 </code></pre>
+</div>
+</div>
+<p>Upon successfully annotating the markers, a table is printed to the screen summarising the number of markers that have been added to the data. We see a new column has been added to the <code>fData</code> of our <code>MSnSet</code> to annotate these proteins in our dataset, called “markers_initial”.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Print the column names of the fData</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>msn <span class="sc">|&gt;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fvarLabels</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "Channel"            "Decoy"              "Proteotypic"       
+ [4] "Protein.Ids"        "Protein.Group"      "Protein.Names"     
+ [7] "Genes"              "PG.TopN"            "Genes.TopN"        
+[10] "Translated.Q.Value" "Channel.Q.Value"    "Lib.PG.Q.Value"    
+[13] "is_contaminant"     "n_rep1"             "n_rep2"            
+[16] "n_rep3"             "n_min"              "n_mean"            
+[19] "missing_rep1"       "missing_rep2"       "missing_rep3"      
+[22] "missing_max"        "missing_mean"       "hc"                
+[25] "hdb_cluster_id"     "hdb_cluster_prob"   "markers_initial"   </code></pre>
+</div>
+</div>
+<p>If you wish to remove the markers from your data you can assign NULL to the output i.e., one would type <code>fData(msn)[, "markers_initial"] &lt;- NULL</code> to remove the marker list. See the help documentation of <code>addMarkers</code> by typing <code>?addMarkers</code> for more details.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>An additional note on minimum number of markers per compartment
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Determining the optimal number of markers to include in the training data can be challenging. The inclusion of more training data (markers) is usually thought to increase the generalisability of a model, although this is only true if these markers represent the full diversity of data and do not lead to model over-fitting. While there are no fixed rules on the minimum number of training examples needed to learn a classifier, we suggest (1) having a sufficient number of markers per class to run cross-validation e.g.&nbsp;10-15 for a 5-fold cross validation, (2) more markers than quantitation features e.g.&nbsp;for correlation profiling experiment with 10 abundance channels, &gt; 10. Some classifiers also require the number of examples per class to be balanced. Unfortunately, the number of proteins known to reside in a subcellular niche can vary greatly, and some niches simply have too few proteins to add more markers. For example, the peroxisome is a relatively small organelle with few available marker proteins. This means that for experiments with many fractions and multiple replicates it may not be possible to have the number of peroxisomal markers exceed the number of quantitative channels. Nevertheless, users should be aware of these general guidelines and try to meet them where possible.</p>
+</div>
+</div>
+</section>
+<section id="evaluating-markers" class="level2" data-number="7.4">
+<h2 data-number="7.4" class="anchored" data-anchor-id="evaluating-markers"><span class="header-section-number">7.4</span> Evaluating markers</h2>
+<p>After annotating the markers we again use dimensionality reduction within the <code>plot2D</code> function as a visualisation tool. This time we pass <code>fcol = "markers_initial"</code> to colour our proteins based on the <code>markers_initial</code> column within our <code>fData</code>. As outlined above, we expect markers to cluster together on these 2D plots.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">1</span>))</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot2D</span>(msn, <span class="at">method =</span> <span class="st">"PCA"</span>, <span class="at">fcol =</span> <span class="st">"markers_initial"</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">main =</span> <span class="st">"Initial marker resolution PCA"</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">addLegend</span>(msn, <span class="at">where =</span> <span class="st">"bottomright"</span>, <span class="at">fcol =</span> <span class="st">"markers_initial"</span>, <span class="at">cex =</span> .<span class="dv">7</span>)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">399</span>)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="fu">plot2D</span>(msn, <span class="at">method =</span> <span class="st">"t-SNE"</span>, <span class="at">fcol =</span> <span class="st">"markers_initial"</span>,</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">main =</span> <span class="st">"Initial marker resolution t-SNE"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required namespace: Rtsne</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">addLegend</span>(msn, <span class="at">where =</span> <span class="st">"bottomright"</span>, <span class="at">fcol =</span> <span class="st">"markers_initial"</span>, <span class="at">cex =</span> .<span class="dv">7</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_02_marker_annotation_files/figure-html/unnamed-chunk-5-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="P2_02_marker_annotation_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="576"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>As expected, the majority of markers cluster together with other proteins from the same subcellular compartment. However, we can see some protein markers which do not cluster as tightly with the rest of their compartment. Additionally, whilst the t-SNE plot shows all clusters to be relatively well separated, the PCA plot displays an overlap between the nucleus (dark purple) and ribosomal subunits (light pink and light orange). This is because the <code>plot2D</code> function uses PC1 and PC2 by default which limits visualisation to compartments resolved in these first two dimensions. We can pass a vector of alternative PC dimensions to the <code>dims</code> argument within <code>plot2D</code> to explore resolution in these lower PCs. Below we show that the ribosome compartments, nucleus, Golgi and lysosome are better differentiated when visualised with other PCs.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">2</span>))</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="do">## Visualise PC1 and PC2 - the PCs which explain the most variance in our data</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot2D</span>(msn, <span class="at">method =</span> <span class="st">"PCA"</span>, <span class="at">fcol =</span> <span class="st">"markers_initial"</span>,</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">main =</span> <span class="st">"Marker resolution in PC1 and PC2"</span>)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="fu">addLegend</span>(msn, <span class="at">where =</span> <span class="st">"bottomright"</span>, <span class="at">fcol =</span> <span class="st">"markers_initial"</span>,</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>          <span class="at">cex =</span> .<span class="dv">7</span>, <span class="at">ncol =</span> <span class="dv">2</span>)</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="do">## Visualise PC2 and PC3</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="fu">plot2D</span>(msn, <span class="at">method =</span> <span class="st">"PCA"</span>, <span class="at">fcol =</span> <span class="st">"markers_initial"</span>,</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">dims =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">3</span>), <span class="at">main =</span> <span class="st">"Marker resolution in PC2 and PC3"</span>)</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="do">## Visualise PC1 and PC3</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="fu">plot2D</span>(msn, <span class="at">method =</span> <span class="st">"PCA"</span>, <span class="at">fcol =</span> <span class="st">"markers_initial"</span>,</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>       <span class="at">dims =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>), <span class="at">main =</span> <span class="st">"Marker resolution in PC1 and PC3"</span>)</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="do">## Visualise PC3 and PC4</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="fu">plot2D</span>(msn, <span class="at">method =</span> <span class="st">"PCA"</span>, <span class="at">fcol =</span> <span class="st">"markers_initial"</span>,</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>       <span class="at">dims =</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">4</span>), <span class="at">main =</span> <span class="st">"Marker resolution in PC3 and PC4"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_02_marker_annotation_files/figure-html/unnamed-chunk-6-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="P2_02_marker_annotation_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="1152"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Importantly, although dimensionality reduction provides a convenient visualisation tool, neither the PCA nor the t-SNE co-ordinates represent the data input for downstream supervised machine learning classification algorithms. The training data for classification are the marker protein correlation profiles. Therefore, it is critical to look directly at these profiles as well as the 2D maps.</p>
+<p>The <code>plotDist</code> function within <code>pRoloc</code> generates a line plot showing the protein distribution profiles. We pass our <code>msn</code> object and subset the proteins annotated as <code>"Mitochondrion"</code> in the <code>markers_initial</code> column of the <code>fData</code>.</p>
+<p>Check the marker names in the data</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Check marker classes</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">getMarkerClasses</span>(msn, <span class="at">fcol =</span> <span class="st">"markers_initial"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "Actin Cytoskeleton" "Chromatin"          "Cytosol"           
+ [4] "Endosome"           "ER"                 "Golgi"             
+ [7] "Lysosome"           "Mitochondrion"      "Nucleus"           
+[10] "Peroxisome"         "PM"                 "Proteasome"        
+[13] "Ribosome 40S"       "Ribosome 60S"      </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Get indices of mitochondrial proteins</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>mt <span class="ot">&lt;-</span> <span class="fu">fData</span>(msn)<span class="sc">$</span>markers_initial <span class="sc">==</span> <span class="st">"Mitochondrion"</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="do">## Plot the distributions of mitochondrial markers</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plotDist</span>(<span class="at">object =</span> msn[mt, ], <span class="at">pcol =</span> <span class="st">"#A65628"</span>, <span class="at">las =</span> <span class="dv">2</span>)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="fu">title</span>(<span class="st">"Mitochondrial markers"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>A <code>for</code> loop can be used to plot the distribution of each marker class, as outlined in the code chunk below. The <code>getMarkerClasses</code> function can be used to return a vector of all subcellular marker compartments in a given <code>MSnSet</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Define marker compartments</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>marker_organelles <span class="ot">&lt;-</span> <span class="fu">getMarkerClasses</span>(msn, <span class="at">fcol =</span> <span class="st">"markers_initial"</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="do">## Define colours</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>my_cols <span class="ot">&lt;-</span> <span class="fu">getStockcol</span>()</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="do">## Plot marker distribution profile per compartment</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">4</span>))</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(marker_organelles)) {</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  marker_indices <span class="ot">&lt;-</span> <span class="fu">fData</span>(msn)<span class="sc">$</span>markers_initial <span class="sc">==</span> marker_organelles[i]</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plotDist</span>(msn[marker_indices, ],</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>           <span class="at">pcol =</span> my_cols[i],</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>           <span class="at">xlab =</span> <span class="st">"Fraction"</span>,</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>           <span class="at">ylab =</span> <span class="st">"Intensity"</span>)</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">title</span>(marker_organelles[i])</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_02_marker_annotation_files/figure-html/unnamed-chunk-9-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="P2_02_marker_annotation_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Plotting the concatenated profiles is useful as it allows us to assess the suitability of markers across all three replicates at once. Importantly, a protein can only be considered to be a marker if it behaves as such across all replicates. Overall, this marker set is a good fit to the data. Nevertheless, there are a few markers that could be removed.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>An additional note on outlier marker removal
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Decisions regarding what constitutes an “outlier marker” can be challenging. In most correlation profiling experiments the marker profiles will contain a certain degree of noise, and this is to be expected. Further, the degree of noise will differ across subcellular compartments depending upon how well they behave during the biochemical fractionation process. For instance, in the use-case data the proteasomal markers have a very tight profile with minimal noise whilst the nuclear markers have a wider profile indicating more variation in the behaviour of these proteins during fractionation. Whilst it would be possible to extract a subset of nuclear markers to generate a much tighter set of profiles (which would translate to a tighter cluster when visualised via dimensionality reduction), this would be an inaccurate representation of the data. Indeed, over-curation of markers to generate unrealistically tight clusters can lead to over-fitting of downstream protein localisation classification models. In other words, the nuclear markers would no longer be a true representation of the nucleus and the model may fail to recognise which of our unknown proteins should be classified as nuclear. The goal of marker curation is to select a set of markers which accurately represent the dataset being analysed. Moreover, some machine learning models are more robust to outliers than others.</p>
+</div>
+</div>
+</section>
+<section id="quantifying-resolution-using-qsep" class="level2" data-number="7.5">
+<h2 data-number="7.5" class="anchored" data-anchor-id="quantifying-resolution-using-qsep"><span class="header-section-number">7.5</span> Quantifying resolution using <code>QSep</code></h2>
+<p>In addition to identifying outlying markers in each of the annotated compartments, users should also consider whether all of the initial compartments have sufficient resolution to be included in downstream classification. From the marker plots generated above, the initial compartments in our marker set do seem to be reasonably well resolved, perhaps with the exception of the actin cytoskeleton. However, we can take a more quantitative approach to exploring resolution by using the <code>QSep</code> function within <code>pRoloc</code>. <code>QSep</code> is a method for quantifying the separation of clusters in subcellular spatial proteomics datasets <span class="citation" data-cites="Gatto2019">(<a href="#ref-Gatto2019" role="doc-biblioref">Gatto et al. 2019</a>)</span>.</p>
+<p>We can carry out QSep analysis using the <code>QSep</code> function on the markers annotated on our <code>MSnSet</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Carry out QSep</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>qsep_res <span class="ot">&lt;-</span> <span class="fu">QSep</span>(<span class="at">object =</span> msn, <span class="at">fcol =</span> <span class="st">"markers_initial"</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="do">## Verify</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>qsep_res</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Object of class 'QSep'.
+ Data: msn 
+ With 14 sub-cellular clusters.</code></pre>
+</div>
+</div>
+<p>The <code>QSep</code> function returns a specialised object of class <code>QSep</code>. Within this object we can access matrices containing two types of QSep score: (1) the original and (2) normalised QSep scores. Original QSep scores are calculated as the average Euclidean distance between two clusters and thus directly quantify how far apart the clusters are when visualised via PCA. These scores are calculated using one of the clusters as a reference cluster. Since the distance between two clusters is the same regardless of which is the reference, the original QSep scores will be a symmetrical matrix. We can access this matrix by executing <code>qsep_res@x</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Look at original QSep scores</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>qsep_res<span class="sc">@</span>x</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                     Cytosol        ER Mitochondrion   Nucleus Chromatin
+Cytosol            0.2609622 0.8322882     1.2791723 0.8397097 1.2586539
+ER                 0.8322882 0.2422845     1.0075807 0.9987673 1.2622263
+Mitochondrion      1.2791723 1.0075807     0.1497379 1.2957358 1.1223420
+Nucleus            0.8397097 0.9987673     1.2957358 0.3296717 0.9309606
+Chromatin          1.2586539 1.2622263     1.1223420 0.9309606 0.5681249
+Lysosome           1.0492475 0.5626146     0.7757452 1.1795653 1.3753506
+PM                 0.8148331 0.2892391     0.8816183 0.9551975 1.1549552
+Proteasome         0.5675919 0.8808103     1.2957101 0.4293897 1.0918821
+Golgi              1.0250485 0.5955514     0.6202102 1.1271236 1.2866597
+Peroxisome         0.8762783 0.2983711     1.1923176 1.0642622 1.3869159
+Endosome           0.6760775 0.4318442     1.2252360 0.8762218 1.2888899
+Actin Cytoskeleton 0.5360356 0.7740139     1.1731957 0.5754468 1.0855941
+Ribosome 60S       0.7610131 0.8395976     1.2400705 0.3519515 1.0253692
+Ribosome 40S       0.6902846 0.9022500     1.2963049 0.3386735 1.0546619
+                    Lysosome        PM Proteasome     Golgi Peroxisome
+Cytosol            1.0492475 0.8148331  0.5675919 1.0250485  0.8762783
+ER                 0.5626146 0.2892391  0.8808103 0.5955514  0.2983711
+Mitochondrion      0.7757452 0.8816183  1.2957101 0.6202102  1.1923176
+Nucleus            1.1795653 0.9551975  0.4293897 1.1271236  1.0642622
+Chromatin          1.3753506 1.1549552  1.0918821 1.2866597  1.3869159
+Lysosome           0.2523469 0.5403635  1.0846731 0.3130587  0.6842091
+PM                 0.5403635 0.2465769  0.8580083 0.5355326  0.4147310
+Proteasome         1.0846731 0.8580083  0.1580363 1.0514769  0.9270015
+Golgi              0.3130587 0.5355326  1.0514769 0.2347473  0.7492663
+Peroxisome         0.6842091 0.4147310  0.9270015 0.7492663  0.1913631
+Endosome           0.8189493 0.4821834  0.7210887 0.8392724  0.4023267
+Actin Cytoskeleton 0.9692686 0.7386319  0.4293695 0.9325260  0.8430337
+Ribosome 60S       1.0377008 0.8114164  0.3539700 0.9995592  0.8961715
+Ribosome 40S       1.1009406 0.8757694  0.2287916 1.0622606  0.9525120
+                    Endosome Actin Cytoskeleton Ribosome 60S Ribosome 40S
+Cytosol            0.6760775          0.5360356    0.7610131    0.6902846
+ER                 0.4318442          0.7740139    0.8395976    0.9022500
+Mitochondrion      1.2252360          1.1731957    1.2400705    1.2963049
+Nucleus            0.8762218          0.5754468    0.3519515    0.3386735
+Chromatin          1.2888899          1.0855941    1.0253692    1.0546619
+Lysosome           0.8189493          0.9692686    1.0377008    1.1009406
+PM                 0.4821834          0.7386319    0.8114164    0.8757694
+Proteasome         0.7210887          0.4293695    0.3539700    0.2287916
+Golgi              0.8392724          0.9325260    0.9995592    1.0622606
+Peroxisome         0.4023267          0.8430337    0.8961715    0.9525120
+Endosome           0.2945097          0.6637656    0.7174710    0.7514423
+Actin Cytoskeleton 0.6637656          0.4829494    0.4833998    0.4486777
+Ribosome 60S       0.7174710          0.4833998    0.2041137    0.2489255
+Ribosome 40S       0.7514423          0.4486777    0.2489255    0.1595204</code></pre>
+</div>
+</div>
+<p>By contrast to these raw scores, normalised QSep scores are calculated as the ratio of average Euclidean distance between clusters to the average distance within the reference cluster. This means that the normalised QSep scores represent not only the distance between clusters but this distance relative to how tight the reference cluster is. As a result, we have an asymmetrical matrix where the score is different when we use each of the two compared clusters as the reference. This matrix is accessed using <code>qsep_res@xnorm</code>, as shown below.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Look at the normalised QSep scores</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>qsep_res<span class="sc">@</span>xnorm</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                    Cytosol       ER Mitochondrion  Nucleus Chromatin Lysosome
+Cytosol            1.000000 3.189305      4.901753 3.217744  4.823127 4.020688
+ER                 3.435169 1.000000      4.158668 4.122292  5.209687 2.322124
+Mitochondrion      8.542744 6.728964      1.000000 8.653361  7.495378 5.180688
+Nucleus            2.547108 3.029581      3.930382 1.000000  2.823902 3.577999
+Chromatin          2.215453 2.221741      1.975520 1.638655  1.000000 2.420859
+Lysosome           4.157957 2.229528      3.074122 4.674380  5.450238 1.000000
+PM                 3.304580 1.173018      3.575429 3.873832  4.683955 2.191460
+Proteasome         3.591530 5.573470      8.198816 2.717033  6.909061 6.863445
+Golgi              4.366605 2.536990      2.642034 4.801434  5.481043 1.333599
+Peroxisome         4.579139 1.559188      6.230655 5.561480  7.247560 3.575449
+Endosome           2.295604 1.466316      4.160257 2.975189  4.376393 2.780721
+Actin Cytoskeleton 1.109921 1.602681      2.429231 1.191526  2.247842 2.006977
+Ribosome 60S       3.728378 4.113382      6.075391 1.724291  5.023520 5.083935
+Ribosome 40S       4.327250 5.656016      8.126265 2.123074  6.611455 6.901567
+                         PM Proteasome    Golgi Peroxisome Endosome
+Cytosol            3.122418  2.1749965 3.927958   3.357874 2.590710
+ER                 1.193800  3.6354383 2.458066   1.231491 1.782385
+Mitochondrion      5.887744  8.6531890 4.141973   7.962699 8.182539
+Nucleus            2.897420  1.3024764 3.418927   3.228248 2.657861
+Chromatin          2.032925  1.9219050 2.264748   2.441216 2.268673
+Lysosome           2.141352  4.2983413 1.240589   2.711383 3.245331
+PM                 1.000000  3.4796781 2.171869   1.681954 1.955509
+Proteasome         5.429187  1.0000000 6.653390   5.865752 4.562805
+Golgi              2.281316  4.4791871 1.000000   3.191800 3.575217
+Peroxisome         2.167246  4.8442011 3.915416   1.000000 2.102425
+Endosome           1.637241  2.4484381 2.849728   1.366090 1.000000
+Actin Cytoskeleton 1.529419  0.8890567 1.930898   1.745594 1.374400
+Ribosome 60S       3.975316  1.7341804 4.897070   4.390550 3.515055
+Ribosome 40S       5.490015  1.4342467 6.659090   5.971098 4.710635
+                   Actin Cytoskeleton Ribosome 60S Ribosome 40S
+Cytosol                      2.054074     2.916181    2.6451515
+ER                           3.194649     3.465338    3.7239278
+Mitochondrion                7.834996     8.281609    8.6571614
+Nucleus                      1.745514     1.067581    1.0273053
+Chromatin                    1.910837     1.804830    1.8563908
+Lysosome                     3.841016     4.112199    4.3628060
+PM                           2.995544     3.290723    3.5517089
+Proteasome                   2.716905     2.239802    1.4477159
+Golgi                        3.972468     4.258023    4.5251248
+Peroxisome                   4.405413     4.683094    4.9775103
+Endosome                     2.253799     2.436154    2.5515030
+Actin Cytoskeleton           1.000000     1.000933    0.9290365
+Ribosome 60S                 2.368287     1.000000    1.2195432
+Ribosome 40S                 2.812667     1.560462    1.0000000</code></pre>
+</div>
+</div>
+<p>For both raw and normalised QSep scores, a higher score indicates better resolution between clusters.</p>
+<p>We can also visualise the results of QSep in multiple ways. Firstly, the <code>plot</code> function within the <code>pRoloc</code> package can be used to generate a boxplot of the QSep scores for each included compartment. The <code>norm</code> argument takes a logical input to indicate whether to use normalised or raw QSep scores.</p>
+<div class="cell" data-layout-align="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="do">## Plot a boxplot of raw QSep scores</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="at">x =</span> qsep_res, <span class="at">norm =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="fu">title</span>(<span class="st">"Raw QSep scores for initial markers"</span>)</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="do">## Plot a boxplot of normalised QSep scores</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="at">x =</span> qsep_res, <span class="at">norm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a><span class="fu">title</span>(<span class="st">"Normalised QSep scores for initial markers"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-6">
+<figure class="figure">
+<p><a href="P2_02_marker_annotation_files/figure-html/unnamed-chunk-13-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="P2_02_marker_annotation_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid quarto-figure quarto-figure-6 figure-img" width="1344"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>From these boxplots we are able to see which of our subcellular compartments have higher overall normalised QSep scores, thus indicating that they are well resolved. In the use-case data, chromatin, mitochondrion, and lysosome are our three most well-resolved compartments.</p>
+<p>Secondly, to take a closer look at the pairwise QSep scores we can use the <code>levelPlot</code> function, again with the <code>norm</code> argument to specify which type of score we are interested in.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Plot a level plot of raw QSep values between each compartment</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">levelPlot</span>(<span class="at">object =</span> qsep_res, <span class="at">norm =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">main =</span> <span class="st">"Raw QSep values for initial markers"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_02_marker_annotation_files/figure-html/unnamed-chunk-14-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-6"><img src="P2_02_marker_annotation_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Plot a level plot of normalised QSep values between each compartment</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">levelPlot</span>(<span class="at">object =</span> qsep_res, <span class="at">norm =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">main =</span> <span class="st">"Normalised QSep values for initial markers"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_02_marker_annotation_files/figure-html/unnamed-chunk-15-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-7"><img src="P2_02_marker_annotation_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Looking at the pairwise QSep scores is particularly useful in identifying which subcellular compartments are the least resolved from each other. In the use-case data the ribosomes have the lowest pairwise resolution, some of this may be down to the annotation of individual subunits and class labelling. When resolution between two subcellular compartments is low (i.e., their pairwise QSep scores are low) there is a higher chance of proteins being misclassified between these compartments during downstream machine learning. Indeed, a subcellular compartment could have a high average QSep score, but the ability to correctly classify proteins to that compartment is determined almost entirely by its lowest pairwise QSep score. For compartments where all calculated QSep scores are low, users may consider whether it is appropriate to include the compartment at all or combine them with other classes under one umbrella term, for example here we could combine the 40S and 60S subunits into one term “Ribosome”. We would also likely remove “Actin cytoskeleton” as it has consistently low resolution against all other compartments. By contrast, for compartments with high overall scores but one or two low pairwise QSep scores it may be worth combining the compartments with lower resolution. After making any changes, QSep scores can be recalculated on the updated annotated <code>MSnSet</code> to determine whether resolution has been improved.</p>
+<p>QSep scores are a quantitative measure of cluster (subcellular compartment) separation. Higher QSep scores indicate that clusters are more well resolved from each other. However, users should not aim for unreasonably high QSep scores. As discussed above in “An additional note on outlier marker removal”, over-curation can generate unrealistically tight protein clusters which are no longer representative of the dataset. These clusters would have relatively higher QSep scores, since they are tighter and further separated from other compartments, but could still lead to over-fitting during protein localisation classification.</p>
+</section>
+<section id="interactive-data-visualisation" class="level2" data-number="7.6">
+<h2 data-number="7.6" class="anchored" data-anchor-id="interactive-data-visualisation"><span class="header-section-number">7.6</span> Interactive data visualisation</h2>
+<p>Visual exploration of correlation profiling datasets is a key aspect of the data analysis. As outlined above, the visualisation of marker protein distribution profiles as well as the annotation of these proteins on 2D maps facilitates the marker curation process required prior to protein localisation classification. To make this process of visual data exploration easier and reduce the need for excess plotting, the <code>pRolocVis</code> function from the <a href="https://bioconductor.org/packages/release/bioc/html/pRolocGUI.html"><code>pRolocGUI</code></a> package can be used. We simply pass our <code>MSnSet</code> object to the <code>pRolocVis</code> function, specify a method of dimensionality reduction and a column from our <code>fData</code> which we wish to visualise, here the <code>markers_initial</code> column.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Open pRolocGUI</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">pRolocVis</span>(<span class="at">object =</span> msn,</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">method =</span> <span class="st">"PCA"</span>,</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>          <span class="at">fcol =</span> <span class="st">"markers_initial"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="figs/pRolocVis_screenshot.png" class="lightbox" data-gallery="quarto-lightbox-gallery-8" title="Screenshot of the pRolocVis GUI application."><img src="figs/pRolocVis_screenshot.png" class="img-fluid figure-img" style="width:80.0%" alt="Screenshot of the pRolocVis GUI application."></a></p>
+<figcaption>Screenshot of the pRolocVis GUI application.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Using this interactive visualisation tool enables us to easily identify which proteins the outlier points and profiles correspond to.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="figs/curation_example.png" class="lightbox" data-gallery="quarto-lightbox-gallery-9" title="Example steps for identifying outlier with pRolocVis."><img src="figs/curation_example.png" class="img-fluid figure-img" style="width:100.0%" alt="Example steps for identifying outlier with pRolocVis."></a></p>
+<figcaption>Example steps for identifying outlier with pRolocVis.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>In the example above we identify a clear endosomal outlier. We see Q7LBR1 is annotated as endosomal (orange) and does not cluster with the other endosomal markers. We can use the <code>pRolocVis</code> app to identify this protein and also check its correlation profile. We indeed see its profile does not fit the average profile of the endosomal markers. For this reason we note this protein as not a good candidate for an endosomal marker in this dataset.</p>
+<div class="callout callout-style-default callout-exercise no-icon callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Exercise</span>Exercise 1 - Challenge: Identifying the actin markers
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<div class="callout-exercise">
+<p><strong>Task 1</strong> Use <code>getMarkers</code> to find out how many actin cytoskeleton markers there are in this marker list.</p>
+<p><strong>Task 2</strong> Use the <code>pRolocVis</code> app from the <code>pRolocGUI</code> package to examine the profiles of the actin markers, or the <code>plotDist</code> function. Do you think they should be included as a marker class for downstream machine learning analysis?</p>
+<p><strong>Task 3</strong> Extract the UniProt accession numbers of the actin cytoskeleton markers and store them in your R notebook or <code>character</code> <code>vector</code>.</p>
+<div class="callout callout-style-default callout-answer no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Answer</span>Answer
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="callout-answer" data-collapse="true">
+<p><strong>Task 1</strong></p>
+<p>The <code>getMarkers</code> function prints a summary table of the number of markers per class in the dataset. The column “<code>markers_initial</code>” contains the current markers we are working with.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getMarkers</span>(msn, <span class="at">fcol =</span> <span class="st">"markers_initial"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>organelleMarkers
+Actin Cytoskeleton          Chromatin            Cytosol           Endosome 
+                30                 69                366                 34 
+                ER              Golgi           Lysosome      Mitochondrion 
+               231                 38                 36                346 
+           Nucleus         Peroxisome                 PM         Proteasome 
+               402                 17                 82                 28 
+      Ribosome 40S       Ribosome 60S            unknown 
+                14                 32               7011 </code></pre>
+</div>
+</div>
+<p><strong>Task 2</strong></p>
+<p>Using the <code>plotDist</code> function.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Subset actin cytoskeleton markers</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>actin <span class="ot">&lt;-</span> <span class="fu">fData</span>(msn)<span class="sc">$</span>markers_initial <span class="sc">==</span> <span class="st">"Actin Cytoskeleton"</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="do">## Plot the distributions of actin cytoskeleton markers</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plotDist</span>(<span class="at">object =</span> msn[actin, ], <span class="at">pcol =</span> <span class="st">"red"</span>, <span class="at">las =</span> <span class="dv">2</span>)</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="fu">title</span>(<span class="st">"Actin cytoskeleton markers"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_02_marker_annotation_files/figure-html/unnamed-chunk-18-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-10"><img src="P2_02_marker_annotation_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>You could have also used the <code>pRolocVis</code> function and selected the “Profiles” tab to examine the actin markers.</p>
+<p><strong>Task 3</strong> There are several ways to do this, one way -</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>ind <span class="ot">&lt;-</span> <span class="fu">which</span>(<span class="fu">fData</span>(msn)<span class="sc">$</span>markers_initial <span class="sc">==</span> <span class="st">"Actin Cytoskeleton"</span>)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>actin_names <span class="ot">&lt;-</span> <span class="fu">featureNames</span>(msn)[ind]</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>actin_names</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "O15143" "O15144" "O15145" "O15511" "O75369" "P06753" "P09493" "P12814"
+ [9] "P13796" "P23528" "P28289" "P47755" "P47756" "P52907" "P59998" "P61158"
+[17] "P61160" "P63261" "Q01518" "Q14847" "Q16658" "Q562R1" "Q92747" "Q9BPX5"
+[25] "Q9BR76" "Q9NYL9" "Q9NZ32" "Q9UJW0" "Q9Y281" "Q9Y4G6"</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Marker curation requires judgement
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>In the next section we refine our marker list, and in doing so we make a series of choices: which outliers to remove, which compartments to keep and which classes to combine or drop. None of these choices are black and white, and there are several sensible ways to approach each one. For example, you might:</p>
+<ul>
+<li>keep a noisy compartment because it is biologically important, or remove it because it is poorly resolved</li>
+<li>combine closely related compartments into one broader class, or keep them separate to gain finer detail at the cost of more misclassification</li>
+<li>remove an outlying marker, or keep it because it reflects genuine variation within that compartment</li>
+</ul>
+<p>The right choice depends on the organism, cell type, experimental conditions and the question you want to answer. What matters is that each decision is deliberate, justified by prior knowledge and the data, and recorded so that it can be reported and reproduced.</p>
+<p>This care is worth taking because markers are the training data for every downstream step. A supervised classifier can only learn the compartments, and the boundaries between them, that the markers define. Any errors or biases in the marker list are carried directly into the predicted localisations, and from there into differential localisation analysis.</p>
+</div>
+</div>
+</section>
+<section id="refining-marker-lists" class="level2" data-number="7.7">
+<h2 data-number="7.7" class="anchored" data-anchor-id="refining-marker-lists"><span class="header-section-number">7.7</span> Refining marker lists</h2>
+<p>Having made an assessment of the suitability of our initial marker list, we can now update our marker list accordingly. There are three different aspects to consider here:</p>
+<ol type="1">
+<li>Removal of outlier markers</li>
+<li>Combining compartments which lack sufficient resolution</li>
+<li>Expansion or removal of marker compartments which have an insufficient number of proteins to use as training data for classification</li>
+</ol>
+<p>With respect to removing the annotation for individual outlier proteins, we previously visualised the correlation profiles of each marker compartment and used <code>pRolocGUI</code> to interactively identify which proteins the outlier profiles belong to. As we wish to keep track of marker annotation throughout our analysis we create a new column for our final marker list that we will use for analysis. We will call this “markers”. This is the default value of the <code>fcol</code> argument in <code>pRoloc</code> for many of <code>pRoloc</code>’s functions. This means we can omit <code>fcol</code> in many arguments.</p>
+<p>Let’s first create this new list,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fData</span>(msn)<span class="sc">$</span>markers <span class="ot">&lt;-</span> <span class="fu">fData</span>(msn)<span class="sc">$</span>markers_initial</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Check it’s been created,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>msn <span class="sc">|&gt;</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fvarLabels</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "Channel"            "Decoy"              "Proteotypic"       
+ [4] "Protein.Ids"        "Protein.Group"      "Protein.Names"     
+ [7] "Genes"              "PG.TopN"            "Genes.TopN"        
+[10] "Translated.Q.Value" "Channel.Q.Value"    "Lib.PG.Q.Value"    
+[13] "is_contaminant"     "n_rep1"             "n_rep2"            
+[16] "n_rep3"             "n_min"              "n_mean"            
+[19] "missing_rep1"       "missing_rep2"       "missing_rep3"      
+[22] "missing_max"        "missing_mean"       "hc"                
+[25] "hdb_cluster_id"     "hdb_cluster_prob"   "markers_initial"   
+[28] "markers"           </code></pre>
+</div>
+</div>
+<p>In the below code we remove the annotation for the following outlying proteins in our new <code>markers</code> column,</p>
+<ul>
+<li>“Q7LBR1” is labelled as endosome but sits away from the rest of the endosomal markers.</li>
+<li>“Q8NBJ9”, “Q9NUN5” are annotated to the lysosome but do not cluster with the other lysosomal markers.</li>
+</ul>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="figs/pRolocVis_mrk_end_lys.png" class="lightbox" data-gallery="quarto-lightbox-gallery-11" title="Screenshots of the pRolocVis app with endosomal and lysosomal markers highlighted."><img src="figs/pRolocVis_mrk_end_lys.png" class="img-fluid figure-img" style="width:100.0%" alt="Screenshots of the pRolocVis app with endosomal and lysosomal markers highlighted."></a></p>
+<figcaption>Screenshots of the pRolocVis app with endosomal and lysosomal markers highlighted.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>In the below code chunk we define the markers to be renamed.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Define marker accessions identified as outliers</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>outlier_acc <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Q7LBR1"</span>, <span class="st">"Q8NBJ9"</span>, <span class="st">"Q9NUN5"</span>)</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="do">## Convert 'marker' column to unknown</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>to_rm <span class="ot">&lt;-</span> <span class="fu">which</span>(<span class="fu">fData</span>(msn)<span class="sc">$</span>Protein.Group <span class="sc">%in%</span> outlier_acc)</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a><span class="fu">fData</span>(msn)<span class="sc">$</span>markers[to_rm] <span class="ot">&lt;-</span> <span class="st">"unknown"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>We can validate the removal of these 3 proteins by looking at a table of the markers using the <code>getMarkers</code> function. We see that previously we had 7011 “unknown” (unannotated) proteins, and now we have 7014.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Compare marker numbers in initial and updated annotation columns</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="fu">getMarkers</span>(msn, <span class="at">fcol =</span> <span class="st">"markers_initial"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>organelleMarkers
+Actin Cytoskeleton          Chromatin            Cytosol           Endosome 
+                30                 69                366                 34 
+                ER              Golgi           Lysosome      Mitochondrion 
+               231                 38                 36                346 
+           Nucleus         Peroxisome                 PM         Proteasome 
+               402                 17                 82                 28 
+      Ribosome 40S       Ribosome 60S            unknown 
+                14                 32               7011 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getMarkers</span>(msn, <span class="at">fcol =</span> <span class="st">"markers"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>organelleMarkers
+Actin Cytoskeleton          Chromatin            Cytosol           Endosome 
+                30                 69                366                 33 
+                ER              Golgi           Lysosome      Mitochondrion 
+               231                 38                 34                346 
+           Nucleus         Peroxisome                 PM         Proteasome 
+               402                 17                 82                 28 
+      Ribosome 40S       Ribosome 60S            unknown 
+                14                 32               7014 </code></pre>
+</div>
+</div>
+<p>Next, we consider whether to remove any compartment annotation and leave these proteins as “unknown” or “unlabelled”. Visualisation of PCA and t-SNE plots and QSep analysis showed good overall resolution of the marker classes, with median normalised between-cluster distances of about 2–5 for all compartments. Mitochondrion and chromatin were the best-resolved classes, with the largest raw distances to other compartments (median about 1.15–1.2) and high normalised scores (median about 4–5). The mitochondrial markers also formed the tightest cluster (within-cluster distance about 0.15). In contrast, the actin cytoskeleton class was poorly defined. It had one of the most diffuse marker clusters (within-cluster distance about 0.48, second only to Chromatin) and, together with endosome, the shortest median distance to other compartments (about 0.7). Because its markers are both dispersed and close to the other compartments, the class does not form a distinct cluster and is likely to cause unreliable classifications. We therefore decide to remove it from the marker set.</p>
+<p>This is a judgement call rather than the only correct answer. A researcher whose question centres on the actin cytoskeleton might reasonably choose to keep the class, accepting that classifications to it will be less certain and interpreting them with appropriate caution. In such a scenario, it could also be worth searching the literature for additional Actin cytoskeleton marker proteins to see whether resolution could be improved.</p>
+<p>Should users wish to remove the annotation for an entire compartment, the <code>fDataToUnknown</code> function provides an easy way to achieve this. We pass our <code>MSnSet</code>, the <code>"markers"</code> column and then use the <code>from</code> and <code>to</code> arguments to change our annotations <code>from</code> a given organelle <code>to</code> <code>"unknown"</code> (the default), or another annotation if desired, as shown below.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Change actin to "unknown" in the column "markers"</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>msn <span class="ot">&lt;-</span> <span class="fu">fDataToUnknown</span>(<span class="at">object =</span> msn, <span class="at">fcol =</span> <span class="st">"markers"</span>,</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>                      <span class="at">from =</span> <span class="st">"Actin Cytoskeleton"</span>, <span class="at">to =</span> <span class="st">"unknown"</span>)</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a><span class="do">## We see the actin annotation has been removed and relabelled as "unknown"</span></span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a><span class="fu">getMarkers</span>(msn)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>organelleMarkers
+    Chromatin       Cytosol      Endosome            ER         Golgi 
+           69           366            33           231            38 
+     Lysosome Mitochondrion       Nucleus    Peroxisome            PM 
+           34           346           402            17            82 
+   Proteasome  Ribosome 40S  Ribosome 60S       unknown 
+           28            14            32          7044 </code></pre>
+</div>
+</div>
+<p>Similarly, this function can also be used to change the names of compartments, replacing “unknown” in the above code chunk to the desired compartment name.</p>
+<p>Finally, if users find that their initial or curated marker lists include compartments of interest which appear to be sufficiently resolved but have too few marker proteins (see the note “An additional note on minimum number of markers”) it may be necessary to find some additional marker proteins within the dataset. This could be informed by the results of unsupervised clustering, as demonstrated in the last lesson. Alternatively, users could consider looking at different marker sets to see whether there are any other well-established marker proteins for their compartment of interest.</p>
+<p>After updating the marker list, users are advised to re-plot the marker profiles and annotated dimensionality reduction plots to display the final markers. This can be achieved using the same code as above, so for the simplicity of this workflow we will not repeat the plotting here.</p>
+<div class="callout callout-style-default callout-exercise no-icon callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Exercise</span>Exercise 2 - Challenge: Re-assess the curated markers
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<div class="callout-exercise">
+<p>Marker curation is iterative, so after refining the marker list we should check whether our changes have improved the fit of the markers to the data.</p>
+<p><strong>Task 1</strong> Re-run <code>QSep</code> using the curated <code>markers</code> column and store the result in a new object called <code>qsep_final</code>.</p>
+<p><strong>Task 2</strong> Plot the normalised QSep scores for the initial and the curated markers side by side, both as boxplots and as level plots. Has the separation of the compartments improved? Which compartments are now the least well resolved from each other?</p>
+<p><strong>Task 3</strong> Re-plot the curated markers on PCA and t-SNE plots, and plot the marker profiles for each compartment with <code>plotDist</code>. Do the markers now fit the data well?</p>
+<p><strong>Task 4</strong> Based on what you see, would you make any further changes to the marker list? Discuss your reasoning with your neighbour. Remember that there is no single correct answer.</p>
+<div class="callout callout-style-default callout-answer no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Answer</span>Answer
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="callout-answer" data-collapse="true">
+<p><strong>Task 1</strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Re-run QSep on the curated markers</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>qsep_final <span class="ot">&lt;-</span> <span class="fu">QSep</span>(<span class="at">object =</span> msn, <span class="at">fcol =</span> <span class="st">"markers"</span>)</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>qsep_final</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Object of class 'QSep'.
+ Data: msn 
+ With 13 sub-cellular clusters.</code></pre>
+</div>
+</div>
+<p><strong>Task 2</strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Compare normalised QSep scores before and after curation</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="at">x =</span> qsep_res, <span class="at">norm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a><span class="fu">title</span>(<span class="st">"Initial markers"</span>)</span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="at">x =</span> qsep_final, <span class="at">norm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a><span class="fu">title</span>(<span class="st">"Curated markers"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_02_marker_annotation_files/figure-html/unnamed-chunk-26-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-12"><img src="P2_02_marker_annotation_files/figure-html/unnamed-chunk-26-1.png" class="img-fluid figure-img" width="1152"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Pairwise normalised QSep scores for the curated markers</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="fu">levelPlot</span>(<span class="at">object =</span> qsep_res, <span class="at">norm =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">main =</span> <span class="st">"Normalised QSep values for the inital markers"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_02_marker_annotation_files/figure-html/unnamed-chunk-27-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-13"><img src="P2_02_marker_annotation_files/figure-html/unnamed-chunk-27-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Pairwise normalised QSep scores for the curated markers</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="fu">levelPlot</span>(<span class="at">object =</span> qsep_final, <span class="at">norm =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">main =</span> <span class="st">"Normalised QSep values for curated markers"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_02_marker_annotation_files/figure-html/unnamed-chunk-28-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-14"><img src="P2_02_marker_annotation_files/figure-html/unnamed-chunk-28-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Removing the actin cytoskeleton class and the outlying endosomal and lysosomal markers should give similar, or slightly higher, QSep scores for the remaining compartments. Because normalised scores depend on how tight each reference cluster is, removing a few outliers from a compartment can increase the scores of that compartment. The ribosomal subunits are likely to remain the least well separated pair.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Lysosome average QSep values initial markers</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>qsep_res<span class="sc">@</span>xnorm[<span class="st">"Lysosome"</span>, ] <span class="sc">|&gt;</span> </span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">median</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 3.543174</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Lysosome average QSep values after curation of markers</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>qsep_final<span class="sc">@</span>xnorm[<span class="st">"Lysosome"</span>, ] <span class="sc">|&gt;</span> </span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">median</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 4.077058</code></pre>
+</div>
+</div>
+<p><strong>Task 3</strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="do">## PCA and t-SNE of the curated markers</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot2D</span>(msn, <span class="at">method =</span> <span class="st">"PCA"</span>, <span class="at">fcol =</span> <span class="st">"markers"</span>,</span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">main =</span> <span class="st">"Curated markers PCA"</span>)</span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a><span class="fu">addLegend</span>(msn, <span class="at">where =</span> <span class="st">"bottomright"</span>, <span class="at">fcol =</span> <span class="st">"markers"</span>, <span class="at">cex =</span> .<span class="dv">7</span>)</span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">399</span>)</span>
+<span id="cb51-9"><a href="#cb51-9" aria-hidden="true" tabindex="-1"></a><span class="fu">plot2D</span>(msn, <span class="at">method =</span> <span class="st">"t-SNE"</span>, <span class="at">fcol =</span> <span class="st">"markers"</span>,</span>
+<span id="cb51-10"><a href="#cb51-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">main =</span> <span class="st">"Curated markers t-SNE"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_02_marker_annotation_files/figure-html/unnamed-chunk-30-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-15"><img src="P2_02_marker_annotation_files/figure-html/unnamed-chunk-30-1.png" class="img-fluid figure-img" width="960"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Marker profiles for each curated compartment</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>marker_organelles <span class="ot">&lt;-</span> <span class="fu">getMarkerClasses</span>(msn, <span class="at">fcol =</span> <span class="st">"markers"</span>)</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>my_cols <span class="ot">&lt;-</span> <span class="fu">getStockcol</span>()</span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">4</span>))</span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(marker_organelles)) {</span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a>  marker_indices <span class="ot">&lt;-</span> <span class="fu">fData</span>(msn)<span class="sc">$</span>markers <span class="sc">==</span> marker_organelles[i]</span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plotDist</span>(msn[marker_indices, ],</span>
+<span id="cb52-9"><a href="#cb52-9" aria-hidden="true" tabindex="-1"></a>           <span class="at">pcol =</span> my_cols[i],</span>
+<span id="cb52-10"><a href="#cb52-10" aria-hidden="true" tabindex="-1"></a>           <span class="at">xlab =</span> <span class="st">"Fraction"</span>,</span>
+<span id="cb52-11"><a href="#cb52-11" aria-hidden="true" tabindex="-1"></a>           <span class="at">ylab =</span> <span class="st">"Intensity"</span>)</span>
+<span id="cb52-12"><a href="#cb52-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">title</span>(marker_organelles[i])</span>
+<span id="cb52-13"><a href="#cb52-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_02_marker_annotation_files/figure-html/unnamed-chunk-31-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-16"><img src="P2_02_marker_annotation_files/figure-html/unnamed-chunk-31-1.png" class="img-fluid figure-img" width="960"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Task 4</strong></p>
+<p>There is no single correct answer. Some reasonable options are:</p>
+<ul>
+<li>Leave the 40S and 60S ribosomal subunits as separate classes if you are interested in distinguishing them, accepting that some proteins may be misclassified between them.</li>
+<li>Combine them into a single “Ribosome” class to improve resolution, at the cost of finer detail. This can be done with <code>fDataToUnknown</code>, using the class names returned by <code>getMarkerClasses(msn)</code>, for example:</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Replace the class names below with those in your data</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>msn_test <span class="ot">&lt;-</span> <span class="fu">fDataToUnknown</span>(msn, <span class="at">fcol =</span> <span class="st">"markers"</span>,</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>                           <span class="at">from =</span> <span class="st">"40S Ribosome"</span>, <span class="at">to =</span> <span class="st">"Ribosome"</span>)</span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>msn_test <span class="ot">&lt;-</span> <span class="fu">fDataToUnknown</span>(msn, <span class="at">fcol =</span> <span class="st">"markers"</span>,</span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>                           <span class="at">from =</span> <span class="st">"60S Ribosome"</span>, <span class="at">to =</span> <span class="st">"Ribosome"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<ul>
+<li>Keep the marker list as it is. If the markers fit the data well and the compartments are reasonably resolved, further curation risks over-fitting.</li>
+</ul>
+<p>Whatever you decide, re-run <code>QSep</code> and re-plot the markers after each change, and keep a record of what you changed and why.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Key Points
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>A marker is a protein known to reside in a single subcellular niche in the system and conditions being studied. Markers are the labelled training data for supervised machine learning, so their quality directly affects the localisation predictions.</li>
+<li>There is no universal marker list. Curation involves judgement calls that depend on the organism, cell type, conditions and data quality. Decisions should be justified, documented and revisited as needed, because the markers determine what downstream machine learning can learn.</li>
+<li>Marker curation is iterative: select the compartments resolved in the data, start from an existing marker list (e.g.&nbsp;from <code>pRolocmarkers()</code> or a publication), evaluate it against the data, refine it and reclassify.</li>
+<li>Aim for enough markers per class to support cross-validation (around 10–15) and, where possible, more markers than quantitative channels. Some small organelles, such as the peroxisome, may not reach this.</li>
+<li>PCA shows only two components at a time, so check several components (<code>dims</code>) before concluding that compartments overlap. Dimensionality reduction is only a visualisation: classifiers are trained on the marker correlation profiles, so always inspect these with <code>plotDist()</code>.</li>
+<li><code>QSep()</code> quantifies how well compartments are separated. Normalised scores account for how tight each cluster is. A compartment is only as well resolved as its lowest pairwise score, so poorly separated compartments may need to be combined (e.g.&nbsp;40S and 60S ribosome into “Ribosome”) or removed.</li>
+<li>Remove clear outlier markers, but avoid over-curation: some noise is expected, and unrealistically tight marker sets give inflated QSep scores and can lead to over-fitting of the classifier.</li>
+</ul>
+</div>
+</div>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="ref-Christopher2025" class="csl-entry" role="listitem">
+Christopher, Josie A., Lisa M. Breckels, Oliver M. Crook, Mercedes Vazquez-Chantada, Derek Barratt, and Kathryn S. Lilley. 2025. <span>“Global Proteomics Indicates Subcellular-Specific Anti-Ferroptotic Responses to Ionizing Radiation.”</span> <em>Molecular and Cellular Proteomics</em> 24 (1): 100888. <a href="https://doi.org/10.1016/j.mcpro.2024.100888">https://doi.org/10.1016/j.mcpro.2024.100888</a>.
+</div>
+<div id="ref-Gatto2019" class="csl-entry" role="listitem">
+Gatto, Laurent, Lisa M. Breckels, and Kathryn S. Lilley. 2019. <span>“Assessing Sub-Cellular Resolution in Spatial Proteomics Experiments.”</span> <em>Current Opinion in Chemical Biology</em> 48 (February): 123–49. <a href="https://doi.org/10.1016/j.cbpa.2018.11.015">https://doi.org/10.1016/j.cbpa.2018.11.015</a>.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+          if (!link.classList.contains('no-external-icon')) {
+          }
+        }
+      }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
+          if (lineIds.length > 0) {
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            placeBand(gutterDiv, el, lastEl);
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
+  </script>
+<nav class="page-navigation" aria-label="Page">
+  <div class="nav-page nav-page-previous">
+      <a href="../materials/P2_01_resolution_clustering.html" class="pagination-link" aria-label="Assessment of resolution">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Assessment of resolution</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../materials/P2_03_ml_classification.html" class="pagination-link" aria-label="Protein localisation prediction">
+        <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Protein localisation prediction</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>Licensed <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> <img src="https://creativecommons.org/images/deed/cc_icon_black_x2.png" class="img-fluid" width="25"> Cambridge Research Informatics Training</p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

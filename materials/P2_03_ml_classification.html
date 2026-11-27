@@ -1,0 +1,1866 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.11.9">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>8&nbsp; Protein localisation prediction</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../materials/P2_04_features_of_interest.html" rel="next">
+<link href="../materials/P2_02_marker_annotation.html" rel="prev">
+<link href="../site_libs/quarto-contrib/quarto-project/cambiotraining/courseformat/img/university-of-cambridge-favicon.ico" rel="icon">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-d8be12bca9bf4cff8dfae3f7a7d6c145.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-7df8b6b947f49bbb2b70116bd26b3010.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../site_libs/quarto-contrib/quarto-project/cambiotraining/courseformat/img/university_crest_reversed.png" alt="" class="navbar-logo light-content">
+    <img src="../site_libs/quarto-contrib/quarto-project/cambiotraining/courseformat/img/university_crest_reversed.png" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Subcellular proteomics analysis</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="https://github.com/CambridgeCentreForProteomics/course_subcellular_proteomics"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="fa6-brands:github" style="font-size: 1.25em;" aria-label="Icon github from fa6-brands Iconify.design set." title="CRIT GitHub"></iconify-icon></span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://bsky.app/profile/bioinfocambs.bsky.social"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="fa6-brands:bluesky" style="font-size: 1.25em;" aria-label="Icon bluesky from fa6-brands Iconify.design set." title="CRIT Bluesky"></iconify-icon></span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://genomic.social/@BioInfoCambs"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="fa6-brands:mastodon" style="font-size: 1.25em;" aria-label="Icon mastodon from fa6-brands Iconify.design set." title="CRIT Mastodon"></iconify-icon></span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://bioinfotraining.bio.cam.ac.uk/"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="mdi:web" style="font-size: 1.25em;" aria-label="Icon web from mdi Iconify.design set." title="CRIT Website"></iconify-icon></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav" aria-label="Toolbar">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <a class="flex-grow-1 no-decor" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+          <h1 class="quarto-secondary-nav-title"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Protein localisation prediction</span></h1>
+        </a>     
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto" aria-label="Section">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-controls="quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-1-label">Welcome</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../setup.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data &amp; Setup</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-controls="quarto-sidebar-section-2" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-2-label">Part I: Data processing</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-2" aria-labelledby="quarto-sidebar-section-2-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P1_01_intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">The use-case data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P1_02_import_and_infrastructure.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Import and infrastructure</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P1_03_qc_data_processing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data processing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P1_04_missing_values.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Missing data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P1_05_normalisation_aggregation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Data transformation and aggregation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-controls="quarto-sidebar-section-3" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-3-label">Part II: Subcellular mapping</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-3" aria-labelledby="quarto-sidebar-section-3-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P2_01_resolution_clustering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Assessment of resolution</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P2_02_marker_annotation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Data annotation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P2_03_ml_classification.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Protein localisation prediction</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P2_04_features_of_interest.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Visualisation and exploration</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-controls="quarto-sidebar-section-4" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-4-label">Part III: Differential localisation</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-4" aria-labelledby="quarto-sidebar-section-4-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P3_01_sandle.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Differential localisation analyses</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-controls="quarto-sidebar-section-5" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-5-label">Glossary</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-5" aria-labelledby="quarto-sidebar-section-5-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P4_01_glossary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Glossary</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction"><span class="header-section-number">8.1</span> Introduction</a></li>
+  <li><a href="#classification-using-a-support-vector-machine" id="toc-classification-using-a-support-vector-machine" class="nav-link" data-scroll-target="#classification-using-a-support-vector-machine"><span class="header-section-number">8.2</span> Classification using a Support Vector Machine</a>
+  <ul class="collapse">
+  <li><a href="#optimising-svm-parameters" id="toc-optimising-svm-parameters" class="nav-link" data-scroll-target="#optimising-svm-parameters"><span class="header-section-number">8.2.1</span> Optimising SVM parameters</a></li>
+  <li><a href="#checking-the-optimisation-results" id="toc-checking-the-optimisation-results" class="nav-link" data-scroll-target="#checking-the-optimisation-results"><span class="header-section-number">8.2.2</span> Checking the optimisation results</a></li>
+  <li><a href="#protein-localisation-prediction-with-svms" id="toc-protein-localisation-prediction-with-svms" class="nav-link" data-scroll-target="#protein-localisation-prediction-with-svms"><span class="header-section-number">8.2.3</span> Protein localisation prediction with SVMs</a></li>
+  <li><a href="#thresholding-protein-localisation-classification-using-an-svm" id="toc-thresholding-protein-localisation-classification-using-an-svm" class="nav-link" data-scroll-target="#thresholding-protein-localisation-classification-using-an-svm"><span class="header-section-number">8.2.4</span> Thresholding protein localisation classification using an SVM</a></li>
+  </ul></li>
+  <li><a href="#classification-using-tagm-map" id="toc-classification-using-tagm-map" class="nav-link" data-scroll-target="#classification-using-tagm-map"><span class="header-section-number">8.3</span> Classification using TAGM-MAP</a>
+  <ul class="collapse">
+  <li><a href="#optimising-tagm-map-model-parameters" id="toc-optimising-tagm-map-model-parameters" class="nav-link" data-scroll-target="#optimising-tagm-map-model-parameters"><span class="header-section-number">8.3.1</span> Optimising TAGM-MAP model parameters</a></li>
+  <li><a href="#protein-localisation-prediction-with-tagm-map" id="toc-protein-localisation-prediction-with-tagm-map" class="nav-link" data-scroll-target="#protein-localisation-prediction-with-tagm-map"><span class="header-section-number">8.3.2</span> Protein localisation prediction with TAGM-MAP</a></li>
+  <li><a href="#thresholding-protein-localisation-classification-using-tagm-map" id="toc-thresholding-protein-localisation-classification-using-tagm-map" class="nav-link" data-scroll-target="#thresholding-protein-localisation-classification-using-tagm-map"><span class="header-section-number">8.3.3</span> Thresholding protein localisation classification using TAGM-MAP</a></li>
+  </ul></li>
+  <li><a href="#generating-a-subcellular-spatial-map" id="toc-generating-a-subcellular-spatial-map" class="nav-link" data-scroll-target="#generating-a-subcellular-spatial-map"><span class="header-section-number">8.4</span> Generating a subcellular spatial map</a></li>
+  <li><a href="#comparing-the-svm-and-tagm-map-results" id="toc-comparing-the-svm-and-tagm-map-results" class="nav-link" data-scroll-target="#comparing-the-svm-and-tagm-map-results"><span class="header-section-number">8.5</span> Comparing the SVM and TAGM-MAP results</a>
+  <ul class="collapse">
+  <li><a href="#how-many-proteins-are-assigned-to-each-compartment" id="toc-how-many-proteins-are-assigned-to-each-compartment" class="nav-link" data-scroll-target="#how-many-proteins-are-assigned-to-each-compartment"><span class="header-section-number">8.5.1</span> How many proteins are assigned to each compartment?</a></li>
+  <li><a href="#why-does-tagm-map-assign-more-proteins" id="toc-why-does-tagm-map-assign-more-proteins" class="nav-link" data-scroll-target="#why-does-tagm-map-assign-more-proteins"><span class="header-section-number">8.5.2</span> Why does TAGM-MAP assign more proteins?</a></li>
+  <li><a href="#do-the-two-classifiers-agree" id="toc-do-the-two-classifiers-agree" class="nav-link" data-scroll-target="#do-the-two-classifiers-agree"><span class="header-section-number">8.5.3</span> Do the two classifiers agree?</a></li>
+  <li><a href="#which-results-should-we-use" id="toc-which-results-should-we-use" class="nav-link" data-scroll-target="#which-results-should-we-use"><span class="header-section-number">8.5.4</span> Which results should we use?</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content" tabindex="-1">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title d-none d-lg-block"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Protein localisation prediction</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Learning objectives
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Explain how supervised classifiers predict localisation by comparing the correlation profiles of unknown proteins to those of markers, and why proteins can only be assigned to compartments present in the training data.</li>
+<li>Optimise SVM parameters (<code>sigma</code>, <code>cost</code>) by cross-validation (<code>svmOptimisation</code>), using class weights to handle unequal class sizes, and assess performance using F1 scores (<code>getF1Scores</code>, <code>levelPlot</code>, <code>getParams</code>).</li>
+<li>Classify proteins with an SVM (<code>svmClassification</code>) and set compartment-specific score thresholds (<code>orgQuants</code>, <code>getPredictions</code>).</li>
+<li>Train and apply the Bayesian TAGM-MAP model (<code>tagmMapTrain</code>, <code>tagmMapPredict</code>), check its convergence, and threshold predictions on the combined localisation and outlier probabilities.</li>
+<li>Visualise classification results as spatial maps (<code>plot2D</code>), and compare the predictions of different classifiers using spatial maps, score distributions and cross-tabulation.</li>
+<li>Explain why TAGM-MAP probabilities can be overconfident, and describe strategies for choosing confident predictions.</li>
+</ul>
+</div>
+</div>
+<section id="introduction" class="level2" data-number="8.1">
+<h2 data-number="8.1" class="anchored" data-anchor-id="introduction"><span class="header-section-number">8.1</span> Introduction</h2>
+<p>In the previous lesson we curated a set of markers that are reliable and representative of the structure of our U-2 OS data, and stored them in the <code>markers</code> column of our <code>msn</code> object. We can now use these markers to predict the localisation of the remaining proteins (currently annotated as “unknown”) using supervised machine learning. Whilst unsupervised methods such as hierarchical clustering and HDBSCAN are able to discover tight clusters of proteins with similar behaviours, these algorithms tend to struggle when it comes to identifying compartment borders. There are a number of supervised and semi-supervised machine learning algorithms available within the <code>pRoloc</code> infrastructure and these differ with respect to their data output, interpretability, and computational demand. Ultimately, the choice of algorithm is up to the user and we would recommend trying multiple models to determine which works best on a given set of data and biological question of interest.</p>
+<p>The <code>pRoloc</code> package provides a wide range of machine learning methods for predicting protein localisation, described in its dedicated vignette <a href="https://bioconductor.org/packages/release/bioc/html/pRoloc.html">“Machine learning techniques available in pRoloc”</a>. We have also published three workflows showing how to apply these methods to correlation profiling data: one using classical machine learning <span class="citation" data-cites="Breckels2018">(<a href="#ref-Breckels2018" role="doc-biblioref">Breckels et al. 2018</a>)</span>, one using Bayesian machine learning <span class="citation" data-cites="Crook2019">(<a href="#ref-Crook2019" role="doc-biblioref">Crook et al. 2019</a>)</span>, and one covering both <span class="citation" data-cites="Hutchings2025">(<a href="#ref-Hutchings2025" role="doc-biblioref">Hutchings et al. 2025</a>)</span>. In this course we focus on two complementary approaches. We start with a Support Vector Machine (SVM), a widely used classical classifier, and then move on to a Bayesian approach based on t-augmented Gaussian mixture (TAGM) models. Rather than giving only a single best guess, TAGM also estimates how confident we can be in each prediction and allows for proteins that do not fit any of the known compartments. We focus on how to apply these methods and interpret their results rather than on the details of the algorithms. Participants who want to learn more about TAGM are referred to <span class="citation" data-cites="Crook2018">Crook et al. (<a href="#ref-Crook2018" role="doc-biblioref">2018</a>)</span> and <span class="citation" data-cites="Crook2019">Crook et al. (<a href="#ref-Crook2019" role="doc-biblioref">2019</a>)</span>.</p>
+<p>Remember that a supervised classifier can only assign proteins to the compartments represented in the training data. Any compartment we removed from the marker list in the previous lesson, such as the actin cytoskeleton, cannot be predicted.</p>
+</section>
+<section id="classification-using-a-support-vector-machine" class="level2" data-number="8.2">
+<h2 data-number="8.2" class="anchored" data-anchor-id="classification-using-a-support-vector-machine"><span class="header-section-number">8.2</span> Classification using a Support Vector Machine</h2>
+<p>Support Vector Machines (SVMs) have been widely used for protein subcellular localisation prediction <span class="citation" data-cites="Itzhak2016 Orre2019 Christoforou2016 Geladaki2019 Mulvey2017 Schessner2023">(<a href="#ref-Itzhak2016" role="doc-biblioref">Itzhak et al. 2016</a>; <a href="#ref-Orre2019" role="doc-biblioref">Orre et al. 2019</a>; <a href="#ref-Christoforou2016" role="doc-biblioref">Christoforou et al. 2016</a>; <a href="#ref-Geladaki2019" role="doc-biblioref">Geladaki et al. 2019</a>; <a href="#ref-Mulvey2017" role="doc-biblioref">Mulvey et al. 2017</a>; <a href="#ref-Schessner2023" role="doc-biblioref">Schessner et al. 2023</a>)</span>. To understand how an SVM works, imagine each protein as a point in space, with one axis per fraction (here, 27 axes). Marker proteins from different compartments sit in different regions of this space. An SVM learns <strong>boundaries</strong> (hyperplanes) that separate these regions, placing each boundary as far as possible from the markers on either side. Unknown proteins are then classified according to which side of the boundaries they fall on. For more details about SVM algorithms readers are directed to <span class="citation" data-cites="Noble2006">Noble (<a href="#ref-Noble2006" role="doc-biblioref">2006</a>)</span>.</p>
+<p>Real compartments rarely have straight-line boundaries, so the SVM uses a <strong>kernel</strong> that allows the boundaries to curve. Two parameters control this, and we will optimise both below:</p>
+<ul>
+<li><code>sigma</code> controls how flexible (curved) the boundaries can be.</li>
+<li><code>cost</code> controls how strictly the boundaries must separate the markers. A high cost penalises misclassified markers heavily, while a low cost tolerates some in exchange for simpler boundaries.</li>
+</ul>
+<p>For each protein, the SVM also returns a <strong>score</strong> reflecting how far it lies from a boundary: proteins deep within a compartment’s region get high scores, whereas proteins near a boundary get low scores. The score is a measure of confidence, but it is not a probability.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>The four steps of SVM classification in <code>pRoloc</code>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li><strong>Optimise</strong> the SVM parameters <code>sigma</code> and <code>cost</code> using the markers (<code>svmOptimisation</code>)</li>
+<li><strong>Check</strong> the results of the optimisation (<code>getF1Scores</code>, <code>levelPlot</code>) and extract the best parameters (<code>getParams</code>)</li>
+<li><strong>Classify</strong> all proteins using these parameters (<code>svmClassification</code>)</li>
+<li><strong>Threshold</strong> the predictions so that only confident assignments are kept (<code>orgQuants</code>, <code>getPredictions</code>)</li>
+</ol>
+</div>
+</div>
+<section id="optimising-svm-parameters" class="level3" data-number="8.2.1">
+<h3 data-number="8.2.1" class="anchored" data-anchor-id="optimising-svm-parameters"><span class="header-section-number">8.2.1</span> Optimising SVM parameters</h3>
+<p>As is the case with most supervised learning models, before we can perform any classification the model parameters need to be optimised. We adopt a classical view of training the model parameters and split the data into training and testing sets. By default in <code>pRoloc</code> all methods allocate 80% of the labelled data (marker proteins) for training and optimisation via cross-validation of the free parameters, namely <code>sigma</code> and <code>cost</code>. The remaining 20% labelled data acts as the test set to which the optimised parameters are applied in order to calculate F1 scores. Briefly, an F1 score can be used as a measure of model accuracy as it combines measurements of both precision and recall. A higher F1 score indicates a better quality classifier.</p>
+<p>In <code>pRoloc</code> the SVM optimisation process is facilitated by the <code>svmOptimisation</code> function. We pass our <code>MSnSet</code> object (here, <code>msn</code>) to the <code>svmOptimisation</code> function and tell it the name of the <code>fData</code> column where our markers are held (here <code>"markers"</code>). We use the <code>times</code> argument to specify how many iterations of cross-validation to complete and the <code>xval</code> argument to set the value of <em>n</em> in n-fold cross validation. Here, we will use the default 5-fold cross-validation (<code>xval = 5</code>) with 10 iterations (<code>times = 10</code>). We would typically set <code>times = 100</code>, but we use 10 here to keep the run time manageable; 100 iterations can take an hour or more on a laptop. Since our training data contains asymmetric class sizes (subcellular compartments with variable numbers of marker proteins), we also set class weights using the <code>class.weights</code> argument to avoid biasing our localisation towards compartments with a greater number of marker proteins <span class="citation" data-cites="YiMinHuang2005">(<a href="#ref-YiMinHuang2005" role="doc-biblioref">Huang and Du 2005</a>)</span>. Hence, we weight each subcellular compartment by the inverse of the number of marker proteins it has. Finally, to ensure reproducibility of our results we set a seed using the <code>seed</code> argument.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Get the number of markers per class</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>marker_tbl <span class="ot">&lt;-</span> <span class="fu">table</span>(<span class="fu">getMarkers</span>(msn, <span class="at">verbose =</span> <span class="cn">FALSE</span>))</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="do">## Set class weights as inverse of class frequencies</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>weights <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">/</span> marker_tbl[<span class="fu">names</span>(marker_tbl) <span class="sc">!=</span> <span class="st">"unknown"</span>]</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>weights</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Chromatin       Cytosol      Endosome            ER         Golgi 
+  0.014492754   0.002732240   0.030303030   0.004329004   0.026315789 
+     Lysosome Mitochondrion       Nucleus    Peroxisome            PM 
+  0.029411765   0.002890173   0.002487562   0.058823529   0.012195122 
+   Proteasome  Ribosome 40S  Ribosome 60S 
+  0.035714286   0.071428571   0.031250000 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="do">## SVM parameter optimisation (using times = 10 for demonstration, usually 100)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>svm_params <span class="ot">&lt;-</span> <span class="fu">svmOptimisation</span>(<span class="at">object =</span> msn,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>                              <span class="at">fcol =</span> <span class="st">"markers"</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>                              <span class="at">times =</span> <span class="dv">10</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>                              <span class="at">xval =</span> <span class="dv">5</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>                              <span class="at">class.weights =</span> weights,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>                              <span class="at">seed =</span> <span class="dv">399</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The output of this code is an object of class <code>GenRegRes</code>, a dedicated data container used to store the results of machine learning optimisation (see <span class="citation" data-cites="Breckels2018">Breckels et al. (<a href="#ref-Breckels2018" role="doc-biblioref">2018</a>)</span> for more details). Printing it gives a short summary of the optimisation.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>svm_params</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Object of class "GenRegRes"
+Algorithm: svm 
+Hyper-parameters:
+ cost: 0.0625 0.125 0.25 0.5 1 2 4 8 16
+ sigma: 0.001 0.01 0.1 1 10 100
+Design:
+ Replication: 10 x 5-fold X-validation
+ Partitioning: 0.2/0.8 (test/train)
+Results
+ macro F1:
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.8227  0.8385  0.8586  0.8572  0.8757  0.8840 
+ best sigma: 0.1   
+ best cost: 16   </code></pre>
+</div>
+</div>
+</section>
+<section id="checking-the-optimisation-results" class="level3" data-number="8.2.2">
+<h3 data-number="8.2.2" class="anchored" data-anchor-id="checking-the-optimisation-results"><span class="header-section-number">8.2.2</span> Checking the optimisation results</h3>
+<section id="best-parameters-in-each-iteration-with-getf1scores" class="level4">
+<h4 class="anchored" data-anchor-id="best-parameters-in-each-iteration-with-getf1scores">Best parameters in each iteration with <code>getF1Scores</code></h4>
+<p>To see which pair of parameters resulted in the highest F1 score in each iteration we can use the <code>getF1Scores</code> function. This gives a matrix with one row per iteration.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Best F1 score, and the parameters that gave it, in each iteration</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">getF1Scores</span>(<span class="at">object =</span> svm_params)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>             F1 sigma cost
+ [1,] 0.8226757   0.1   16
+ [2,] 0.8773922   0.1   16
+ [3,] 0.8347168   0.1   16
+ [4,] 0.8497589   0.1   16
+ [5,] 0.8704653   0.1   16
+ [6,] 0.8324702   0.1   16
+ [7,] 0.8839693   0.1   16
+ [8,] 0.8560528   0.1   16
+ [9,] 0.8833327   0.1   16
+[10,] 0.8611609   0.1   16</code></pre>
+</div>
+</div>
+<p>How do we interpret this output?</p>
+<ul>
+<li><strong>Each row is one iteration of cross-validation.</strong> In each iteration, a different random 20% of the markers was held back as a test set, every combination of <code>sigma</code> and <code>cost</code> was tested, and the best-performing combination was recorded.</li>
+<li><strong>The best parameters are consistent across iterations.</strong> Here, <code>sigma</code> = 0.1 and <code>cost</code> = 16 give the highest F1 score in 10 of the 10 iterations. When the same combination wins in most or all iterations, the choice of parameters is stable and does not depend on how the markers happened to be split into training and test sets.</li>
+<li><strong>The F1 scores are high.</strong> They range from 0.82 to 0.88, with a mean of 0.86. The F1 score measures how well the model, trained on one part of the markers, predicts the markers it has not seen, balancing precision and recall. A score of 1 would be perfect, so our classifier correctly predicts most held-out markers. This is also a good sign that our curated markers separate the compartments well.</li>
+<li><strong>Some variation between iterations is expected.</strong> The small spread in F1 scores reflects which markers end up in each test set, and is not a cause for concern.</li>
+</ul>
+</section>
+<section id="all-parameter-combinations-with-levelplot" class="level4">
+<h4 class="anchored" data-anchor-id="all-parameter-combinations-with-levelplot">All parameter combinations with <code>levelPlot</code></h4>
+<p>The <code>getF1Scores</code> function only tells us which combination of parameters performed best in each iteration. It does not tell us how the other combinations performed, or whether the best combination is clearly better than its neighbours. For this, we can use the <code>levelPlot</code> function, which shows the F1 score for every combination of <code>sigma</code> and <code>cost</code> tested during optimisation as a heatmap.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Plot the average F1 score for every combination of sigma and cost</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">levelPlot</span>(svm_params)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_03_ml_classification_files/figure-html/unnamed-chunk-7-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="P2_03_ml_classification_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="576"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Each cell of the heatmap is one combination of <code>sigma</code> and <code>cost</code>, and its colour shows the F1 score for that combination averaged over the iterations. When reading this plot, we look for three things:</p>
+<ul>
+<li><strong>Where the highest F1 scores are.</strong> This shows us which region of parameter space gives the best classifier, and should agree with the results of <code>getF1Scores</code>.</li>
+<li><strong>Whether the best region is broad or narrow.</strong> A broad region of similarly high F1 scores means the classifier is not very sensitive to the exact parameter values, which is reassuring. A single isolated cell with a high score is less trustworthy, as it may reflect chance.</li>
+<li><strong>Whether the best values lie at the edge of the grid.</strong> If the highest F1 scores are found at the smallest or largest value of <code>sigma</code> or <code>cost</code> tested, a value outside this range might perform even better. In that case, it is worth re-running <code>svmOptimisation</code> with a wider range of values, passed to its <code>sigma</code> and <code>cost</code> arguments.</li>
+</ul>
+<p>By default, <code>levelPlot</code> summarises the F1 scores across iterations using the mean. We can change this with the <code>fun</code> argument. For example, using the standard deviation shows how much the performance of each combination varied between iterations.</p>
+<div class="callout callout-style-default callout-exercise no-icon callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Exercise</span>Exercise 1 - Challenge: How stable is the parameter search?
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<div class="callout-exercise">
+<p><font style="font-variant: small-caps">Level:</font> <i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i><i class="fa-regular fa-star"></i><br></p>
+<p>Use <code>levelPlot</code> with <code>fun = median</code> and then <code>fun = sd</code>. Does the median give the same best region as the mean? Which combinations of <code>sigma</code> and <code>cost</code> give the most variable performance between iterations?</p>
+<div class="callout callout-style-default callout-answer no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Answer</span>Answer
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="callout-answer" data-collapse="true">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Median F1 score across iterations</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">levelPlot</span>(svm_params, <span class="at">fun =</span> median)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_03_ml_classification_files/figure-html/unnamed-chunk-8-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="P2_03_ml_classification_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Standard deviation of F1 scores across iterations</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">levelPlot</span>(svm_params, <span class="at">fun =</span> sd)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_03_ml_classification_files/figure-html/unnamed-chunk-8-2.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="P2_03_ml_classification_files/figure-html/unnamed-chunk-8-2.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The median should highlight the same best region as the mean, because the same parameters performed best in most or all iterations. The standard deviation plot shows which combinations performed inconsistently between iterations. Ideally, the best combination should have both a high average F1 score and a low standard deviation.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Other functions for exploring the optimisation
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>pRoloc</code> has further functions for exploring a <code>GenRegRes</code> object. For example, <code>f1Count(svm_params, t = 0.8)</code> counts how many times each combination of <code>sigma</code> and <code>cost</code> gave an F1 score above a threshold <code>t</code>, and the full F1 matrix for each iteration can be accessed with <code>svm_params@f1Matrices</code>. With only 10 iterations these add little to <code>getF1Scores</code> and <code>levelPlot</code>, but they become more informative when <code>svmOptimisation</code> is run with the recommended 100 or more iterations.</p>
+</div>
+</div>
+</section>
+<section id="extracting-the-best-parameters-with-getparams" class="level4">
+<h4 class="anchored" data-anchor-id="extracting-the-best-parameters-with-getparams">Extracting the best parameters with <code>getParams</code></h4>
+<p>When one combination of <code>sigma</code> and <code>cost</code> performs best in most iterations, the choice is clear. When several combinations perform similarly, the <code>getParams</code> function chooses the <em>best</em> parameters for us. We use it here to confirm the parameters that will be used for classification.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Return optimal parameters</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">getParams</span>(<span class="at">object =</span> svm_params)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>sigma  cost 
+  0.1  16.0 </code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="protein-localisation-prediction-with-svms" class="level3" data-number="8.2.3">
+<h3 data-number="8.2.3" class="anchored" data-anchor-id="protein-localisation-prediction-with-svms"><span class="header-section-number">8.2.3</span> Protein localisation prediction with SVMs</h3>
+<p>Now that we are happy with our parameters, we can apply the SVM model to our data using the <code>svmClassification</code> function. Rather than typing the values of <code>sigma</code> and <code>cost</code> by hand, we pass the whole <code>svm_params</code> object to the <code>assessRes</code> argument, and the best parameters (those returned by <code>getParams</code>) are extracted automatically. We again provide our weights to <code>class.weights</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Carry out SVM classification using optimised parameters</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>msn <span class="ot">&lt;-</span> <span class="fu">svmClassification</span>(<span class="at">object =</span> msn,</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>                         <span class="at">fcol =</span> <span class="st">"markers"</span>,</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>                         <span class="at">assessRes =</span> svm_params,</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>                         <span class="at">class.weights =</span> weights)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "markers"</code></pre>
+</div>
+</div>
+<p>After carrying out the SVM classification, we now have two new columns added to the <code>fData</code> of our <code>MSnSet</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Check the new columns in fData</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fvarLabels</span>(msn)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "Channel"            "Decoy"              "Proteotypic"       
+ [4] "Protein.Ids"        "Protein.Group"      "Protein.Names"     
+ [7] "Genes"              "PG.TopN"            "Genes.TopN"        
+[10] "Translated.Q.Value" "Channel.Q.Value"    "Lib.PG.Q.Value"    
+[13] "is_contaminant"     "n_rep1"             "n_rep2"            
+[16] "n_rep3"             "n_min"              "n_mean"            
+[19] "missing_rep1"       "missing_rep2"       "missing_rep3"      
+[22] "missing_max"        "missing_mean"       "hc"                
+[25] "hdb_cluster_id"     "hdb_cluster_prob"   "markers_initial"   
+[28] "markers"            "svm"                "svm.scores"        </code></pre>
+</div>
+</div>
+<p>The first of these is the <code>svm</code> column which contains the classification result i.e., the localisation prediction for each protein.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Look at svm classification column</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>msn <span class="sc">|&gt;</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fData</span>() <span class="sc">|&gt;</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(svm) <span class="sc">|&gt;</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">table</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Chromatin       Cytosol      Endosome            ER         Golgi 
+          462          2339           349          1045           128 
+     Lysosome Mitochondrion       Nucleus    Peroxisome            PM 
+           92           767          2614            38           559 
+   Proteasome  Ribosome 40S  Ribosome 60S 
+          143            37           163 </code></pre>
+</div>
+</div>
+<p>The second new column is <code>svm.scores</code>, which contains the SVM score for each protein, as described above.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Look at svm.scores column</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>msn <span class="sc">|&gt;</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fData</span>() <span class="sc">|&gt;</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(svm.scores) <span class="sc">|&gt;</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summary</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1561  0.5469  0.8715  0.7590  0.9881  1.0000 </code></pre>
+</div>
+</div>
+</section>
+<section id="thresholding-protein-localisation-classification-using-an-svm" class="level3" data-number="8.2.4">
+<h3 data-number="8.2.4" class="anchored" data-anchor-id="thresholding-protein-localisation-classification-using-an-svm"><span class="header-section-number">8.2.4</span> Thresholding protein localisation classification using an SVM</h3>
+<p>As we saw above, all proteins have been classified to one of the subcellular compartments included in our training data. However, when applying a supervised machine learning algorithm it is standard practice to set a specific confidence threshold at which we accept new assignments. Any protein with a confidence below this threshold will receive the final classification of <code>"unknown"</code>. The way in which confidence is defined differs between classification algorithms. In the case of SVMs, we rely on the SVM score to set our thresholds.</p>
+<p>Let’s plot a boxplot of the SVM scores of proteins allocated to each subcellular compartment. We first use the <code>unknownMSnSet</code> function to return an <code>MSnSet</code> with the marker proteins removed. Markers are assigned to their own class with a score of 1, so they cannot tell us anything about the confidence of new predictions.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Remove markers</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>msn_preds <span class="ot">&lt;-</span> <span class="fu">unknownMSnSet</span>(<span class="at">object =</span> msn)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="do">## Use the same colours as plot2D for each compartment</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>org_cols <span class="ot">&lt;-</span> <span class="fu">getStockcol</span>()[<span class="fu">seq_along</span>(<span class="fu">getMarkerClasses</span>(msn))]</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(org_cols) <span class="ot">&lt;-</span> <span class="fu">getMarkerClasses</span>(msn)</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="do">## Visualise svm scores per organelle</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>msn_preds <span class="sc">|&gt;</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fData</span>() <span class="sc">|&gt;</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">|&gt;</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> svm, <span class="at">y =</span> svm.scores, <span class="at">fill =</span> svm)) <span class="sc">+</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">alpha =</span> <span class="fl">0.7</span>, <span class="at">outlier.size =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> org_cols) <span class="sc">+</span></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"SVM classification"</span>, <span class="at">y =</span> <span class="st">"SVM score"</span>) <span class="sc">+</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>),</span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.position =</span> <span class="st">"none"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_03_ml_classification_files/figure-html/unnamed-chunk-14-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="P2_03_ml_classification_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="768"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We can see that each compartment displays a different distribution of SVM scores and, therefore, applying a global score threshold would not be appropriate here. Instead, there are several ways in which users can apply compartment-specific thresholding. One common approach is to manually set a compartment-specific FDR to allow up to 5% false discoveries, for example. This would involve putting the proteins localised to each compartment in descending order by their SVM score before going down the list to find the SVM score at which 5% of proteins are incorrectly classified based on reliable subcellular databases and prior knowledge from the literature. Unfortunately, such an approach can never be completely objective and is limited to organisms with well annotated subcellular proteomes. An alternative method would be to threshold each compartment at a set percentile of its SVM scores. Here, we will demonstrate the latter approach using the <code>orgQuants</code> and <code>getPredictions</code> functions within <code>pRoloc</code>.</p>
+<p>The <code>orgQuants</code> function takes an <code>MSnSet</code> containing classification results as its input. We pass the column in our <code>fData</code> where the classification assignments are stored (here <code>"svm"</code>), the score column (<code>"svm.scores"</code>) and the marker column (<code>"markers"</code>). Finally, we use the <code>t</code> argument to specify our threshold quantile. The quantile threshold is ultimately up to the user and will depend on (1) how exploratory the analysis aims to be, and (2) the data quality and resolution. In reality, we recommend testing multiple thresholds. Here, we demonstrate the use of a 0.75 quantile threshold, which keeps the 25% of proteins with the highest scores in each compartment.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Get organelle-specific quantile SVM scores</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>score_thresholds <span class="ot">&lt;-</span> <span class="fu">orgQuants</span>(<span class="at">object =</span> msn,</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>                              <span class="at">fcol =</span> <span class="st">"svm"</span>,</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>                              <span class="at">scol =</span> <span class="st">"svm.scores"</span>,</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>                              <span class="at">mcol =</span> <span class="st">"markers"</span>,</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>                              <span class="at">t =</span> <span class="fl">0.75</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    Chromatin       Cytosol      Endosome            ER         Golgi 
+    0.9047297     0.9664284     0.7789853     0.9032660     0.8151856 
+     Lysosome Mitochondrion       Nucleus    Peroxisome            PM 
+    0.8190059     0.9866420     0.9526143     0.5257223     0.8253324 
+   Proteasome  Ribosome 40S  Ribosome 60S 
+    0.6695862     0.4592555     0.6904836 </code></pre>
+</div>
+</div>
+<p>We can now use these quantile-based score thresholds in the <code>getPredictions</code> function.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Use organelle-specific quantiles to get thresholded localisation predictions</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>msn <span class="ot">&lt;-</span> <span class="fu">getPredictions</span>(<span class="at">object =</span> msn,</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>                      <span class="at">fcol =</span> <span class="st">"svm"</span>,</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>                      <span class="at">scol =</span> <span class="st">"svm.scores"</span>,</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>                      <span class="at">mcol =</span> <span class="st">"markers"</span>,</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>                      <span class="at">t =</span> score_thresholds)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>ans
+    Chromatin       Cytosol      Endosome            ER         Golgi 
+          168           860           112           435            61 
+     Lysosome Mitochondrion       Nucleus    Peroxisome            PM 
+           49           452           955            23           202 
+   Proteasome  Ribosome 40S  Ribosome 60S       unknown 
+           57            20            65          5277 </code></pre>
+</div>
+</div>
+<p>After thresholding we have a new column in our <code>fData</code> called <code>svm.pred</code>. This column contains the localisation allocations after thresholding. We also get a summary output when we applied the <code>getPredictions</code> function showing us the number of proteins classified to each subcellular compartment as well as the 5277 proteins which remain <code>"unknown"</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Check fData for new svm.pred column</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fvarLabels</span>(msn)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "Channel"            "Decoy"              "Proteotypic"       
+ [4] "Protein.Ids"        "Protein.Group"      "Protein.Names"     
+ [7] "Genes"              "PG.TopN"            "Genes.TopN"        
+[10] "Translated.Q.Value" "Channel.Q.Value"    "Lib.PG.Q.Value"    
+[13] "is_contaminant"     "n_rep1"             "n_rep2"            
+[16] "n_rep3"             "n_min"              "n_mean"            
+[19] "missing_rep1"       "missing_rep2"       "missing_rep3"      
+[22] "missing_max"        "missing_mean"       "hc"                
+[25] "hdb_cluster_id"     "hdb_cluster_prob"   "markers_initial"   
+[28] "markers"            "svm"                "svm.scores"        
+[31] "svm.pred"          </code></pre>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Why would proteins not meet the classification threshold and remain unknown?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>After thresholding our SVM classifications we have 5277 proteins which were not assigned to one of the subcellular compartments and instead remain as <code>"unknown"</code>. There are a number of reasons for which proteins may remain unknown after classification. Firstly, the subcellular structure and compartmentalisation of a cell is extremely complex and cannot be completely represented by our labelled training data (markers). For instance, some subcellular structures may have too few well-established marker proteins to be included in classification. This could be due to lack of prior knowledge or absence of a unique protein profile, as seen with P-bodies and stress granules, niches which are defined by many of the same proteins. Secondly, a large proportion of the proteome is known to reside in multiple subcellular niches within a given cell at a given time <span class="citation" data-cites="Thul2017">(<a href="#ref-Thul2017" role="doc-biblioref">Thul et al. 2017</a>)</span>. The abundance profiles of these multi-localised proteins can represent a mixture of their localisations and, therefore, no longer match the marker profiles of any given compartment. Further, since correlation profiling experiments utilise bulk proteomics, the observed protein abundance profiles represent an average of the population. Proteins which differ in subcellular localisation across a heterogeneous starting population (e.g., due to differences in cell cycle status) could also display mixed localisation profiles and ultimately remain classified as <code>"unknown"</code>.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="classification-using-tagm-map" class="level2" data-number="8.3">
+<h2 data-number="8.3" class="anchored" data-anchor-id="classification-using-tagm-map"><span class="header-section-number">8.3</span> Classification using TAGM-MAP</h2>
+<p>As an alternative to protein localisation classification using a classical SVM approach, users can also make use of newer Bayesian models available within <code>pRoloc</code>. The main advantages of applying a Bayesian framework are that (1) protein localisation predictions come with probabilities, which are on the same scale for every compartment and are, in principle, easier to interpret than SVM scores, and (2) the model includes an outlier component, so proteins that do not fit any of the known compartments can be identified explicitly rather than being forced into one. As we will see, however, these probabilities are only as good as the model that produces them, and they need to be interpreted with care.</p>
+<p>Both Bayesian classifiers available within <code>pRoloc</code> are based on a t-augmented Gaussian mixture (TAGM) model, as outlined in <span class="citation" data-cites="Crook2018">Crook et al. (<a href="#ref-Crook2018" role="doc-biblioref">2018</a>)</span>. In this course we use the first implementation of this model, TAGM-MAP, which uses <em>maximum a posteriori</em> estimates of the model parameters. The second implementation, TAGM-MCMC, is not covered here (see <span class="citation" data-cites="Crook2019">Crook et al. (<a href="#ref-Crook2019" role="doc-biblioref">2019</a>)</span> for a worked example). Unlike TAGM-MCMC, TAGM-MAP does not sample the entire posterior distribution but instead uses an extended version of the expectation maximisation (EM) algorithm for inference. In terms of user experience, this means that TAGM-MAP is faster and requires less computational power. However, it also means that TAGM-MAP finds a single best set of model parameters and does not account for uncertainty in them. We will return to the consequences of this when we compare the SVM and TAGM-MAP results.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Bayesian methods, posteriors and the EM algorithm in brief
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li><strong>Bayesian methods</strong> combine what we already believe (the <strong>prior</strong>) with what we observe in the data (the <strong>likelihood</strong>) to give an updated belief, the <strong>posterior</strong>. Here, the posterior tells us how probable it is that a protein belongs to each compartment, given its profile and the markers.</li>
+<li><strong>TAGM</strong> (t-augmented Gaussian mixture) describes each compartment as a cloud of points with a centre and a spread (a Gaussian distribution), fitted to the markers. An extra, very broad component (a <em>t</em>-distribution) captures <strong>outliers</strong>: proteins that do not fit any compartment well.</li>
+<li><strong>MAP</strong> (<em>maximum a posteriori</em>) means finding the single most probable set of model parameters, i.e.&nbsp;the best centre and spread for each compartment.</li>
+<li>The <strong>EM algorithm</strong> (expectation maximisation) is how TAGM-MAP finds these parameters. It alternates between two steps: (E) given the current compartment shapes, estimate how likely each protein is to belong to each compartment, and (M) given these estimates, update the compartment shapes. It repeats until the results stop changing, which is why we check <strong>convergence</strong>.</li>
+<li><strong>TAGM-MCMC</strong> (Markov-chain Monte Carlo), which we do not cover here, does not stop at a single best set of parameters. Instead, it samples many plausible sets, which gives a fuller picture of uncertainty but takes much longer.</li>
+</ul>
+</div>
+</div>
+<section id="optimising-tagm-map-model-parameters" class="level3" data-number="8.3.1">
+<h3 data-number="8.3.1" class="anchored" data-anchor-id="optimising-tagm-map-model-parameters"><span class="header-section-number">8.3.1</span> Optimising TAGM-MAP model parameters</h3>
+<p>The first step in using TAGM-MAP is executing the <code>tagmMapTrain</code> function. We run the algorithm for 100 iterations (the default, <code>numIter = 100</code>). We set a seed to ensure reproducibility and pass our marker annotated <code>MSnSet</code> to the function.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Optimise the tagm-map model</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>map_params <span class="ot">&lt;-</span> <span class="fu">tagmMapTrain</span>(msn, <span class="at">numIter =</span> <span class="dv">100</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The output of the <code>tagmMapTrain</code> function is an object of class <code>MAPParams</code> which contains the optimised model parameters. Importantly, before applying these parameters we need to check that the model has converged. The TAGM-MAP expectation maximisation (EM) algorithm iterates between an expectation and maximisation step until the log-posterior is stable. To check that the model successfully reached this status, we use the <code>logPosteriors</code> function to extract the log-posteriors at each iteration and pass this to the <code>plot</code> function.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Plot to visualise convergence</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>map_params <span class="sc">|&gt;</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">logPosteriors</span>() <span class="sc">|&gt;</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(<span class="at">type =</span> <span class="st">"b"</span>, <span class="at">col =</span> <span class="st">"blue"</span>, <span class="at">cex =</span> <span class="fl">0.3</span>,</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">ylab =</span> <span class="st">"log-posterior"</span>,</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">xlab =</span> <span class="st">"Iteration"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_03_ml_classification_files/figure-html/unnamed-chunk-20-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="P2_03_ml_classification_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" width="576"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We can see that the value of the log-posterior increased until it stopped changing, thus indicating that the TAGM-MAP model has converged. This means that it is suitable to continue with our optimised parameters. For further details of the algorithm we refer readers to <span class="citation" data-cites="Crook2019">Crook et al. (<a href="#ref-Crook2019" role="doc-biblioref">2019</a>)</span>.</p>
+</section>
+<section id="protein-localisation-prediction-with-tagm-map" class="level3" data-number="8.3.2">
+<h3 data-number="8.3.2" class="anchored" data-anchor-id="protein-localisation-prediction-with-tagm-map"><span class="header-section-number">8.3.2</span> Protein localisation prediction with TAGM-MAP</h3>
+<p>Next, we apply the optimised TAGM-MAP parameters to carry out protein localisation classification via the <code>tagmMapPredict</code> function. We pass our <code>MSnSet</code> object and the object storing our parameters, here called <code>map_params</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Predict protein localisation using converged parameters</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>msn <span class="ot">&lt;-</span> <span class="fu">tagmMapPredict</span>(<span class="at">object =</span> msn, <span class="at">params =</span> map_params)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The <code>tagmMapPredict</code> function adds three new columns to the <code>fData</code> of our <code>MSnSet</code>:</p>
+<ul>
+<li><strong><code>tagm.map.allocation</code></strong>: the most probable compartment for each protein. Like the <code>svm</code> column, every protein is assigned to a compartment at this stage, before any thresholding.</li>
+<li><strong><code>tagm.map.probability</code></strong>: the probability that the protein belongs to its allocated compartment, given the model. Values close to 1 indicate a confident allocation.</li>
+<li><strong><code>tagm.map.outlier</code></strong>: the probability that the protein is an outlier, i.e.&nbsp;that it does not belong to any of the compartments defined by our markers. Values close to 1 indicate a protein that fits poorly with all compartments.</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Check which columns we have in the fData</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>msn <span class="sc">|&gt;</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fvarLabels</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "Channel"              "Decoy"                "Proteotypic"         
+ [4] "Protein.Ids"          "Protein.Group"        "Protein.Names"       
+ [7] "Genes"                "PG.TopN"              "Genes.TopN"          
+[10] "Translated.Q.Value"   "Channel.Q.Value"      "Lib.PG.Q.Value"      
+[13] "is_contaminant"       "n_rep1"               "n_rep2"              
+[16] "n_rep3"               "n_min"                "n_mean"              
+[19] "missing_rep1"         "missing_rep2"         "missing_rep3"        
+[22] "missing_max"          "missing_mean"         "hc"                  
+[25] "hdb_cluster_id"       "hdb_cluster_prob"     "markers_initial"     
+[28] "markers"              "svm"                  "svm.scores"          
+[31] "svm.pred"             "tagm.map.allocation"  "tagm.map.probability"
+[34] "tagm.map.outlier"    </code></pre>
+</div>
+</div>
+<p>Let’s take a look at the initial classification results.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Check overall classifications prior to thresholding</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>msn <span class="sc">|&gt;</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fData</span>() <span class="sc">|&gt;</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(tagm.map.allocation) <span class="sc">|&gt;</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">table</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Chromatin       Cytosol      Endosome            ER         Golgi 
+          571          1896           186          1501            81 
+     Lysosome Mitochondrion       Nucleus    Peroxisome            PM 
+           44           721          2991            18           594 
+   Proteasome  Ribosome 40S  Ribosome 60S 
+           66            17            50 </code></pre>
+</div>
+</div>
+<p>We can also look at the range of probabilities given for organelle classifications and outlier detection.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Check range of probabilities for compartment localisations</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>msn <span class="sc">|&gt;</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fData</span>() <span class="sc">|&gt;</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(tagm.map.probability) <span class="sc">|&gt;</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summary</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+0.0000000 0.0000058 0.9989217 0.6352027 1.0000000 1.0000000 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Check range of probabilities for outliers</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>msn <span class="sc">|&gt;</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fData</span>() <span class="sc">|&gt;</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(tagm.map.outlier) <span class="sc">|&gt;</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summary</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+0.0000000 0.0000000 0.0003424 0.3631731 0.9999942 1.0000000 </code></pre>
+</div>
+</div>
+<p>Notice how extreme the localisation probabilities are: the median is 0.9989 and the upper quartile is 1. Compare this with the SVM scores above, which are spread much more evenly between 0 and 1 (lower quartile 0.55, median 0.87). We will come back to this when we compare the two classifiers.</p>
+</section>
+<section id="thresholding-protein-localisation-classification-using-tagm-map" class="level3" data-number="8.3.3">
+<h3 data-number="8.3.3" class="anchored" data-anchor-id="thresholding-protein-localisation-classification-using-tagm-map"><span class="header-section-number">8.3.3</span> Thresholding protein localisation classification using TAGM-MAP</h3>
+<p>As was the case when applying an SVM model, we still need to apply thresholding to the initial classification results to ensure confidence in our results. Again, proteins which do not meet our defined threshold will receive the final classification of <code>"unknown"</code>. Thresholding of TAGM-MAP outputs can be achieved by combining the probability of a predicted compartment classification being correct with the probability that a protein belongs to an outlier component. In the code chunk below we create a new column in the <code>fData</code> of our <code>MSnSet</code> called <code>overall_prob</code>. This value is calculated as the probability of the compartment classification multiplied by one minus the probability that a protein is an outlier. Hence, a larger <code>overall_prob</code> indicates a higher confidence in our classification.</p>
+<p>Because these are probabilities, they are on the same scale for every compartment, so we can use a single threshold for all compartments rather than the organelle-specific thresholds we needed for the SVM. We use the <code>getPredictions</code> function to update our classification predictions based on our score column (<code>scol</code>) <code>overall_prob</code> with a threshold (<code>t</code>) of 0.999.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Store classification and outlier probabilities</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>tagm_prob <span class="ot">&lt;-</span> <span class="fu">fData</span>(msn)[, <span class="st">"tagm.map.probability"</span>]</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>tagm_out <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">-</span> <span class="fu">fData</span>(msn)[, <span class="st">"tagm.map.outlier"</span>]</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="do">## Create new column containing overall probability</span></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a><span class="fu">fData</span>(msn)[, <span class="st">"overall_prob"</span>] <span class="ot">&lt;-</span> tagm_prob <span class="sc">*</span> tagm_out</span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a><span class="do">## Set prediction thresholds on overall probability</span></span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>msn <span class="ot">&lt;-</span> <span class="fu">getPredictions</span>(msn,</span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a>                      <span class="at">fcol =</span> <span class="st">"tagm.map.allocation"</span>,</span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a>                      <span class="at">scol =</span> <span class="st">"overall_prob"</span>,</span>
+<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a>                      <span class="at">t =</span> .<span class="dv">999</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>ans
+    Chromatin       Cytosol      Endosome            ER         Golgi 
+          417           642            47          1252            54 
+     Lysosome Mitochondrion       Nucleus    Peroxisome            PM 
+           36           717           806            17           158 
+   Proteasome  Ribosome 40S  Ribosome 60S       unknown 
+           32            14            34          4510 </code></pre>
+</div>
+</div>
+<p>As above, the <code>getPredictions</code> function has printed a summary of the thresholded classification results, which are stored in a new column called <code>tagm.map.allocation.pred</code>.</p>
+</section>
+</section>
+<section id="generating-a-subcellular-spatial-map" class="level2" data-number="8.4">
+<h2 data-number="8.4" class="anchored" data-anchor-id="generating-a-subcellular-spatial-map"><span class="header-section-number">8.4</span> Generating a subcellular spatial map</h2>
+<p>Regardless of the algorithm used, the result of classification is a list of proteins and their predicted subcellular localisations. As was the case for markers, these results can be visualised using dimensionality reduction methods via the <code>plot2D</code> function to create a “subcellular spatial map” of the data. It is also important to remember to plot the protein correlation profiles alongside maps of the data to aid interpretation and verify resolution.</p>
+<p>This time, we pass our <code>MSnSet</code> and specify the <code>fcol</code> as the column containing our thresholded localisation results. It is up to the user which dimensionality reduction method is applied. To see the full list of visualisation methods available for use with <code>plot2D</code> see <code>plot2Dmethods</code>, which are also listed in the <code>plot2D</code> documentation (see <code>?plot2D</code> for details).</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>plot2Dmethods</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "PCA"    "MDS"    "kpca"   "lda"    "t-SNE"  "UMAP"   "nipals" "hexbin"
+ [9] "none"   "scree" </code></pre>
+</div>
+</div>
+<p>First, as a reminder, we plot our markers using the default <code>plot2D</code> settings, which produce a PCA plot of the <code>markers</code> column.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Plot the markers</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>msn <span class="sc">|&gt;</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot2D</span>(<span class="at">main =</span> <span class="st">"PCA: markers"</span>)</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>msn <span class="sc">|&gt;</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">addLegend</span>(<span class="at">where =</span> <span class="st">"topright"</span>, <span class="at">cex =</span> .<span class="dv">6</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_03_ml_classification_files/figure-html/unnamed-chunk-28-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-6"><img src="P2_03_ml_classification_files/figure-html/unnamed-chunk-28-1.png" class="img-fluid figure-img" width="576"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Next, we plot the thresholded results of both classifiers side by side by passing <code>fcol = "svm.pred"</code> and <code>fcol = "tagm.map.allocation.pred"</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="do">## Plot the thresholded SVM results</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>msn <span class="sc">|&gt;</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot2D</span>(<span class="at">fcol =</span> <span class="st">"svm.pred"</span>, <span class="at">main =</span> <span class="st">"PCA: classification using SVM"</span>)</span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a><span class="do">## Plot the thresholded TAGM-MAP results</span></span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>msn <span class="sc">|&gt;</span></span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot2D</span>(<span class="at">fcol =</span> <span class="st">"tagm.map.allocation.pred"</span>,</span>
+<span id="cb44-10"><a href="#cb44-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">main =</span> <span class="st">"PCA: classification using TAGM-MAP"</span>)</span>
+<span id="cb44-11"><a href="#cb44-11" aria-hidden="true" tabindex="-1"></a>msn <span class="sc">|&gt;</span></span>
+<span id="cb44-12"><a href="#cb44-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">addLegend</span>(<span class="at">fcol =</span> <span class="st">"tagm.map.allocation.pred"</span>, <span class="at">where =</span> <span class="st">"topright"</span>, <span class="at">cex =</span> .<span class="dv">6</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_03_ml_classification_files/figure-html/unnamed-chunk-29-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-7"><img src="P2_03_ml_classification_files/figure-html/unnamed-chunk-29-1.png" class="img-fluid figure-img" width="1152"></a></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="comparing-the-svm-and-tagm-map-results" class="level2" data-number="8.5">
+<h2 data-number="8.5" class="anchored" data-anchor-id="comparing-the-svm-and-tagm-map-results"><span class="header-section-number">8.5</span> Comparing the SVM and TAGM-MAP results</h2>
+<p>At first glance the two spatial maps look similar: the same compartments are found in the same regions of the PCA plot. However, looking more closely, the TAGM-MAP map has many more coloured (classified) proteins and fewer grey (<code>"unknown"</code>) proteins, and some compartments extend much further into the regions between clusters. Let’s look at this in more detail.</p>
+<section id="how-many-proteins-are-assigned-to-each-compartment" class="level3" data-number="8.5.1">
+<h3 data-number="8.5.1" class="anchored" data-anchor-id="how-many-proteins-are-assigned-to-each-compartment"><span class="header-section-number">8.5.1</span> How many proteins are assigned to each compartment?</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Number of proteins per compartment for each classifier</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="at">compartment =</span> <span class="fu">c</span>(<span class="fu">fData</span>(msn)<span class="sc">$</span>svm.pred, <span class="fu">fData</span>(msn)<span class="sc">$</span>tagm.map.allocation.pred),</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>      <span class="at">classifier  =</span> <span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">"SVM"</span>, <span class="st">"TAGM_MAP"</span>), <span class="at">each =</span> <span class="fu">nrow</span>(<span class="fu">fData</span>(msn)))) <span class="sc">|&gt;</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame.matrix</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>               SVM TAGM_MAP
+Chromatin      168      417
+Cytosol        860      642
+Endosome       112       47
+ER             435     1252
+Golgi           61       54
+Lysosome        49       36
+Mitochondrion  452      717
+Nucleus        955      806
+Peroxisome      23       17
+PM             202      158
+Proteasome      57       32
+Ribosome 40S    20       14
+Ribosome 60S    65       34
+unknown       5277     4510</code></pre>
+</div>
+</div>
+<p>TAGM-MAP leaves fewer proteins as <code>"unknown"</code> (4510 compared with 5277 for the SVM), and assigns many more proteins to some compartments. The difference is largest for the ER (1252 proteins with TAGM-MAP compared with 435 with the SVM) and chromatin (417 compared with 168). On the PCA plot, these extra assignments extend into the regions between compartments, where we would expect proteins to be less confidently localised.</p>
+</section>
+<section id="why-does-tagm-map-assign-more-proteins" class="level3" data-number="8.5.2">
+<h3 data-number="8.5.2" class="anchored" data-anchor-id="why-does-tagm-map-assign-more-proteins"><span class="header-section-number">8.5.2</span> Why does TAGM-MAP assign more proteins?</h3>
+<p>The answer lies in the distribution of the scores and probabilities used for thresholding. Let’s plot them for all proteins that are not markers.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Remove markers</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>msn_preds <span class="ot">&lt;-</span> <span class="fu">unknownMSnSet</span>(<span class="at">object =</span> msn)</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a><span class="do">## Scores and probabilities used for thresholding, in long format</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>scores_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">value =</span> <span class="fu">c</span>(<span class="fu">fData</span>(msn_preds)<span class="sc">$</span>svm.scores, <span class="fu">fData</span>(msn_preds)<span class="sc">$</span>overall_prob),</span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">classifier =</span> <span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">"SVM score"</span>, <span class="st">"TAGM-MAP overall probability"</span>),</span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>                   <span class="at">each =</span> <span class="fu">nrow</span>(msn_preds)))</span>
+<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-10"><a href="#cb47-10" aria-hidden="true" tabindex="-1"></a><span class="do">## Plot their distributions</span></span>
+<span id="cb47-11"><a href="#cb47-11" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(scores_df, <span class="fu">aes</span>(<span class="at">x =</span> value)) <span class="sc">+</span></span>
+<span id="cb47-12"><a href="#cb47-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">50</span>, <span class="at">fill =</span> <span class="st">"steelblue"</span>, <span class="at">colour =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
+<span id="cb47-13"><a href="#cb47-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> classifier, <span class="at">scales =</span> <span class="st">"free_y"</span>) <span class="sc">+</span></span>
+<span id="cb47-14"><a href="#cb47-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Score / probability"</span>, <span class="at">y =</span> <span class="st">"Number of proteins"</span>) <span class="sc">+</span></span>
+<span id="cb47-15"><a href="#cb47-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_03_ml_classification_files/figure-html/unnamed-chunk-31-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-8"><img src="P2_03_ml_classification_files/figure-html/unnamed-chunk-31-1.png" class="img-fluid figure-img" width="960"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The SVM scores are spread across the whole range from 0 to 1, so a threshold can separate confident from less confident assignments. The TAGM-MAP probabilities, by contrast, are almost all either very close to 0 or very close to 1. With so few proteins in between, a threshold of 0.999 removes very few proteins, and proteins lying between compartments are classified with a probability of 1.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Why are the TAGM-MAP probabilities so extreme?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Probabilities are only as good as the model that produces them. There are several reasons why TAGM-MAP tends to be overconfident:</p>
+<ul>
+<li><strong>TAGM-MAP finds a single best set of parameters.</strong> It estimates the centre and spread of each compartment once, and treats these estimates as exact. It ignores any uncertainty in them, which makes the resulting probabilities more extreme than they should be. TAGM-MCMC (not covered here, see <span class="citation" data-cites="Crook2019">Crook et al. (<a href="#ref-Crook2019" role="doc-biblioref">2019</a>)</span>) averages over this uncertainty and generally produces more informative probabilities.</li>
+<li><strong>Many dimensions sharpen small differences.</strong> Our data has 27 quantitative channels (three concatenated replicates). With this many dimensions, a small difference in how well a protein fits two compartments becomes a very large difference in likelihood, pushing the probability towards 0 or 1.</li>
+<li><strong>Broad compartments absorb proteins between clusters.</strong> A compartment with a large spread, such as the ER here, can fit proteins lying between clusters well enough to claim them with high probability.</li>
+<li><strong>The outlier component may be too small.</strong> The expected proportion of outliers is set by a prior (see the <code>u</code> and <code>v</code> arguments in <code>?tagmMapTrain</code>). If our data contains more proteins that do not fit any compartment than the prior allows for, they are pushed into a compartment instead.</li>
+</ul>
+</div>
+</div>
+</section>
+<section id="do-the-two-classifiers-agree" class="level3" data-number="8.5.3">
+<h3 data-number="8.5.3" class="anchored" data-anchor-id="do-the-two-classifiers-agree"><span class="header-section-number">8.5.3</span> Do the two classifiers agree?</h3>
+<p>Finally, we can check how often the two classifiers agree. We cross-tabulate the thresholded predictions and calculate the proportion of proteins classified by both methods that are assigned to the same compartment.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Cross-tabulate the thresholded predictions of the two classifiers</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>agree_tbl <span class="ot">&lt;-</span> <span class="fu">table</span>(<span class="at">SVM =</span> <span class="fu">fData</span>(msn_preds)<span class="sc">$</span>svm.pred,</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">TAGM_MAP =</span> <span class="fu">fData</span>(msn_preds)<span class="sc">$</span>tagm.map.allocation.pred)</span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>agree_tbl</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>               TAGM_MAP
+SVM             Chromatin Cytosol Endosome   ER Golgi Lysosome Mitochondrion
+  Chromatin            88       0        0    0     0        0             0
+  Cytosol               0     206        0    0     0        0             0
+  Endosome              0       0        4    1     0        0             0
+  ER                    0       0        0  165     0        0             0
+  Golgi                 0       0        0    5    11        1             0
+  Lysosome              0       0        0   10     0        0             0
+  Mitochondrion         0       0        0    0     0        0           106
+  Nucleus               0       0        0    0     0        0             0
+  Peroxisome            0       0        0    6     0        0             0
+  PM                    0       0        0   35     0        0             0
+  Proteasome            0       0        0    0     0        0             0
+  Ribosome 40S          0       0        0    0     0        0             0
+  Ribosome 60S          0       0        0    0     0        0             0
+  unknown             260      70       10  799     5        1           265
+               TAGM_MAP
+SVM             Nucleus   PM Proteasome Ribosome 60S unknown
+  Chromatin           0    0          0            0      11
+  Cytosol             0    0          0            0     288
+  Endosome            0   24          0            0      50
+  ER                  0    3          0            0      36
+  Golgi               0    0          0            0       6
+  Lysosome            0    0          0            0       5
+  Mitochondrion       0    0          0            0       0
+  Nucleus           223    0          0            0     330
+  Peroxisome          0    0          0            0       0
+  PM                  0    4          0            0      81
+  Proteasome          0    0          4            0      25
+  Ribosome 40S        2    0          0            0       4
+  Ribosome 60S        0    0          0            2      31
+  unknown           179   45          0            0    3643</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Proteins classified (not "unknown") by both classifiers</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>both <span class="ot">&lt;-</span> <span class="fu">fData</span>(msn_preds)<span class="sc">$</span>svm.pred <span class="sc">!=</span> <span class="st">"unknown"</span> <span class="sc">&amp;</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fData</span>(msn_preds)<span class="sc">$</span>tagm.map.allocation.pred <span class="sc">!=</span> <span class="st">"unknown"</span></span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a><span class="do">## Proportion of these assigned to the same compartment</span></span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>agree_prop <span class="ot">&lt;-</span> <span class="fu">mean</span>(<span class="fu">fData</span>(msn_preds)<span class="sc">$</span>svm.pred[both] <span class="sc">==</span></span>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">fData</span>(msn_preds)<span class="sc">$</span>tagm.map.allocation.pred[both])</span>
+<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a>agree_prop</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.9033333</code></pre>
+</div>
+</div>
+<p>Of the 900 proteins classified by both methods, 90.3% are assigned to the same compartment. A further 1634 proteins are left as <code>"unknown"</code> by the SVM but assigned to a compartment by TAGM-MAP. Proteins predicted to the same compartment by two quite different methods are good candidates for a confident localisation.</p>
+</section>
+<section id="which-results-should-we-use" class="level3" data-number="8.5.4">
+<h3 data-number="8.5.4" class="anchored" data-anchor-id="which-results-should-we-use"><span class="header-section-number">8.5.4</span> Which results should we use?</h3>
+<p>There is no single correct answer. Probabilities are attractive because they are on the same scale for every compartment, are easy to interpret, and allow us to identify outliers. However, as we have seen, the probabilities from TAGM-MAP in this dataset are overconfident, and a fixed threshold discriminates poorly between confident and uncertain assignments. There are several ways to address this:</p>
+<ul>
+<li>use a stricter or organelle-specific threshold on the TAGM-MAP probabilities (see the challenge below)</li>
+<li>compare the predictions of different classifiers and focus on proteins on which they agree</li>
+<li>use TAGM-MCMC, which accounts for uncertainty in the model parameters and generally produces more informative probabilities, at a greater computational cost <span class="citation" data-cites="Crook2019">(see <a href="#ref-Crook2019" role="doc-biblioref">Crook et al. 2019</a>)</span></li>
+</ul>
+<p>As with marker curation, the choice depends on the data and the question. Whichever approach is used, predictions should always be checked against the data, using spatial maps and protein profiles, and against prior knowledge.</p>
+<div class="callout callout-style-default callout-exercise no-icon callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-10-contents" aria-controls="callout-10" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Exercise</span>Exercise 2 - Challenge: Organelle-specific thresholds for TAGM-MAP
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-10" class="callout-10-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<div class="callout-exercise">
+<p><font style="font-variant: small-caps">Level:</font> <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i><br></p>
+<p>For the SVM, we used <code>orgQuants</code> to set a different score threshold for each compartment. For TAGM-MAP, we instead used a single threshold of 0.999 on the overall probability.</p>
+<p><strong>Task 1</strong> Use <code>orgQuants</code> to calculate organelle-specific thresholds on the <code>overall_prob</code> column, using a quantile of <code>t = 0.75</code>, as we did for the SVM. Look at the thresholds. Are they similar across compartments?</p>
+<p><strong>Task 2</strong> Use these thresholds with <code>getPredictions</code>. Store the result in a new object called <code>msn_q</code>, so that the results from the 0.999 threshold in <code>msn</code> are not overwritten.</p>
+<p><strong>Task 3</strong> Compare the number of proteins assigned to each compartment using the fixed 0.999 threshold (in <code>msn</code>), the quantile thresholds (in <code>msn_q</code>) and the SVM. Plot the new results on a PCA plot next to the SVM results. Are the results from the quantile thresholds closer to the SVM?</p>
+<p><strong>Task 4</strong> Discuss with your neighbour: SVM scores are not probabilities, but the TAGM output is. Is it appropriate to use quantile-based thresholds on probabilities? What does a threshold of <code>t = 0.75</code> mean in each case?</p>
+<div class="callout callout-style-default callout-answer no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Answer</span>Answer
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-9" class="callout-9-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="callout-answer" data-collapse="true">
+<p><strong>Task 1</strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Organelle-specific 75% quantile of the overall TAGM-MAP probability</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>tagm_thresholds <span class="ot">&lt;-</span> <span class="fu">orgQuants</span>(<span class="at">object =</span> msn,</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>                             <span class="at">fcol =</span> <span class="st">"tagm.map.allocation"</span>,</span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>                             <span class="at">scol =</span> <span class="st">"overall_prob"</span>,</span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>                             <span class="at">mcol =</span> <span class="st">"markers"</span>,</span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a>                             <span class="at">t =</span> <span class="fl">0.75</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    Chromatin       Cytosol      Endosome            ER         Golgi 
+ 1.000000e+00  9.826666e-01  9.061409e-05  1.000000e+00  9.999179e-01 
+     Lysosome Mitochondrion       Nucleus    Peroxisome            PM 
+ 9.187138e-01  1.000000e+00  9.898761e-01  6.363480e-20  9.899338e-01 
+   Proteasome  Ribosome 40S  Ribosome 60S 
+ 9.948479e-01  9.274668e-01  8.279396e-08 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>tagm_thresholds</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    Chromatin       Cytosol      Endosome            ER         Golgi 
+ 1.000000e+00  9.826666e-01  9.061409e-05  1.000000e+00  9.999179e-01 
+     Lysosome Mitochondrion       Nucleus    Peroxisome            PM 
+ 9.187138e-01  1.000000e+00  9.898761e-01  6.363480e-20  9.899338e-01 
+   Proteasome  Ribosome 40S  Ribosome 60S 
+ 9.948479e-01  9.274668e-01  8.279396e-08 </code></pre>
+</div>
+</div>
+<p>Most thresholds are very close to 1, reflecting how extreme the TAGM-MAP probabilities are.</p>
+<p><strong>Task 2</strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Apply the organelle-specific thresholds, saving to a new object</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>msn_q <span class="ot">&lt;-</span> <span class="fu">getPredictions</span>(<span class="at">object =</span> msn,</span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>                        <span class="at">fcol =</span> <span class="st">"tagm.map.allocation"</span>,</span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>                        <span class="at">scol =</span> <span class="st">"overall_prob"</span>,</span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>                        <span class="at">mcol =</span> <span class="st">"markers"</span>,</span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a>                        <span class="at">t =</span> tagm_thresholds)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>ans
+    Chromatin       Cytosol      Endosome            ER         Golgi 
+          195           749            72           549            49 
+     Lysosome Mitochondrion       Nucleus    Peroxisome            PM 
+           37           675          1050            18           210 
+   Proteasome  Ribosome 40S  Ribosome 60S       unknown 
+           38            15            37          5042 </code></pre>
+</div>
+</div>
+<p><strong>Task 3</strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Compare the number of proteins per compartment</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="at">compartment =</span> <span class="fu">c</span>(<span class="fu">fData</span>(msn)<span class="sc">$</span>svm.pred, </span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">fData</span>(msn)<span class="sc">$</span>tagm.map.allocation.pred, </span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">fData</span>(msn_q)<span class="sc">$</span>tagm.map.allocation.pred),</span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">classifier  =</span> <span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">"SVM"</span>, <span class="st">"TAGM-MAP fixed"</span>, <span class="st">"TAGM-MAP quantile"</span>),</span>
+<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>                        <span class="at">each =</span> <span class="fu">nrow</span>(<span class="fu">fData</span>(msn)))) <span class="sc">|&gt;</span></span>
+<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame.matrix</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>               SVM TAGM-MAP fixed TAGM-MAP quantile
+Chromatin      168            417               195
+Cytosol        860            642               749
+Endosome       112             47                72
+ER             435           1252               549
+Golgi           61             54                49
+Lysosome        49             36                37
+Mitochondrion  452            717               675
+Nucleus        955            806              1050
+Peroxisome      23             17                18
+PM             202            158               210
+Proteasome      57             32                38
+Ribosome 40S    20             14                15
+Ribosome 60S    65             34                37
+unknown       5277           4510              5042</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>msn <span class="sc">|&gt;</span></span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot2D</span>(<span class="at">fcol =</span> <span class="st">"svm.pred"</span>, <span class="at">main =</span> <span class="st">"SVM"</span>)</span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a>msn_q <span class="sc">|&gt;</span></span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot2D</span>(<span class="at">fcol =</span> <span class="st">"tagm.map.allocation.pred"</span>,</span>
+<span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">main =</span> <span class="st">"TAGM-MAP, organelle-specific thresholds"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P2_03_ml_classification_files/figure-html/unnamed-chunk-38-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-9"><img src="P2_03_ml_classification_files/figure-html/unnamed-chunk-38-1.png" class="img-fluid figure-img" width="1152"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Task 4</strong></p>
+<p><code>orgQuants</code> works on any score, so the code runs without error. However, the threshold means something different in each case:</p>
+<ul>
+<li><strong>SVM scores</strong> are not probabilities and are not comparable between compartments, so setting a threshold relative to each compartment’s own score distribution is a sensible way to choose cutoffs.</li>
+<li><strong>TAGM probabilities</strong> are on the same scale for every compartment, so in principle a single threshold such as 0.999 should be enough. A quantile threshold ignores this: it keeps the top 25% of proteins in each compartment, regardless of their actual probability.</li>
+</ul>
+<p>In practice, however, the TAGM-MAP probabilities in our data are very close to 0 or 1, so a fixed threshold of 0.999 removes very few proteins. Organelle-specific quantiles bring back some discrimination within each compartment and give results closer to those of the SVM. So, although quantiles do not use the probabilities as probabilities, they can be a useful practical tool when the probabilities are poorly spread. Whichever approach you choose, check the results on a PCA plot and against prior knowledge.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Key Points
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Supervised classifiers predict the localisation of unknown proteins by comparing their correlation profiles with those of the markers. Proteins can only be assigned to compartments represented in the marker list.</li>
+<li>SVM parameters (<code>sigma</code> and <code>cost</code>) are optimised by repeated cross-validation on the markers with <code>svmOptimisation</code>. Class weights stop the classifier favouring compartments with many markers.</li>
+<li><code>getF1Scores</code> shows the best parameters in each iteration and <code>levelPlot</code> shows how every combination performed. Consistent best parameters and high F1 scores indicate a stable, well-performing classifier.</li>
+<li><code>svmClassification</code> assigns every protein to a compartment, so predictions must be thresholded. SVM scores differ between compartments, so compartment-specific thresholds (<code>orgQuants</code>, <code>getPredictions</code>) are more appropriate than a single global threshold.</li>
+<li>TAGM-MAP gives a localisation probability and an outlier probability for each protein. Probabilities are on the same scale for every compartment and are easier to interpret than SVM scores, but they are only as reliable as the model behind them.</li>
+<li>In our data, TAGM-MAP probabilities are overconfident, so a fixed threshold assigns more proteins than the SVM, particularly in regions between compartments. Visualising predictions on spatial maps, comparing classifiers and choosing thresholds carefully all help to identify confident predictions.</li>
+<li>Proteins that remain <code>"unknown"</code> after thresholding are not necessarily a problem. They may belong to compartments not in the marker list, reside in more than one location, or vary in localisation across the cell population.</li>
+</ul>
+</div>
+</div>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="ref-Breckels2018" class="csl-entry" role="listitem">
+Breckels, Lisa M., Claire M. Mulvey, Kathryn S. Lilley, and Laurent Gatto. 2018. <span>“A Bioconductor Workflow for Processing and Analysing Spatial Proteomics Data.”</span> <em>F1000Research</em> 5 (July): 2926. <a href="https://doi.org/10.12688/f1000research.10411.2">https://doi.org/10.12688/f1000research.10411.2</a>.
+</div>
+<div id="ref-Christoforou2016" class="csl-entry" role="listitem">
+Christoforou, Andy, Claire M. Mulvey, Lisa M. Breckels, et al. 2016. <span>“A Draft Map of the Mouse Pluripotent Stem Cell Spatial Proteome.”</span> <em>Nature Communications</em> 7 (1). <a href="https://doi.org/10.1038/ncomms9992">https://doi.org/10.1038/ncomms9992</a>.
+</div>
+<div id="ref-Crook2019" class="csl-entry" role="listitem">
+Crook, Oliver M., Lisa M. Breckels, Kathryn S. Lilley, Paul D. W. Kirk, and Laurent Gatto. 2019. <span>“A Bioconductor Workflow for the Bayesian Analysis of Spatial Proteomics.”</span> <em>F1000Research</em> 8 (April): 446. <a href="https://doi.org/10.12688/f1000research.18636.1">https://doi.org/10.12688/f1000research.18636.1</a>.
+</div>
+<div id="ref-Crook2018" class="csl-entry" role="listitem">
+Crook, Oliver M., Claire M. Mulvey, Paul D. W. Kirk, Kathryn S. Lilley, and Laurent Gatto. 2018. <span>“A Bayesian Mixture Modelling Approach for Spatial Proteomics.”</span> <em>PLOS Computational Biology</em> 14 (11): e1006516. <a href="https://doi.org/10.1371/journal.pcbi.1006516">https://doi.org/10.1371/journal.pcbi.1006516</a>.
+</div>
+<div id="ref-Geladaki2019" class="csl-entry" role="listitem">
+Geladaki, Aikaterini, Nina Kočevar Britovšek, Lisa M. Breckels, et al. 2019. <span>“Combining <span>LOPIT</span> with Differential Ultracentrifugation for High-Resolution Spatial Proteomics.”</span> <em>Nature Communications</em> 10 (1). <a href="https://doi.org/10.1038/s41467-018-08191-w">https://doi.org/10.1038/s41467-018-08191-w</a>.
+</div>
+<div id="ref-YiMinHuang2005" class="csl-entry" role="listitem">
+Huang, Yi-Min, and Shu-Xin Du. 2005. <span>“Weighted Support Vector Machine for Classification with Uneven Training Class Sizes.”</span> <em>2005 International Conference on Machine Learning and Cybernetics</em>. <a href="https://doi.org/10.1109/icmlc.2005.1527706">https://doi.org/10.1109/icmlc.2005.1527706</a>.
+</div>
+<div id="ref-Hutchings2025" class="csl-entry" role="listitem">
+Hutchings, Charlotte, Thomas Krueger, Oliver M Crook, Laurent Gatto, Kathryn S Lilley, and Lisa M Breckels. 2025. <span>“An Updated Bioconductor Workflow for Correlation Profiling Subcellular Proteomics.”</span> <em>F1000Research</em> 14: 714. <a href="https://doi.org/10.12688/f1000research.165543.1">https://doi.org/10.12688/f1000research.165543.1</a>.
+</div>
+<div id="ref-Itzhak2016" class="csl-entry" role="listitem">
+Itzhak, Daniel N, Stefka Tyanova, Jürgen Cox, and Georg HH Borner. 2016. <span>“Global, Quantitative and Dynamic Mapping of Protein Subcellular Localization.”</span> <em><span class="nocase">eLife</span></em> 5 (June). <a href="https://doi.org/10.7554/elife.16950">https://doi.org/10.7554/elife.16950</a>.
+</div>
+<div id="ref-Mulvey2017" class="csl-entry" role="listitem">
+Mulvey, Claire M, Lisa M Breckels, Aikaterini Geladaki, et al. 2017. <span>“Using <span class="nocase">hyperLOPIT</span> to Perform High-Resolution Mapping of the Spatial Proteome.”</span> <em>Nature Protocols</em> 12 (6): 1110–35. <a href="https://doi.org/10.1038/nprot.2017.026">https://doi.org/10.1038/nprot.2017.026</a>.
+</div>
+<div id="ref-Noble2006" class="csl-entry" role="listitem">
+Noble, William S. 2006. <span>“What Is a Support Vector Machine?”</span> <em>Nature Biotechnology</em> 24 (12): 1565–67. <a href="https://doi.org/10.1038/nbt1206-1565">https://doi.org/10.1038/nbt1206-1565</a>.
+</div>
+<div id="ref-Orre2019" class="csl-entry" role="listitem">
+Orre, Lukas Minus, Mattias Vesterlund, Yanbo Pan, et al. 2019. <span>“<span>SubCellBarCode</span>: Proteome-Wide Mapping of Protein Localization and Relocalization.”</span> <em>Molecular Cell</em> 73 (1): 166–182.e7. <a href="https://doi.org/10.1016/j.molcel.2018.11.035">https://doi.org/10.1016/j.molcel.2018.11.035</a>.
+</div>
+<div id="ref-Schessner2023" class="csl-entry" role="listitem">
+Schessner, Julia P., Vincent Albrecht, Alexandra K. Davies, Pavel Sinitcyn, and Georg H. H. Borner. 2023. <span>“Deep and Fast Label-Free Dynamic Organellar Mapping.”</span> <em>Nature Communications</em> 14 (1). <a href="https://doi.org/10.1038/s41467-023-41000-7">https://doi.org/10.1038/s41467-023-41000-7</a>.
+</div>
+<div id="ref-Thul2017" class="csl-entry" role="listitem">
+Thul, Peter J., Lovisa Åkesson, Mikaela Wiking, et al. 2017. <span>“A Subcellular Map of the Human Proteome.”</span> <em>Science</em> 356 (6340). <a href="https://doi.org/10.1126/science.aal3321">https://doi.org/10.1126/science.aal3321</a>.
+</div>
+</div>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+          if (!link.classList.contains('no-external-icon')) {
+          }
+        }
+      }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
+          if (lineIds.length > 0) {
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            placeBand(gutterDiv, el, lastEl);
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
+  </script>
+<nav class="page-navigation" aria-label="Page">
+  <div class="nav-page nav-page-previous">
+      <a href="../materials/P2_02_marker_annotation.html" class="pagination-link" aria-label="Data annotation">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Data annotation</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../materials/P2_04_features_of_interest.html" class="pagination-link" aria-label="Visualisation and exploration">
+        <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Visualisation and exploration</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>Licensed <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> <img src="https://creativecommons.org/images/deed/cc_icon_black_x2.png" class="img-fluid" width="25"> Cambridge Research Informatics Training</p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

@@ -1,0 +1,1826 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.11.9">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>2&nbsp; Import and infrastructure</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../materials/P1_03_qc_data_processing.html" rel="next">
+<link href="../materials/P1_01_intro.html" rel="prev">
+<link href="../site_libs/quarto-contrib/quarto-project/cambiotraining/courseformat/img/university-of-cambridge-favicon.ico" rel="icon">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-d8be12bca9bf4cff8dfae3f7a7d6c145.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-7df8b6b947f49bbb2b70116bd26b3010.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../site_libs/quarto-contrib/quarto-project/cambiotraining/courseformat/img/university_crest_reversed.png" alt="" class="navbar-logo light-content">
+    <img src="../site_libs/quarto-contrib/quarto-project/cambiotraining/courseformat/img/university_crest_reversed.png" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Subcellular proteomics analysis</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="https://github.com/CambridgeCentreForProteomics/course_subcellular_proteomics"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="fa6-brands:github" style="font-size: 1.25em;" aria-label="Icon github from fa6-brands Iconify.design set." title="CRIT GitHub"></iconify-icon></span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://bsky.app/profile/bioinfocambs.bsky.social"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="fa6-brands:bluesky" style="font-size: 1.25em;" aria-label="Icon bluesky from fa6-brands Iconify.design set." title="CRIT Bluesky"></iconify-icon></span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://genomic.social/@BioInfoCambs"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="fa6-brands:mastodon" style="font-size: 1.25em;" aria-label="Icon mastodon from fa6-brands Iconify.design set." title="CRIT Mastodon"></iconify-icon></span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://bioinfotraining.bio.cam.ac.uk/"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="mdi:web" style="font-size: 1.25em;" aria-label="Icon web from mdi Iconify.design set." title="CRIT Website"></iconify-icon></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav" aria-label="Toolbar">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <a class="flex-grow-1 no-decor" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+          <h1 class="quarto-secondary-nav-title"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Import and infrastructure</span></h1>
+        </a>     
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto" aria-label="Section">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-controls="quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-1-label">Welcome</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../setup.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data &amp; Setup</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-controls="quarto-sidebar-section-2" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-2-label">Part I: Data processing</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-2" aria-labelledby="quarto-sidebar-section-2-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P1_01_intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">The use-case data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P1_02_import_and_infrastructure.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Import and infrastructure</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P1_03_qc_data_processing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data processing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P1_04_missing_values.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Missing data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P1_05_normalisation_aggregation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Data transformation and aggregation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-controls="quarto-sidebar-section-3" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-3-label">Part II: Subcellular mapping</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-3" aria-labelledby="quarto-sidebar-section-3-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P2_01_resolution_clustering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Assessment of resolution</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P2_02_marker_annotation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Data annotation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P2_03_ml_classification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Protein localisation prediction</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P2_04_features_of_interest.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Visualisation and exploration</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-controls="quarto-sidebar-section-4" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-4-label">Part III: Differential localisation</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-4" aria-labelledby="quarto-sidebar-section-4-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P3_01_sandle.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Differential localisation analyses</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-controls="quarto-sidebar-section-5" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-5-label">Glossary</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-5" aria-labelledby="quarto-sidebar-section-5-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/P4_01_glossary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Glossary</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#the-data-structure" id="toc-the-data-structure" class="nav-link active" data-scroll-target="#the-data-structure"><span class="header-section-number">2.1</span> The data structure</a></li>
+  <li><a href="#importing-the-data-into-r" id="toc-importing-the-data-into-r" class="nav-link" data-scroll-target="#importing-the-data-into-r"><span class="header-section-number">2.2</span> Importing the data into R</a></li>
+  <li><a href="#the-structure-of-a-summarizedexperiment" id="toc-the-structure-of-a-summarizedexperiment" class="nav-link" data-scroll-target="#the-structure-of-a-summarizedexperiment"><span class="header-section-number">2.3</span> The structure of a <code>SummarizedExperiment</code></a></li>
+  <li><a href="#the-structure-of-a-qfeatures-object" id="toc-the-structure-of-a-qfeatures-object" class="nav-link" data-scroll-target="#the-structure-of-a-qfeatures-object"><span class="header-section-number">2.4</span> The structure of a <code>QFeatures</code> object</a></li>
+  <li><a href="#importing-the-sample-metadata" id="toc-importing-the-sample-metadata" class="nav-link" data-scroll-target="#importing-the-sample-metadata"><span class="header-section-number">2.5</span> Importing the sample metadata</a></li>
+  <li><a href="#initial-data-wrangling-optional" id="toc-initial-data-wrangling-optional" class="nav-link" data-scroll-target="#initial-data-wrangling-optional"><span class="header-section-number">2.6</span> Initial data wrangling (optional)</a></li>
+  <li><a href="#converting-the-data-into-a-qfeatures-object" id="toc-converting-the-data-into-a-qfeatures-object" class="nav-link" data-scroll-target="#converting-the-data-into-a-qfeatures-object"><span class="header-section-number">2.7</span> Converting the data into a QFeatures object</a></li>
+  <li><a href="#exploring-the-data" id="toc-exploring-the-data" class="nav-link" data-scroll-target="#exploring-the-data"><span class="header-section-number">2.8</span> Exploring the data</a>
+  <ul class="collapse">
+  <li><a href="#how-many-precursors-per-sample" id="toc-how-many-precursors-per-sample" class="nav-link" data-scroll-target="#how-many-precursors-per-sample"><span class="header-section-number">2.8.1</span> How many precursors per sample?</a></li>
+  <li><a href="#exploring-the-row-data" id="toc-exploring-the-row-data" class="nav-link" data-scroll-target="#exploring-the-row-data"><span class="header-section-number">2.8.2</span> Exploring the row data</a></li>
+  </ul></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content" tabindex="-1">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title d-none d-lg-block"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Import and infrastructure</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Learning Objectives
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Understand the structure of <code>SummarizedExperiment</code> and <code>QFeatures</code> objects and how the two are related</li>
+<li>Understand how DIA-NN output data is structured and how it can be imported into R</li>
+<li>Know how to import data into a <code>QFeatures</code> object</li>
+<li>Demonstrate how to access information from each part of a <code>QFeatures</code> object by indexing and using <code>assay</code>, <code>rowData</code> and <code>colData</code></li>
+</ul>
+</div>
+</div>
+<p>In this course material we provide a start-to-finish workflow for the analysis of subcellular spatial proteomics data derived from an MS-based correlation profiling experiment. Depending on the experimental goal (e.g., generation of subcellular spatial maps versus discovery of differentially localised proteins) and level of data available (e.g., precursor, PSM, peptide or protein), users may only need to follow part of the workflow. For simplicity, we have divided the workflow into three parts:</p>
+<ol type="1">
+<li>Data processing and generation of protein correlation profiles using <code>QFeatures</code></li>
+<li>Protein localisation prediction for static maps using <code>pRoloc</code></li>
+<li>Differential localisation prediction for dynamic experiments using <code>bandle</code></li>
+</ol>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="figs/workflow_outline.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="A schematic summary of the presented workflow. The input and output of each part of the workflow are outlined and visualised. Users may only need to complete a portion of this workflow depending upon their initial data input and experimental question(s)."><img src="figs/workflow_outline.png" class="img-fluid figure-img" style="width:90.0%" alt="A schematic summary of the presented workflow. The input and output of each part of the workflow are outlined and visualised. Users may only need to complete a portion of this workflow depending upon their initial data input and experimental question(s)."></a></p>
+<figcaption>A schematic summary of the presented workflow. The input and output of each part of the workflow are outlined and visualised. Users may only need to complete a portion of this workflow depending upon their initial data input and experimental question(s).</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>We begin with demonstrating how to import quantitative MS data into R using the <code>QFeatures</code> infrastructure. We will then discuss the key data cleaning and quality control steps required to ensure that only high quality data is retained. Finally, the quantitative data will be transformed into correlation profiles which hold the spatial information required for protein localisation prediction, as covered in part II of the workflow.</p>
+<section id="the-data-structure" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="the-data-structure"><span class="header-section-number">2.1</span> The data structure</h2>
+<p>MS-based quantitative proteomics data is typically represented as a matrix in which the rows represent features (PSMs, precursors, peptides or proteins) and the columns contain information about these features, including their quantification measurements across several samples. As we saw before, this type of quantitative proteomics matrix can be generated by using third party softwares to process raw MS data. Moreover, the software usually outputs a quantitative matrix for each data level (e.g., PSM, precursors, peptide, peptide groups, protein groups). In this lesson we will explain how we can make use of R/Bioconductor packages with dedicated functions and data structures to store and manipulate quantitative proteomics data.</p>
+<p>We begin with importing the data at the lowest data-level. In this DIA-LOP experiment this is the precursor level. The raw DIA mass spectrometry data was processed using DIA-NN v2.0 (Academic), which outputs a report file in <code>.parquet</code> format. Unlike a simple abundance matrix, this is a <strong>long-format</strong> table — each row corresponds to a single precursor–sample combination, rather than one row per precursor across all samples simultaneously. The file contains precursor-level identifications and quantities for every sample, along with quality metrics from the DIA-NN search.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>File formats
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>File formats vary according to the software used to perform the identification search. Proteome Discoverer and MaxQuant output typically a .tsv or .csv file (standard tabular or comma separated output), early DIA-NN versions output .tsv file also, newer versions output parquet files.</p>
+</div>
+</div>
+</section>
+<section id="importing-the-data-into-r" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="importing-the-data-into-r"><span class="header-section-number">2.2</span> Importing the data into R</h2>
+<p>We start with loading the packages we will be using in this workflow.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressPackageStartupMessages</span>({</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(<span class="st">"tidyverse"</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(<span class="st">"QFeatures"</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(<span class="st">"MSnbase"</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(<span class="st">"pRoloc"</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(<span class="st">"ggplot2"</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(<span class="st">"Biostrings"</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(<span class="st">"gridExtra"</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(<span class="st">"arrow"</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  })</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The data we need to get started is stored in <code>parquet</code> file format (when data has been processed with DIA-NN&gt;=2.0), opposed to one main report <code>.tsv</code> output file from earlier versions. We begin by using the <code>arrow</code> package to unpack the <code>parquet</code> files using the <code>read_parquet</code> function.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">read_parquet</span>(<span class="st">"data/report.parquet"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Let’s have a look at the data to check we’ve imported it correctly. We can inspect the dimensions and column names to understand what the data contains.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(df)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2889795      69</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(df)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "Run.Index"                    "Run"                         
+ [3] "Channel"                      "Precursor.Id"                
+ [5] "Modified.Sequence"            "Stripped.Sequence"           
+ [7] "Precursor.Charge"             "Precursor.Lib.Index"         
+ [9] "Decoy"                        "Proteotypic"                 
+[11] "Precursor.Mz"                 "Protein.Ids"                 
+[13] "Protein.Group"                "Protein.Names"               
+[15] "Genes"                        "RT"                          
+[17] "iRT"                          "Predicted.RT"                
+[19] "Predicted.iRT"                "IM"                          
+[21] "iIM"                          "Predicted.IM"                
+[23] "Predicted.iIM"                "Precursor.Quantity"          
+[25] "Precursor.Normalised"         "Ms1.Area"                    
+[27] "Ms1.Normalised"               "Ms1.Apex.Area"               
+[29] "Ms1.Apex.Mz.Delta"            "Normalisation.Factor"        
+[31] "Quantity.Quality"             "Empirical.Quality"           
+[33] "Normalisation.Noise"          "Ms1.Profile.Corr"            
+[35] "Evidence"                     "Mass.Evidence"               
+[37] "Channel.Evidence"             "Ms1.Total.Signal.Before"     
+[39] "Ms1.Total.Signal.After"       "RT.Start"                    
+[41] "RT.Stop"                      "FWHM"                        
+[43] "PG.TopN"                      "PG.MaxLFQ"                   
+[45] "Genes.TopN"                   "Genes.MaxLFQ"                
+[47] "Genes.MaxLFQ.Unique"          "PG.MaxLFQ.Quality"           
+[49] "Genes.MaxLFQ.Quality"         "Genes.MaxLFQ.Unique.Quality" 
+[51] "Q.Value"                      "PEP"                         
+[53] "Global.Q.Value"               "Lib.Q.Value"                 
+[55] "Peptidoform.Q.Value"          "Global.Peptidoform.Q.Value"  
+[57] "Lib.Peptidoform.Q.Value"      "PTM.Site.Confidence"         
+[59] "Site.Occupancy.Probabilities" "Protein.Sites"               
+[61] "Lib.PTM.Site.Confidence"      "Translated.Q.Value"          
+[63] "Channel.Q.Value"              "PG.Q.Value"                  
+[65] "PG.PEP"                       "GG.Q.Value"                  
+[67] "Protein.Q.Value"              "Global.PG.Q.Value"           
+[69] "Lib.PG.Q.Value"              </code></pre>
+</div>
+</div>
+<p>We can see many columns, each containing information about a given precursor peptide in a given sample. These include the precursor peptide sequence, the protein(s) and protein group (PG) to which it has been mapped, and various quality control parameters. For a full explanation of the DIA-NN output we direct users to the <a href="https://github.com/vdemichev/DiaNN?tab=readme-ov-file#output">DIA-NN GitHub page</a>.</p>
+<p>The key columns we will use in our analysis are:</p>
+<ul>
+<li><strong><code>Precursor.Id</code></strong>: a unique identifier for each precursor — typically the modified peptide sequence and charge state (e.g.&nbsp;<code>"PEPTM[ox]IDEQ..2"</code>)</li>
+<li><strong><code>Protein.Group</code></strong>: the canonical protein group identifier used for aggregation to protein level. Proteins that cannot be distinguished from each other based on proteotypic peptides detected in the data are grouped together under one Protein Group</li>
+<li><strong><code>Protein.Ids</code></strong>: the UniProt accession(s) of the protein(s) to which the precursor is assigned</li>
+<li><strong><code>Genes</code></strong>: the gene symbol(s) associated with the identified proteins</li>
+<li><strong><code>Run</code></strong>: the identifier for the sample run — one value per LC-MS sample injection</li>
+<li><strong><code>Precursor.Quantity</code></strong>: the quantified abundance of the precursor in that run</li>
+<li><strong><code>Q.Value</code></strong>: the precursor-level Q-value, representing the estimated false discovery rate (FDR) at the precursor level; lower values indicate more confident identifications</li>
+<li><strong><code>Lib.Q.Value</code></strong>: the library-level Q-value — the confidence that the precursor was matched to the correct entry in the spectral library</li>
+<li><strong><code>Protein.Q.Value</code></strong>: the protein-level Q-value, representing the estimated FDR at the protein level</li>
+</ul>
+<p>Information about the precursor Id and its peptide sequence can be found in the <code>Precursor.Id</code>, <code>Stripped.Sequence</code> and <code>Modified.Sequence</code> columns, as shown below.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>df <span class="sc">|&gt;</span> </span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(Precursor.Id, Stripped.Sequence, Modified.Sequence)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2,889,795 × 3
+   Precursor.Id                         Stripped.Sequence      Modified.Sequence
+   &lt;chr&gt;                                &lt;chr&gt;                  &lt;chr&gt;            
+ 1 (UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2 AAAAAAAGDSDSWDADAFSVE… (UniMod:1)AAAAAA…
+ 2 (UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2 AAAAAAAGDSDSWDADAFSVE… (UniMod:1)AAAAAA…
+ 3 (UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2 AAAAAAAGDSDSWDADAFSVE… (UniMod:1)AAAAAA…
+ 4 (UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2 AAAAAAAGDSDSWDADAFSVE… (UniMod:1)AAAAAA…
+ 5 (UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2 AAAAAAAGDSDSWDADAFSVE… (UniMod:1)AAAAAA…
+ 6 (UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2 AAAAAAAGDSDSWDADAFSVE… (UniMod:1)AAAAAA…
+ 7 (UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2 AAAAAAAGDSDSWDADAFSVE… (UniMod:1)AAAAAA…
+ 8 (UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2 AAAAAAAGDSDSWDADAFSVE… (UniMod:1)AAAAAA…
+ 9 (UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2 AAAAAAAGDSDSWDADAFSVE… (UniMod:1)AAAAAA…
+10 (UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2 AAAAAAAGDSDSWDADAFSVE… (UniMod:1)AAAAAA…
+# ℹ 2,889,785 more rows</code></pre>
+</div>
+</div>
+<p>We can see that we have the same <code>Precursor.Id</code> across multiple rows. Here, each row contains information about the precursor peptide in a different sample (biochemical fraction). We can also see that we have multiple <code>Precursor.Id</code> entries corresponding to the same peptide sequence, one succeeded by the numbers. These numbers indicate the charge state of the peptide, which can also be found in the <code>Precursor.Charge</code> column. Hence, data was collected for this peptide sequence under different charge states.</p>
+<p>Information about which MS sample (here, biochemical fraction) each precursor was derived from can be found in the <code>Run</code> column.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Check annotation of each sample in Run column</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>df <span class="sc">|&gt;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">pull</span>(Run) <span class="sc">|&gt;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unique</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "R8F01_DIA_KM_876" "R8F02_DIA_KM_877" "R8F04_DIA_KM_885" "R8F05_DIA_KM_889"
+ [5] "R8F06_DIA_KM_891" "R8F07_DIA_KM_893" "R8F08_DIA_KM_895" "R8F09_DIA_KM_897"
+ [9] "R8F10_DIA_KM_899" "R9F01_DIA_KM_902" "R9F03_DIA_KM_906" "R9F04_DIA_KM_908"
+[13] "R9F05_DIA_KM_910" "R9F06_DIA_KM_912" "R9F07_DIA_KM_915" "R9F08_DIA_KM_918"
+[17] "R9F09_DIA_KM_920" "R9F10_DIA_KM_925" "R1F1_DIA_KM_280"  "R1F2_DIA_KM_282" 
+[21] "R1F3_DIA_KM_284"  "R1F4_DIA_KM_289"  "R1F6_DIA_KM_694"  "R1F7_DIA_KM_696" 
+[25] "R1F8_DIA_KM_698"  "R1F9_DIA_KM_700"  "R1F10_DIA_KM_316" "R8F03_DIA_KM_887"
+[29] "R1F5_DIA_KM_301"  "R9F02_DIA_KM_927"</code></pre>
+</div>
+</div>
+<p>We see there are 30 unique run names corresponding to the 3 experiments which each have 10 biochemical fractions. The name of each run is generated during the DIA-NN search based on the name of the raw MS files that are provided.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>df <span class="sc">|&gt;</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">pull</span>(Run) <span class="sc">|&gt;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unique</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">length</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 30</code></pre>
+</div>
+</div>
+<p>Note: The main difference between this DIA data and the DDA data is that the DIA data is output in a long format. This means that instead of having one row per precursor peptide and multiple quantitative columns representing each biochemical fraction (referred to as a ‘wide’ format), each precursor peptide has multiple rows representing each biochemical fraction it was identified in and one quantititive column. In fact, we have multiple qunatitative columns (<code>PG.Quantity</code>, <code>PG.Normalised</code>, <code>PG.MaxLFQ</code>, <code>Genes.Quantity</code>, <code>Genes.Normalised</code>, <code>Genes.MaxLFQ</code>, <code>Genes.MaxLFQ.Unique</code>, <code>Precursor.Quantity</code>, <code>Precursor.Normalised</code>, <code>Precursor.Translated</code>, <code>Fragment.Quant.Raw</code>, <code>Fragment.Quant.Corrected</code>), but these represent different types of quantitation rather than quantitation across different samples. Before we proceed to importing our data into <code>QFeatures</code> we do some initial data wrangling for ease of plotting and interpretation downstream.</p>
+<p>We will be using the Quantitative features for mass spectrometry, or <code>QFeatures</code>, Bioconductor package to import, store, and manipulate our data. Before we convert the data into a <code>QFeatures</code> object it is first necessary to understand the structure of a <code>QFeatures</code> object and <code>SummarizedExperiment</code> object.</p>
+</section>
+<section id="the-structure-of-a-summarizedexperiment" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="the-structure-of-a-summarizedexperiment"><span class="header-section-number">2.3</span> The structure of a <code>SummarizedExperiment</code></h2>
+<p>To simplify the storage of quantitative proteomics data we can store the data as a <a href="https://bioconductor.org/packages/release/bioc/html/SummarizedExperiment.html"><code>SummarizedExperiment</code></a> object (as shown in <a href="#fig-summarized-experiment" class="quarto-xref">Figure&nbsp;<span>2.1</span></a>). <code>SummarizedExperiment</code> objects can be conceptualised as data containers made up of three different parts:</p>
+<ol type="1">
+<li><p>The <code>assay</code> - a matrix which contains the quantitative data from a proteomics experiment. Each row represents a feature (a precursor, peptide or protein) and each column contains the quantitative data (measurements) from one experimental sample. Hence, the matrix is in a wide format.</p></li>
+<li><p>The <code>rowData</code> - a table (data frame) which contains all remaining information associated with each feature (i.e.&nbsp;every column from your search output that was not a quantification column). Rows represent features but columns inform about different attributes of the feature (e.g., its sequence, name, modifications).</p></li>
+<li><p>The <code>colData</code> - a table (data frame) to store sample metadata that would not appear in the output of your search software. This could be, for example, the condition, replicate, or batch each sample belongs to. Again, this information is stored in a matrix-like data structure.</p></li>
+</ol>
+<p>Finally, there is also an additional container called <code>metadata</code> which is a place for users to store experimental metadata, such as which instrument the samples were run on or the date of data acquisition. We will focus on populating and understanding the three main containers above.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-summarized-experiment" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-summarized-experiment-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figs/summarized-experiment-modified.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;2.1: Diagramatic representation of the structure of a SummarizedExperiment object in R (modified from the SummarizedExperiment package)"><img src="figs/summarized-experiment-modified.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:90.0%"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-summarized-experiment-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.1: Diagramatic representation of the structure of a <code>SummarizedExperiment</code> object in R (modified from the SummarizedExperiment package)
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Data stored in these three main areas can be easily accessed using the <code>assay()</code>, <code>rowData()</code> and <code>colData()</code> functions, as we will see later.</p>
+</section>
+<section id="the-structure-of-a-qfeatures-object" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="the-structure-of-a-qfeatures-object"><span class="header-section-number">2.4</span> The structure of a <code>QFeatures</code> object</h2>
+<p>Whilst a <code>SummarizedExperiment</code> is able to neatly store quantitative proteomics data at a single data level (i.e., precursor, peptide or protein), a typical data analysis workflow requires us to look across multiple levels. For example, it is common to start an analysis at a lower data level and then aggregate upward towards a final protein-level dataset. Doing this allows for greater flexibility and understanding of the processes required to clean and aggregate the data.</p>
+<p>A <a href="https://bioconductor.org/packages/release/bioc/html/QFeatures.html"><code>QFeatures</code></a> object is essentially a list of <code>SummarizedExperiment</code> objects. However, the main benefit of using a <code>QFeatures</code> object over storing each data level as an independent <code>SummarizedExperiment</code> or in a normal <code>list</code> object is that the <code>QFeatures</code> infrastructure maintains explicit links between the <code>SummarizedExperiment</code>s that it stores. This allows for maximum traceability when processing data across multiple levels — for example, tracking which precursors or peptides contribute to each protein (<a href="#fig-qfeatures" class="quarto-xref">Figure&nbsp;<span>2.2</span></a>, modified from the <a href="https://bioconductor.org/packages/release/bioc/vignettes/QFeatures/inst/doc/QFeatures.html"><code>QFeatures</code> vignette</a> with permission).</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-qfeatures" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-qfeatures-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figs/qfeatures.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="Figure&nbsp;2.2: Graphic representation of the explicit links between data levels when stored in a QFeatures object."><img src="figs/qfeatures.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:90.0%"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-qfeatures-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.2: Graphic representation of the explicit links between data levels when stored in a <code>QFeatures</code> object.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>QFeatures nomenclature
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>When talking about a <code>QFeatures</code> object, each dataset (individual <code>SummarizedExperiment</code>) can be referred to as a <code>set</code> (short for dataset). Previously, each dataset was referred to as an <code>experimental assay</code>, and some older resources may still use this term. However, the <code>experimental assay</code> should not be confused with the quantitative matrix section of a <code>SummarizedExperiment</code>, which is called the <code>assay</code> data.</p>
+</div>
+</div>
+<p>In order to generate the explicit links between data levels, we need to import the lowest desired data level into a <code>QFeatures</code> object and aggregate upwards within the <code>QFeatures</code> infrastructure using the <code>aggregateFeatures</code> function. If two <code>SummarizedExperiment</code>s are generated separately and then added into the same <code>QFeatures</code> object, there will not automatically be links between them. In this case, if links are required, we can manually add them using the <code>addAssayLink()</code> function.</p>
+<p>The best way to get our head around the <code>QFeatures</code> infrastructure is to import our data into a <code>QFeatures</code> object and start exploring.</p>
+</section>
+<section id="importing-the-sample-metadata" class="level2" data-number="2.5">
+<h2 data-number="2.5" class="anchored" data-anchor-id="importing-the-sample-metadata"><span class="header-section-number">2.5</span> Importing the sample metadata</h2>
+<p>Sample metadata is information related to each sample that helps us interpret, organise and analyse our proteomics data. This data is something you must create yourself, related to your experiment. You can use a spreadsheet program such as Excel, or it can be coded in R directly.</p>
+<p>Here, we have created a .csv file containing sample metadata. This file is called <code>sample_info_dia.csv</code>. It provides information about each sample, including replicate information and fraction . We use the <code>read.csv</code> to import the data into R.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>sample_metadata <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/sample_info_dia.csv"</span>, <span class="at">row.names =</span> <span class="dv">1</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(sample_metadata)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      Replicate Fraction runCol
+R1F01         1        1  R1F01
+R1F02         1        2  R1F02
+R1F03         1        3  R1F03
+R1F04         1        4  R1F04
+R1F05         1        5  R1F05
+R1F06         1        6  R1F06
+R1F07         1        7  R1F07
+R1F08         1        8  R1F08
+R1F09         1        9  R1F09
+R1F10         1       10  R1F10
+R2F01         2        1  R2F01
+R2F02         2        2  R2F02
+R2F03         2        3  R2F03
+R2F04         2        4  R2F04
+R2F05         2        5  R2F05
+R2F06         2        6  R2F06
+R2F07         2        7  R2F07
+R2F08         2        8  R2F08
+R2F09         2        9  R2F09
+R2F10         2       10  R2F10
+R3F01         3        1  R3F01
+R3F02         3        2  R3F02
+R3F03         3        3  R3F03
+R3F04         3        4  R3F04
+R3F05         3        5  R3F05
+R3F06         3        6  R3F06
+R3F07         3        7  R3F07
+R3F08         3        8  R3F08
+R3F09         3        9  R3F09
+R3F10         3       10  R3F10</code></pre>
+</div>
+</div>
+<p>We have also created a column called <code>runCol</code> which is a concise, human-readable label for each sample which we add to our <code>QFeatures</code> object to in the next section to use in our analysis. It is important that this column is named <code>runCol</code>, as the <code>readQFeaturesFromDIANN</code> function expects this exact column name when importing the DIA-NN results.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>The pipe operator
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>In this course we will frequently use the pipe operator (<code>|&gt;</code>). The pipe passes the output of one function directly as the input to the next, allowing you to chain together multiple operations in a linear, readable way — rather than nesting function calls or creating many intermediate variables.</p>
+<section id="why-we-use-r-pipe-rather-than-the-magrittr-pipe" class="level5">
+<h5 class="anchored" data-anchor-id="why-we-use-r-pipe-rather-than-the-magrittr-pipe">Why we use R pipe (<code>|&gt;</code>) rather than the <code>magrittr</code> pipe (<code>%&gt;%</code>)?</h5>
+<p>Since version 4.1, R has had its own built-in pipe, <code>|&gt;</code>, so we don’t need to load an extra package to chain steps together. Because it’s part of the language, it runs slightly faster and gives clearer error messages when something goes wrong. It’s also what the tidyverse style guide and R for Data Science now recommend. You’ll still see the older magrittr pipe, <code>%&gt;%</code>, in plenty of existing code and online examples. In everyday use the two behave almost identically, so you can read either one. For more information see Hadley Wickham’s Tidyverse at <a href="https://www.tidyverse.org">https://www.tidyverse.org</a>.</p>
+</section>
+</div>
+</div>
+</section>
+<section id="initial-data-wrangling-optional" class="level2" data-number="2.6">
+<h2 data-number="2.6" class="anchored" data-anchor-id="initial-data-wrangling-optional"><span class="header-section-number">2.6</span> Initial data wrangling (optional)</h2>
+<p>During the MS run and DIA-NN search samples were named ambiguously. The 30 “Run” names are not particularly informative for downstream analysis and it is a good idea to change them.</p>
+<ol type="1">
+<li><p>In the below code we re-move unnecessary text from the run name e.g.&nbsp;<code>DIA_KM</code> for clarity.</p></li>
+<li><p>We see <code>"R"</code> corresponds to replicate, <code>"F"</code> to fraction. We have R1, and also R8 and R9. The names R8 and R9 correspond to replicates 2 and 3 so let’s recode them as R2, and R3.</p></li>
+<li><p>Some fractions identifiers have a leading 0 e.g.&nbsp;01, 02, and some don’t. Currently, this is not an issue but could be later downstream, when it comes to plotting the protein correlation profiles.</p></li>
+</ol>
+<p>Let’s change it now.</p>
+<p><strong>Before - </strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>df <span class="sc">|&gt;</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">pull</span>(Run) <span class="sc">|&gt;</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unique</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "R8F01_DIA_KM_876" "R8F02_DIA_KM_877" "R8F04_DIA_KM_885" "R8F05_DIA_KM_889"
+ [5] "R8F06_DIA_KM_891" "R8F07_DIA_KM_893" "R8F08_DIA_KM_895" "R8F09_DIA_KM_897"
+ [9] "R8F10_DIA_KM_899" "R9F01_DIA_KM_902" "R9F03_DIA_KM_906" "R9F04_DIA_KM_908"
+[13] "R9F05_DIA_KM_910" "R9F06_DIA_KM_912" "R9F07_DIA_KM_915" "R9F08_DIA_KM_918"
+[17] "R9F09_DIA_KM_920" "R9F10_DIA_KM_925" "R1F1_DIA_KM_280"  "R1F2_DIA_KM_282" 
+[21] "R1F3_DIA_KM_284"  "R1F4_DIA_KM_289"  "R1F6_DIA_KM_694"  "R1F7_DIA_KM_696" 
+[25] "R1F8_DIA_KM_698"  "R1F9_DIA_KM_700"  "R1F10_DIA_KM_316" "R8F03_DIA_KM_887"
+[29] "R1F5_DIA_KM_301"  "R9F02_DIA_KM_927"</code></pre>
+</div>
+</div>
+<p>Now tidying up the naming of the samples,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> df <span class="sc">|&gt;</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">runCol =</span> </span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_remove</span>(Run, <span class="st">"_.*"</span>) <span class="sc">|&gt;</span>            <span class="co"># Remove text after 1st _ i.e.DIA_KM...</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_replace</span>(<span class="st">"^R8"</span>, <span class="st">"R2"</span>) <span class="sc">|&gt;</span>          <span class="co"># Recode R8 -&gt; R2</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_replace</span>(<span class="st">"^R9"</span>, <span class="st">"R3"</span>) <span class="sc">|&gt;</span>          <span class="co"># Recode R9 -&gt; R3</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_replace</span>(<span class="st">"F(</span><span class="sc">\\</span><span class="st">d)$"</span>, <span class="st">"F0</span><span class="sc">\\</span><span class="st">1"</span>)       <span class="co"># Add leading zero after F if single digit</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Let’s look at the new run names we have created in the new column called <code>runCol</code>. Note: the naming of this column as <code>runCol</code> is a conscious choice, as previously mentioned. When we convert the data in the next section to a <code>QFeatures</code> object we use this column to match out metadata and the experimental data.</p>
+<p><strong>After -</strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>df <span class="sc">|&gt;</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">pull</span>(runCol) <span class="sc">|&gt;</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unique</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "R2F01" "R2F02" "R2F04" "R2F05" "R2F06" "R2F07" "R2F08" "R2F09" "R2F10"
+[10] "R3F01" "R3F03" "R3F04" "R3F05" "R3F06" "R3F07" "R3F08" "R3F09" "R3F10"
+[19] "R1F01" "R1F02" "R1F03" "R1F04" "R1F06" "R1F07" "R1F08" "R1F09" "R1F10"
+[28] "R2F03" "R1F05" "R3F02"</code></pre>
+</div>
+</div>
+</section>
+<section id="converting-the-data-into-a-qfeatures-object" class="level2" data-number="2.7">
+<h2 data-number="2.7" class="anchored" data-anchor-id="converting-the-data-into-a-qfeatures-object"><span class="header-section-number">2.7</span> Converting the data into a QFeatures object</h2>
+<p>The <code>readQFeaturesFromDIANN</code> takes DIA-NN output as a <code>data.frame</code> and converts it into a multi-set <code>QFeatures</code> object. We pass the <code>runCol</code> column from our <code>data.frame</code> to be the column that <code>readQFeaturesFromDIANN</code> uses to split the data into sets - we will end up with a <code>QFeatures</code> object with one set per unique value of <code>runCol</code>. This is important because some quality control metrics are calculated on a per-run basis, so we need to keep each run separate in order to use these. We also pass <code>Precursor.Id</code> to the <code>fnames</code> argument to tell <code>readQFeaturesFromDIANN</code> how to name the rows.</p>
+<p>We also need to tell <code>QFeatures</code> where the quantitation data is located. As previously mentioned you will notice with DIA-NN output there are multiple qunatitative columns e.g.&nbsp;<code>PG.Quantity</code>, <code>PG.Normalised</code>, <code>Precursor.Quantity</code> etc., and these will vary between DIA-NN versions. Make sure to check the column names for the version you are using. As mentioned before, these columns represent different types of quantitation rather than quantitation across different samples.</p>
+<p><strong>Using Precursor.Quantity for quantitation</strong> Since our analysis started from the precursor level, we will use precursor-level quantitation and aggregate upwards to protein-level. Whilst DIA-NN provides the <code>Precursor.Normalised</code> column containing quantitative data pre-normalised using the MaxLFQ algorithm, this normalisation step makes the assumption that the majority of the proteome does not change between any two samples <span class="citation" data-cites="Cox2014">(<a href="#ref-Cox2014" role="doc-biblioref">Cox et al. 2014</a>)</span>. Since biochemical fractions derived from a correlation profiling experiment are expected to be relatively different from each other in terms of their composition, our data does not meet the assumptions required. Hence, we use the <code>Precursor.Quantity</code> column which contains the raw quantitation data.</p>
+<section id="creating-the-data-object" class="level4">
+<h4 class="anchored" data-anchor-id="creating-the-data-object">Creating the data object</h4>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>qf <span class="ot">&lt;-</span> <span class="fu">readQFeaturesFromDIANN</span>(<span class="at">assayData =</span> df, </span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>                             <span class="at">quantCols =</span> <span class="st">"Precursor.Quantity"</span>, </span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>                             <span class="at">runCol =</span> <span class="st">"runCol"</span>, </span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>                             <span class="at">fnames =</span> <span class="st">"Precursor.Id"</span>,</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>                             <span class="at">colData =</span> sample_metadata)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># check</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>qf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>An instance of class QFeatures (type: bulk) with 30 sets:
+
+ [1] R1F01: SummarizedExperiment with 130218 rows and 1 columns 
+ [2] R1F02: SummarizedExperiment with 117847 rows and 1 columns 
+ [3] R1F03: SummarizedExperiment with 126057 rows and 1 columns 
+ ...
+ [28] R3F08: SummarizedExperiment with 98579 rows and 1 columns 
+ [29] R3F09: SummarizedExperiment with 90933 rows and 1 columns 
+ [30] R3F10: SummarizedExperiment with 80905 rows and 1 columns </code></pre>
+</div>
+</div>
+<p>You will notice that each run (fraction) appears as a separate set within the <code>QFeatures</code> object and we now have 30 sets (individual <code>SummarizedExperiments</code>). Note, that this differs from when we import labelled correlation profiling data when we would have one set containing all of the fractions together and as such the upstream processing is slightly different. Information on the analysis of label-based or correlation profiling data can be found in <span class="citation" data-cites="Hutchings2025">(<a href="#ref-Hutchings2025" role="doc-biblioref">Hutchings et al. 2025</a>)</span>.</p>
+</section>
+</section>
+<section id="exploring-the-data" class="level2" data-number="2.8">
+<h2 data-number="2.8" class="anchored" data-anchor-id="exploring-the-data"><span class="header-section-number">2.8</span> Exploring the data</h2>
+<p>When we inspect our <code>QFeatures</code> object, we see that it contains 30 sets, each corresponding to a different sample run (fraction). Each set contains the precursor-level quantification data for that fraction, with feature names given by the <code>Precursor.Id</code> column from the original DIA-NN output.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>qf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>An instance of class QFeatures (type: bulk) with 30 sets:
+
+ [1] R1F01: SummarizedExperiment with 130218 rows and 1 columns 
+ [2] R1F02: SummarizedExperiment with 117847 rows and 1 columns 
+ [3] R1F03: SummarizedExperiment with 126057 rows and 1 columns 
+ ...
+ [28] R3F08: SummarizedExperiment with 98579 rows and 1 columns 
+ [29] R3F09: SummarizedExperiment with 90933 rows and 1 columns 
+ [30] R3F10: SummarizedExperiment with 80905 rows and 1 columns </code></pre>
+</div>
+</div>
+<p>By default if a <code>QFeatures</code> object has more than 6 sets, only the first and last three set summaries are printed to the screen. To see all sets and their respective data summaries, we can use the <code>experiments</code> function.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">experiments</span>(qf)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>ExperimentList class object of length 30:
+ [1] R1F01: SummarizedExperiment with 130218 rows and 1 columns
+ [2] R1F02: SummarizedExperiment with 117847 rows and 1 columns
+ [3] R1F03: SummarizedExperiment with 126057 rows and 1 columns
+ [4] R1F04: SummarizedExperiment with 123127 rows and 1 columns
+ [5] R1F05: SummarizedExperiment with 105871 rows and 1 columns
+ [6] R1F06: SummarizedExperiment with 95843 rows and 1 columns
+ [7] R1F07: SummarizedExperiment with 100230 rows and 1 columns
+ [8] R1F08: SummarizedExperiment with 111203 rows and 1 columns
+ [9] R1F09: SummarizedExperiment with 102343 rows and 1 columns
+ [10] R1F10: SummarizedExperiment with 42954 rows and 1 columns
+ [11] R2F01: SummarizedExperiment with 107372 rows and 1 columns
+ [12] R2F02: SummarizedExperiment with 110259 rows and 1 columns
+ [13] R2F03: SummarizedExperiment with 47214 rows and 1 columns
+ [14] R2F04: SummarizedExperiment with 95213 rows and 1 columns
+ [15] R2F05: SummarizedExperiment with 93501 rows and 1 columns
+ [16] R2F06: SummarizedExperiment with 86653 rows and 1 columns
+ [17] R2F07: SummarizedExperiment with 90905 rows and 1 columns
+ [18] R2F08: SummarizedExperiment with 104243 rows and 1 columns
+ [19] R2F09: SummarizedExperiment with 103410 rows and 1 columns
+ [20] R2F10: SummarizedExperiment with 92893 rows and 1 columns
+ [21] R3F01: SummarizedExperiment with 111073 rows and 1 columns
+ [22] R3F02: SummarizedExperiment with 21160 rows and 1 columns
+ [23] R3F03: SummarizedExperiment with 112618 rows and 1 columns
+ [24] R3F04: SummarizedExperiment with 116613 rows and 1 columns
+ [25] R3F05: SummarizedExperiment with 95523 rows and 1 columns
+ [26] R3F06: SummarizedExperiment with 76872 rows and 1 columns
+ [27] R3F07: SummarizedExperiment with 98163 rows and 1 columns
+ [28] R3F08: SummarizedExperiment with 98579 rows and 1 columns
+ [29] R3F09: SummarizedExperiment with 90933 rows and 1 columns
+ [30] R3F10: SummarizedExperiment with 80905 rows and 1 columns</code></pre>
+</div>
+</div>
+<p>We can quickly see how many precursors were measured per sample for example, we see for the first sample called R1F01 there are 130218 precursors.</p>
+<p>We can access individual sets (samples, or <code>SummarizedExperiment</code>s) using standard double bracket nomenclature (this is how you would normally access items of a list in R). As with all indexing we can use the list position or dataset name.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>qf[[<span class="dv">1</span>]]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>class: SummarizedExperiment 
+dim: 130218 1 
+metadata(0):
+assays(1): ''
+rownames(130218): (UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2
+  (UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3 ... YYYQGC(UniMod:4)ASWK2
+  YYYVPADFVEYEK2
+rowData names(69): Run.Index Run ... Lib.PG.Q.Value runCol
+colnames(1): R1F01
+colData names(0):</code></pre>
+</div>
+</div>
+<p>Is the same as,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>qf[[<span class="st">"R1F01"</span>]]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>class: SummarizedExperiment 
+dim: 130218 1 
+metadata(0):
+assays(1): ''
+rownames(130218): (UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2
+  (UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3 ... YYYQGC(UniMod:4)ASWK2
+  YYYVPADFVEYEK2
+rowData names(69): Run.Index Run ... Lib.PG.Q.Value runCol
+colnames(1): R1F01
+colData names(0):</code></pre>
+</div>
+</div>
+<p>The quantitation data for each sample is stored in the <code>assay</code> container and can be extracted using the <code>assay</code> function.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>qf[[<span class="dv">1</span>]] <span class="sc">|&gt;</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assay</span>() <span class="sc">|&gt;</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                           R1F01
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2    53665.14
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3    13024.05
+(UniMod:1)AAAAAAALESWQAAAPR2            43326.91
+(UniMod:1)AAAAAAAVGGQQPSQPELPAPGLALDK3  16287.36
+(UniMod:1)AAAAAAGAASGLPGPVAQGLK2       784884.25
+(UniMod:1)AAAAAAGAASGLPGPVAQGLK3        18962.71</code></pre>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Alternative input methods
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>There are several ways to import correlation profiling data into a <code>QFeatures</code> object, and the correct way will depend upon the data structure (long vs.&nbsp;wide) as well as the quantitation (label-free vs.&nbsp;label-based) and acquisition (DDA vs. DIA) method.</p>
+<p>For example, TMT-based methods (e.g., LOPIT) allow for sample multiplexing meaning that all biochemical fractions from a correlation profiling experiment can be pooled and analysed in a single MS run. Here, the identification of a peptide sequence across multiple fractions is derived from a single MS2 spectrum. Therefore, there is no per-run or per-fraction quality control metrics, only global statistics that apply to that peptide for all fractions. This data can be imported into a <code>QFeatures</code> object in a single set with one row per feature (PSM, peptide or protein) and one quantitative column per fraction. When multiple replicates or conditions have been used, each experiment (one full correlation gradient) can be imported as a separate set. Hence, if you had three replicate LOPIT-DC experiments, you would import the data as three sets within a <code>QFeatures</code> object.</p>
+<p>Details about different import options for DDA datasets is outlined in <span class="citation" data-cites="Hutchings2025">(<a href="#ref-Hutchings2025" role="doc-biblioref">Hutchings et al. 2025</a>)</span>. For label-free DIA datasets, we recommend using the multi-set import approach demonstrated in this workflow, with one set per run.</p>
+</div>
+</div>
+<section id="discussion" class="level4 callout-discussion">
+<h4 class="anchored" data-anchor-id="discussion">Discussion</h4>
+<p>Why does <code>readQFeaturesFromDIANN</code> create one <code>SummarizedExperiment</code> per run, rather than a single combined set across all runs from the outset?</p>
+</section>
+<div class="callout callout-style-default callout-answer no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Answer</span>Answer
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="callout-answer" data-collapse="true">
+<p>The DIA-NN output contains per-run quality metrics stored in the <code>rowData</code> of each precursor. These are run-specific values and would be ambiguous or impossible to retain if all runs were immediately merged into a single matrix.</p>
+<p>By keeping one <code>SummarizedExperiment</code> per run, we can inspect and filter on these per-run metrics before joining the data. We will join the per-run sets into a single combined precursor set per replicate in the next lesson, once filtering is complete.</p>
+</div>
+</div>
+</div>
+</div>
+<section id="how-many-precursors-per-sample" class="level3" data-number="2.8.1">
+<h3 data-number="2.8.1" class="anchored" data-anchor-id="how-many-precursors-per-sample"><span class="header-section-number">2.8.1</span> How many precursors per sample?</h3>
+<p>Each run will have a different number of precursors identified and quantified. We can explore this by inspecting the number of rows in each per-run set, which corresponds to the number of precursors quantified in that run (here a biochemical fraction from one replicate).</p>
+<div class="callout callout-style-default callout-exercise no-icon callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Exercise</span>Exercise 1 - Number of precursors per sample
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<div class="callout-exercise">
+<p><font style="font-variant: small-caps">Level:</font> <i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i><i class="fa-regular fa-star"></i><br></p>
+<ol type="1">
+<li>By examining the <code>QFeatures</code> object, determine how how many precursors are quantified in each sample.</li>
+</ol>
+<p><font style="font-variant: small-caps">Level:</font> <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i><br></p>
+<ol start="2" type="1">
+<li><p>Use this information to create a bar plot to visualise the number of precursors identified in each sample, coloured by replicate.</p></li>
+<li><p>Based on your plot,</p></li>
+</ol>
+<ul>
+<li>Which sample tends to have the most precursors identified?</li>
+<li>Is there any sample that looks like an outlier?</li>
+</ul>
+<details>
+<summary>
+Hint
+</summary>
+Start with applying the <code>nrows</code> function to your <code>QFeatures</code> object.
+</details>
+<div class="callout callout-style-default callout-answer no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Answer</span>Answer
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="callout-answer" data-collapse="true">
+<p>One (of many different) answers. First let’s find the number or precursors per sample.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>qf <span class="sc">|&gt;</span> </span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">nrows</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> R1F01  R1F02  R1F03  R1F04  R1F05  R1F06  R1F07  R1F08  R1F09  R1F10  R2F01 
+130218 117847 126057 123127 105871  95843 100230 111203 102343  42954 107372 
+ R2F02  R2F03  R2F04  R2F05  R2F06  R2F07  R2F08  R2F09  R2F10  R3F01  R3F02 
+110259  47214  95213  93501  86653  90905 104243 103410  92893 111073  21160 
+ R3F03  R3F04  R3F05  R3F06  R3F07  R3F08  R3F09  R3F10 
+112618 116613  95523  76872  98163  98579  90933  80905 </code></pre>
+</div>
+</div>
+<p>Now create a barplot of the number of precursors quantified.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Number of precursors per sample</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>n_precursors <span class="ot">&lt;-</span> <span class="fu">nrows</span>(qf)</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="do">## Create data.frame of information we need</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>plot_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_precursors =</span> n_precursors,</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">sample =</span> <span class="fu">names</span>(n_precursors),</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">replicate =</span> <span class="fu">colData</span>(qf)[, <span class="st">"Replicate"</span>]) </span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a><span class="do">## Now produce a barplot</span></span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>plot_df <span class="sc">|&gt;</span></span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> sample, <span class="at">y =</span> n_precursors, <span class="at">fill =</span> replicate)) <span class="sc">+</span></span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>) <span class="sc">+</span></span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Sample"</span>, <span class="at">y =</span> <span class="st">"Number of precursors"</span>) <span class="sc">+</span></span>
+<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>)) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P1_02_import_and_infrastructure_files/figure-html/unnamed-chunk-13-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="P1_02_import_and_infrastructure_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We see from the boxplot that the first three of the samples have a much lower number of samples quantified in comparison to all samples.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="exploring-the-row-data" class="level3" data-number="2.8.2">
+<h3 data-number="2.8.2" class="anchored" data-anchor-id="exploring-the-row-data"><span class="header-section-number">2.8.2</span> Exploring the row data</h3>
+<p>The <code>rowData</code> of each per-run <code>SummarizedExperiment</code> contains quality metrics from DIA-NN. This information can be accessed on a run-by-run level by using the <code>rowData</code> function. For example, let’s look at the <code>rowData</code> for run 1 stored in <code>qf[[1]]</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>qf[[<span class="dv">1</span>]] <span class="sc">|&gt;</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowData</span>() <span class="sc">|&gt;</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>DataFrame with 2 rows and 69 columns
+                                     Run.Index           Run     Channel
+                                     &lt;integer&gt;   &lt;character&gt; &lt;character&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2        20 R1F1_DIA_K...            
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3        20 R1F1_DIA_K...            
+                                      Precursor.Id Modified.Sequence
+                                       &lt;character&gt;       &lt;character&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2 (UniMod:1)...     (UniMod:1)...
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3 (UniMod:1)...     (UniMod:1)...
+                                     Stripped.Sequence Precursor.Charge
+                                           &lt;character&gt;        &lt;integer&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2     AAAAAAAGDS...                2
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3     AAAAAAAGDS...                3
+                                     Precursor.Lib.Index     Decoy Proteotypic
+                                               &lt;integer&gt; &lt;integer&gt;   &lt;integer&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2                   0         0           1
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3                   1         0           1
+                                     Precursor.Mz Protein.Ids Protein.Group
+                                        &lt;numeric&gt; &lt;character&gt;   &lt;character&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2      1254.05      O75822        O75822
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3       836.37      O75822        O75822
+                                     Protein.Names       Genes        RT
+                                       &lt;character&gt; &lt;character&gt; &lt;numeric&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2 EIF3J_HUMA...       EIF3J   59.2974
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3 EIF3J_HUMA...       EIF3J   59.4341
+                                           iRT Predicted.RT Predicted.iRT
+                                     &lt;numeric&gt;    &lt;numeric&gt;     &lt;numeric&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2   78.4207      59.8732       76.2670
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3   77.1638      59.5928       76.6675
+                                            IM       iIM Predicted.IM
+                                     &lt;numeric&gt; &lt;numeric&gt;    &lt;numeric&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2   1.34597   1.37659      1.34498
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3   1.12864   1.11736      1.12003
+                                     Predicted.iIM Precursor.Normalised
+                                         &lt;numeric&gt;            &lt;numeric&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2       1.37906              65836.6
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3       1.12645              16295.9
+                                      Ms1.Area Ms1.Normalised Ms1.Apex.Area
+                                     &lt;numeric&gt;      &lt;numeric&gt;     &lt;numeric&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2   33405.8        40982.4       5489.34
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3   27372.2        34248.5      11204.46
+                                     Ms1.Apex.Mz.Delta Normalisation.Factor
+                                             &lt;numeric&gt;            &lt;numeric&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2      -0.004760742              1.22680
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3       0.000976562              1.25122
+                                     Quantity.Quality Empirical.Quality
+                                            &lt;numeric&gt;         &lt;numeric&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2         0.899106          0.858576
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3         0.810458          0.803516
+                                     Normalisation.Noise Ms1.Profile.Corr
+                                               &lt;numeric&gt;        &lt;numeric&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2           -0.346676         0.232383
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3           -0.324085         0.213520
+                                      Evidence Mass.Evidence Channel.Evidence
+                                     &lt;numeric&gt;     &lt;numeric&gt;        &lt;numeric&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2  3.085093             0                0
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3  0.429237             0                0
+                                     Ms1.Total.Signal.Before
+                                                   &lt;numeric&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2                52411432
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3                52691888
+                                     Ms1.Total.Signal.After  RT.Start   RT.Stop
+                                                  &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2               52019644   59.1216   59.8834
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3               52628160   59.0825   59.6490
+                                          FWHM   PG.TopN PG.MaxLFQ Genes.TopN
+                                     &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;  &lt;numeric&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2  0.399875         0   1122914          0
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3  0.061245         0   1122914          0
+                                     Genes.MaxLFQ Genes.MaxLFQ.Unique
+                                        &lt;numeric&gt;           &lt;numeric&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2      1122914             1122914
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3      1122914             1122914
+                                     PG.MaxLFQ.Quality Genes.MaxLFQ.Quality
+                                             &lt;numeric&gt;            &lt;numeric&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2          0.974252             0.974252
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3          0.974252             0.974252
+                                     Genes.MaxLFQ.Unique.Quality     Q.Value
+                                                       &lt;numeric&gt;   &lt;numeric&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2                    0.974252 0.000368433
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3                    0.974252 0.005117550
+                                            PEP Global.Q.Value Lib.Q.Value
+                                      &lt;numeric&gt;      &lt;numeric&gt;   &lt;numeric&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2 0.00178641    0.002239843  0.00054370
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3 0.05765069    0.000176215  0.00021758
+                                     Peptidoform.Q.Value
+                                               &lt;numeric&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2           0.5016207
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3           0.0488951
+                                     Global.Peptidoform.Q.Value
+                                                      &lt;numeric&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2                0.002239843
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3                0.000820419
+                                     Lib.Peptidoform.Q.Value
+                                                   &lt;numeric&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2             0.000543700
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3             0.000524103
+                                     PTM.Site.Confidence
+                                               &lt;numeric&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2                   0
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3                   0
+                                     Site.Occupancy.Probabilities Protein.Sites
+                                                      &lt;character&gt;   &lt;character&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2                (UniMod:1)... [O75822:A2...
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3                (UniMod:1)... [O75822:A2...
+                                     Lib.PTM.Site.Confidence Translated.Q.Value
+                                                   &lt;numeric&gt;          &lt;numeric&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2                       0                  0
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3                       0                  0
+                                     Channel.Q.Value  PG.Q.Value      PG.PEP
+                                           &lt;numeric&gt;   &lt;numeric&gt;   &lt;numeric&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2               0 0.000117786 0.000235004
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3               0 0.000117786 0.000235004
+                                      GG.Q.Value Protein.Q.Value
+                                       &lt;numeric&gt;       &lt;numeric&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2 0.000118078     0.000120279
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3 0.000118078     0.000120279
+                                     Global.PG.Q.Value Lib.PG.Q.Value
+                                             &lt;numeric&gt;      &lt;numeric&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2       0.000112549    0.000109505
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3       0.000112549    0.000109505
+                                          runCol
+                                     &lt;character&gt;
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR2       R1F01
+(UniMod:1)AAAAAAAGDSDSWDADAFSVEDPVR3       R1F01</code></pre>
+</div>
+</div>
+<p>However, we want to access this information across all the MS runs. To do this we can use the <code>rbindRowData</code> function.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>rdata <span class="ot">&lt;-</span> <span class="fu">rbindRowData</span>(qf, <span class="at">i =</span> <span class="fu">names</span>(qf))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The <code>rbindRowData</code> functions returns a <code>DFrame</code> table that contains the row binded <code>rowData</code> tables from the selected sets. In this context, <code>i</code> is a <code>character()</code>, <code>integer()</code> or <code>logical()</code> object for subsetting sets. Only <code>rowData</code> variables that are common to all sets are kept.</p>
+<p>Recall, there is also a slot in the <code>QFeatures</code> object that stores information on the MS samples/runs. This is the <code>colData</code> slot.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colData</span>(qf)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>DataFrame with 30 rows and 3 columns
+      Replicate  Fraction      runCol
+      &lt;integer&gt; &lt;integer&gt; &lt;character&gt;
+R1F01         1         1       R1F01
+R1F02         1         2       R1F02
+R1F03         1         3       R1F03
+R1F04         1         4       R1F04
+R1F05         1         5       R1F05
+...         ...       ...         ...
+R3F06         3         6       R3F06
+R3F07         3         7       R3F07
+R3F08         3         8       R3F08
+R3F09         3         9       R3F09
+R3F10         3        10       R3F10</code></pre>
+</div>
+</div>
+<p>In the below code chunk we create a <code>data.frame</code> called <code>cdata</code> containing the sample information and merge this with the <code>rdata</code> so we get group information for each sample. This will help with our data exploration.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Create a data.frame of the sample information</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>cdata <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">colData</span>(qf))</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Merge this with the row data</span></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Note: Our data is in separate sets, so the sample names are in the 'assay'</span></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a><span class="co"># column. We merge with the column data (using the runCol column) to get group</span></span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a><span class="co"># information for each sample</span></span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a>rdata <span class="ot">&lt;-</span> rdata <span class="sc">|&gt;</span></span>
+<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>() <span class="sc">|&gt;</span></span>
+<span id="cb41-12"><a href="#cb41-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">merge</span>(cdata, <span class="at">by.x =</span> <span class="st">"assay"</span>, <span class="at">by.y =</span> <span class="st">"runCol"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Now we have one <code>data.frame</code> with precursor-level and sample-level information we can now visualise quality metrics from DIA-NN.</p>
+<div class="callout callout-style-default callout-exercise no-icon callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-10-contents" aria-controls="callout-10" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Exercise</span>Exercise 2 - Challenge: Exploring rowData metrics
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-10" class="callout-10-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<div class="callout-exercise">
+<p><font style="font-variant: small-caps">Level:</font> <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i><br></p>
+<ol type="1">
+<li><p>Use the <code>rowData</code> to visualize the retention time distribution of precursors per run.</p></li>
+<li><p>Calculate the number of protein groups identified in each replicate. Next visualise the number of protein groups per run.</p></li>
+</ol>
+<ul>
+<li>Why might the latter plot be helpful?</li>
+</ul>
+<div class="callout callout-style-default callout-answer no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Answer</span>Answer
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-9" class="callout-9-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="callout-answer" data-collapse="true">
+<p><strong>Task 1</strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>rdata <span class="sc">|&gt;</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> RT, <span class="at">group =</span> runCol, <span class="at">colour =</span> runCol)) <span class="sc">+</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_density</span>() <span class="sc">+</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>() <span class="sc">+</span> </span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Retention time"</span>, <span class="at">y =</span> <span class="st">"Density"</span>, <span class="at">colour =</span> <span class="st">"Run"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P1_02_import_and_infrastructure_files/figure-html/plot retention time per run-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="P1_02_import_and_infrastructure_files/figure-html/plot retention time per run-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Task 2</strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>rdata <span class="sc">|&gt;</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Replicate) <span class="sc">|&gt;</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">no_proteins =</span> <span class="fu">n_distinct</span>(Protein.Group))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 2
+  Replicate no_proteins
+      &lt;int&gt;       &lt;int&gt;
+1         1       10763
+2         2       10574
+3         3       10600</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>rdata <span class="sc">|&gt;</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(runCol) <span class="sc">|&gt;</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">no_proteins =</span> <span class="fu">n_distinct</span>(Protein.Group)) <span class="sc">|&gt;</span> </span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> runCol, <span class="at">y =</span> no_proteins)) <span class="sc">+</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>() <span class="sc">+</span> </span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Run"</span>, <span class="at">y =</span> <span class="st">"Number of proteins"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="P1_02_import_and_infrastructure_files/figure-html/Calculate the unique protein groups per replicate-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-6"><img src="P1_02_import_and_infrastructure_files/figure-html/Calculate the unique protein groups per replicate-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Key Points
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>DIA-NN outputs a <code>.parquet</code> format report file containing precursor- and protein-level quantification data for each MS sample/run</li>
+<li>The <code>readQFeaturesFromDIANN</code> function imports DIA-NN output into a <code>QFeatures</code> object, creating one <code>SummarizedExperiment</code> per sample run</li>
+<li>Sample metadata is stored in the <code>colData</code> of the <code>QFeatures</code> object and can be used to annotate samples with experimental group information</li>
+<li>The <code>rowData</code> of each per-run <code>SummarizedExperiment</code> contains quality metrics from DIA-NN that can be used to explore data quality and guide downstream filtering decisions</li>
+</ul>
+</div>
+</div>
+</section>
+</section>
+<section id="references" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="references">References</h2>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="ref-Cox2014" class="csl-entry" role="listitem">
+Cox, Jürgen, Marco Y. Hein, Christian A. Luber, Igor Paron, Nagarjuna Nagaraj, and Matthias Mann. 2014. <span>“Accurate Proteome-Wide Label-Free Quantification by Delayed Normalization and Maximal Peptide Ratio Extraction, Termed MaxLFQ.”</span> <em>Molecular &amp;Amp; Cellular Proteomics</em> 13 (9): 2513–26. <a href="https://doi.org/10.1074/mcp.m113.031591">https://doi.org/10.1074/mcp.m113.031591</a>.
+</div>
+<div id="ref-Hutchings2025" class="csl-entry" role="listitem">
+Hutchings, Charlotte, Thomas Krueger, Oliver M Crook, Laurent Gatto, Kathryn S Lilley, and Lisa M Breckels. 2025. <span>“An Updated Bioconductor Workflow for Correlation Profiling Subcellular Proteomics.”</span> <em>F1000Research</em> 14: 714. <a href="https://doi.org/10.12688/f1000research.165543.1">https://doi.org/10.12688/f1000research.165543.1</a>.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+          if (!link.classList.contains('no-external-icon')) {
+          }
+        }
+      }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
+          if (lineIds.length > 0) {
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            placeBand(gutterDiv, el, lastEl);
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
+  </script>
+<nav class="page-navigation" aria-label="Page">
+  <div class="nav-page nav-page-previous">
+      <a href="../materials/P1_01_intro.html" class="pagination-link" aria-label="The use-case data">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">The use-case data</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../materials/P1_03_qc_data_processing.html" class="pagination-link" aria-label="Data processing">
+        <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data processing</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>Licensed <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> <img src="https://creativecommons.org/images/deed/cc_icon_black_x2.png" class="img-fluid" width="25"> Cambridge Research Informatics Training</p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>
